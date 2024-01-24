@@ -3,9 +3,28 @@ import Header from './Header'
 import useNowPlayingMovies from '../hooks/useNowPlayingMovies';
 import SecondaryContainer from './SecondaryContainer';
 import MainContainer from './MainContainer';
+import usePopularMovies from '../hooks/usePopularMovies';
+import useTopratedMovies from '../hooks/useTopratedMovies';
+import useUpComing from '../hooks/useUpComing';
 
 const Browse = () => {
-  useNowPlayingMovies() // custom hook 
+  useNowPlayingMovies() 
+  usePopularMovies()
+  useTopratedMovies()
+  useUpComing()
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   return (

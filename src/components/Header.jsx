@@ -43,9 +43,9 @@ const Header = () => {
   }, []);
 
   return (
-    <div className="absolute bg-gradient-to-b from-black px-2 lg:px-10 lg:pr-24 py-4 z-10  w-screen flex items-center justify-between">
+    <div className="absolute bg-gradient-to-b from-black px-6 lg:px-10 lg:pr-24 py-4 z-10  w-screen flex items-center justify-between">
       <img
-        className="w-32 lg:w-40"
+        className="w-28 lg:w-40"
         src="https://i.ibb.co/fYn5BbH/png-transparent-netflix-streaming-media-television-show-logo-netflix-television-text-trademark-thumb.png "
         alt="logo img"
       />
@@ -53,7 +53,7 @@ const Header = () => {
         {user && (
           <button
             onClick={handleSignOut}
-            className="px-2 py-1 bg-red-600 text-white font-semibold rounded-lg"
+            className="lg:px-2 lg:py-1 text-sm p-1 bg-red-600 text-white font-semibold rounded-lg"
           >
             Sign out
           </button>
