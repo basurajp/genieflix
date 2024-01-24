@@ -14,8 +14,6 @@ import { useNavigate } from "react-router-dom";
 const Login = () => {
   const [issSingnin, setissSingnin] = useState(true);
   const [errorMessage, seterrorMessage] = useState(null);
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const name = useRef(null);
   const email = useRef(null);
@@ -68,19 +66,7 @@ const Login = () => {
     }
   };
 
-  useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const { uid, email, displayName } = user;
-        navigate("/browse");
 
-        dispatch(addUser({ uid: uid, email: email, displayName: displayName }));
-      } else {
-        dispatch(removeUser());
-        navigate("/");
-      }
-    });
-  }, []);
 
   const handleSignupSignInToggle = () => {
     setissSingnin(!issSingnin);
