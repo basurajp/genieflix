@@ -1,10 +1,15 @@
 import React from "react";
 import Body from "./components/Body";
+import { Provider } from "react-redux";
+import store from "./rtk/store";
 
 const App = () => {
   return (
-    <div className="w-screen min-h-screen ">
-      <Body />
+    <div className=" w-screen min-h-screen ">
+      <Provider store={store}>
+        <Body />
+      </Provider>
+      ,
     </div>
   );
 };

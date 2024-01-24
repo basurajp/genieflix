@@ -1,0 +1,9 @@
+{
+  "projects": {
+    "default": "genieflix-15d8d",
+    "geineflixx": "gptflix-8a107",
+    "gineflix": "genieflix-15d8d"
+  },
+  "targets": {},
+  "etags": {}
+}
