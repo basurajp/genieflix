@@ -6,7 +6,7 @@ import GptMovieSuggestion from "./GptMovieSuggestion";
 const GptSearch = () => {
   return (
     <div className="">
-      <div className="absolute -z-10 ">
+      <div className="fixed -z-10 ">
         <img className="h-[100vh] lg:h-auto object-cover" src={BG_URL} alt="" />
       </div>
       <GptSearchBar />
