@@ -3,7 +3,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "../utils/firebase";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { addUser, removeUser } from "../rtk/userSlice"; // Assuming you have a removeUser action in your userSlice
+import { addUser, removeUser } from "../rtk/userSlice"; 
 import { API_OPTION, SUPPORTED_LANGUAGES } from "../utils/constant";
 import { addNowPlayingMovies } from "../rtk/movieSlice";
 import { toggleGptSearchView } from "../rtk/gptSlice";
@@ -61,6 +61,7 @@ const Header = () => {
       <div className="">
         {user && (
           <>
+         
             <select onChange={handleLanguageChange} className="bg-gray-600 py-1 text-white mr-1 rounded-lg">
               {SUPPORTED_LANGUAGES.map((langData, index) => (
                 <option key={langData.identifier} value={langData.identifier}>{langData.name}</option>

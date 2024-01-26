@@ -1,15 +1,11 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useRef, useState } from "react";
 import Header from "./Header";
 import { checkValidate } from "../utils/validate";
 import {
   createUserWithEmailAndPassword,
-  onAuthStateChanged,
   signInWithEmailAndPassword,
 } from "firebase/auth";
 import { auth } from "../utils/firebase";
-import { useDispatch } from "react-redux";
-import { addUser, removeUser } from "../rtk/userSlice";
-import { useNavigate } from "react-router-dom";
 
 const Login = () => {
   const [issSingnin, setissSingnin] = useState(true);
@@ -65,8 +61,6 @@ const Login = () => {
         });
     }
   };
-
-
 
   const handleSignupSignInToggle = () => {
     setissSingnin(!issSingnin);
