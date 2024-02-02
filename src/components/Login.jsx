@@ -100,6 +100,7 @@ const Login = () => {
         <input
           ref={password}
           type="password"
+          va
           className="my-2 py-2 w-full bg-gray-700  px-3 rounded-md"
           placeholder="password"
         />
@@ -107,6 +108,7 @@ const Login = () => {
 
         <button
           type="submit"
+          
           onClick={handleButtonClickform}
           className="px-4 py-3 my-2 w-full bg-red-700 rounded-lg "
         >
