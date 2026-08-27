@@ -63,8 +63,15 @@ the one shared module (config, subprocess, ffprobe/volumedetect helpers) — its
 by `pipeline/`, `integrations/`, and `cartoon/`.
 
 **Config**: `pipeline/config.json` if present, else `pipeline/config.example.json` (setup copies
-it). Voice backend `auto` detects per platform: Chatterbox/MLX (macOS) → XTTS → edge-tts →
-Kokoro (`npx hyperframes tts`, always available). All JSON/text reads use `utf-8-sig` — Windows
+it). Voice backend `auto` probes in order: Chatterbox/MLX (macOS) → Chatterbox/PyTorch
+(`chatterbox-tts` in the venv, any OS, cuda/mps/cpu) → XTTS → edge-tts → Kokoro (`npx
+hyperframes tts`, always available). Chatterbox specifics: non-English routes to the
+multilingual model (23 languages incl. Hindi, language id follows the project `lang`); the
+reference clip's first ~10 s define the voice *and its accent*; emotion knobs
+`chatterbox_exaggeration` (0.5 neutral, ~0.7 dramatic) and `chatterbox_cfg_weight` (~0.3
+expressive, 0.0 preserves the reference accent). The Mac default model `chatterbox-turbo-fp16`
+is **English-only and ignores those knobs** — Hindi/expressive on Mac needs
+`mlx-community/chatterbox-multilingual-v3`. All JSON/text reads use `utf-8-sig` — Windows
 PowerShell writes BOMs.
 
 **Two caption modes** (`project.json` `"lang"`): `"en"` runs Whisper per line for word-level
@@ -113,6 +120,8 @@ re-encodes clips with dense keyframes and strips audio first).
 - Back up before overwrite: voice/audio regeneration moves old takes to `raw.bak/`/`audio.bak/`.
 - Cartoon episodes hardcode their staging to their line count (compose.py asserts 14 for
   last-laddu); a new script means a copied composer with re-mapped `CAM` and gags, not a bigger
-  config.
+  config. Cast files are dual-engine per speaker (`"edge"` + `"kokoro"` voice ids —
+  `cast_voices.py` tries edge, falls back to kokoro); `pitch` is a post-processing multiplier,
+  overridable per engine via `edge_pitch`/`kokoro_pitch`.
 - `vercel.json` disables deployments on purpose (repo is not a web app) — leave it.
 - No AI/model attribution in committed files, commit messages, or artifacts.
