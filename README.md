@@ -139,10 +139,13 @@ expanded; relative paths resolve from the repo root.
 
 | Key | Default | What it does |
 | --- | --- | --- |
-| `voice_backend` | `auto` | `auto` \| `chatterbox` \| `xtts` \| `edge` \| `kokoro`. Auto probes in that order: MLX venv on a Mac → Coqui TTS in the venv → edge-tts → Kokoro (`npx hyperframes tts`, works everywhere). |
-| `voice_reference` | `voice-samples/voice-sample.wav` | The reference WAV the clone copies. |
+| `voice_backend` | `auto` | `auto` \| `chatterbox` \| `xtts` \| `edge` \| `kokoro`. Auto probes in that order: MLX venv on a Mac → `chatterbox-tts` (PyTorch) in the venv → Coqui TTS in the venv → edge-tts → Kokoro (`npx hyperframes tts`, works everywhere). |
+| `voice_reference` | `voice-samples/voice-sample.wav` | The reference WAV the clone copies. Chatterbox uses the first ~10 s — the voice **and its accent** come from here. |
 | `voice_venv` | `~/.voice-clone-venv` | Python venv holding the voice backend. The Windows setup script creates `.voice-clone-venv` inside the repo and points this at it. |
-| `chatterbox_model` | `mlx-community/chatterbox-turbo-fp16` | MLX Chatterbox build (Apple Silicon Mac only). |
+| `chatterbox_model` | `mlx-community/chatterbox-turbo-fp16` | MLX Chatterbox build (Mac path). Turbo is English-only and ignores the emotion knobs — for Hindi or expressive delivery on a Mac use `mlx-community/chatterbox-multilingual-v3`. The PyTorch path (`pip install chatterbox-tts`, any OS, cuda/mps/cpu) picks the multilingual model automatically for non-English. |
+| `chatterbox_language` | `auto` | Chatterbox language id (`hi`, `en`, … 23 total); `auto` follows the project's `lang`. |
+| `chatterbox_exaggeration` | `0.5` | Emotion intensity. `0.5` neutral, `~0.7+` dramatic (speech speeds up — compensate with `cfg_weight` `~0.3`). |
+| `chatterbox_cfg_weight` | `0.5` | Pacing/adherence. `~0.3` slower and more expressive; `0.0` keeps the reference clip's accent fully (e.g. an Indian-English reference stays Indian-English in any language). |
 | `xtts_model` | `tts_models/multilingual/multi-dataset/xtts_v2` | Coqui XTTS v2 — the Windows/Linux clone path. |
 | `edge_voice` | `en-US-GuyNeural` | edge-tts voice (free, not your clone, needs network). |
 | `kokoro_voice` | `am_michael` | Kokoro voice for the built-in fallback TTS. |

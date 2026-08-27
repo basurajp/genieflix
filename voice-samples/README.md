@@ -13,6 +13,10 @@ included. Record it once, well, and you never record narration again.
 - Talk, don't read stiffly. The clone inherits your energy along with your voice.
 - Trim the file to the clearest continuous stretch — cut the throat-clearing,
   the pauses, the part where the chair squeaked.
+- **The first ~10 seconds do most of the work** for the Chatterbox backend (it
+  crops the rest), so lead with your best, most expressive stretch. Your accent
+  is part of the voice: an Indian-English or Hindi reference gives an Indian
+  voice in every language (`chatterbox_cfg_weight: 0.0` preserves it fully).
 
 ## File requirements
 

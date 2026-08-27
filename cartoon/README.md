@@ -50,10 +50,14 @@ proportional timing, so dialogue spelling is always exactly as authored.
 
 Three tiers, best first:
 
-1. **Your own voice clone** (Chapter 4 of the playbook): record a reference per
-   character (you, doing the voices — or one person pitch-shifted per role via
-   `"pitch"`), generate with the Chatterbox/XTTS path, drop the WAVs into
-   `raw/` yourself, and skip `cast_voices.py`. Human, because it is a human.
+1. **Your own voice clone** (Chapter 4 of the playbook): record a ~10 s
+   reference per character (you, doing the voices — or one person pitch-shifted
+   per role via `"pitch"`), generate with the Chatterbox/XTTS path, drop the
+   WAVs into `raw/` yourself, and skip `cast_voices.py`. Human, because it is a
+   human. Chatterbox adds emotion knobs (`chatterbox_exaggeration` ~0.7 for
+   drama, `chatterbox_cfg_weight` ~0.3 for expressive pacing, 0.0 to keep the
+   reference's accent) and speaks Hindi + 22 other languages from the same
+   reference — see the config reference in the root README.
 2. **edge-tts** (default): Microsoft neural voices — very close to human, free,
    needs internet. The shipped casts use real character voices, including an
    actual child voice for Arjun (`en-US-AnaNeural`). `pip install edge-tts`

@@ -4,8 +4,17 @@
 Usage: pipeline/voice.py --project <dir> [--force] [--line N]
 
 Backends (config "voice_backend"; "auto" picks the first available in this order):
-chatterbox (macOS voice clone via mlx_audio) -> xtts (Coqui voice clone) ->
+chatterbox (voice clone: mlx_audio on macOS, or the chatterbox-tts PyTorch
+package anywhere with cuda/mps/cpu) -> xtts (Coqui voice clone) ->
 edge (edge-tts neural voice) -> kokoro (npx hyperframes tts; runs everywhere).
+
+Chatterbox notes (verified against resemble-ai/chatterbox and Blaizzy/mlx-audio):
+the reference clip's first ~10 s carry the voice AND its accent; Hindi and 22
+other languages need a MULTILINGUAL checkpoint (torch: automatic; mlx: set
+"chatterbox_model" to mlx-community/chatterbox-multilingual-v3 — the default
+chatterbox-turbo is English-only and ignores emotion controls). Emotion:
+"chatterbox_exaggeration" 0.5 neutral, ~0.7+ dramatic; "chatterbox_cfg_weight"
+0.5 default, ~0.3 slower/more expressive, 0.0 to keep the reference's accent.
 Existing lines are skipped unless --force or --line is given; before any
 overwrite the old take is copied to raw.bak/ (and audio.bak/) — never destroyed.
 """
@@ -59,6 +68,8 @@ def detect_backend(cfg):
     python = common.venv_python(cfg)
     if sys.platform == "darwin" and venv_imports(python, "mlx_audio"):
         return "chatterbox"
+    if venv_imports(python, "chatterbox"):
+        return "chatterbox"
     if venv_imports(python, "TTS"):
         return "xtts"
     if edge_tts_command(cfg):
@@ -87,6 +98,20 @@ def xtts_language(lang):
     return lang[:2]
 
 
+CHATTERBOX_LANGS = {
+    "ar", "da", "de", "el", "en", "es", "fi", "fr", "he", "hi", "it", "ja",
+    "ko", "ms", "nl", "no", "pl", "pt", "ru", "sv", "sw", "tr", "zh",
+}
+
+
+def chatterbox_language(cfg, project):
+    """Resolve the Chatterbox language id ("auto" follows the project's lang)."""
+    lang = (cfg.get("chatterbox_language") or "auto").strip().lower()
+    if lang == "auto":
+        lang = xtts_language(project.get("lang", "en"))
+    return lang if lang in CHATTERBOX_LANGS else "en"
+
+
 def collect_output(raw_dir, stem):
     """Normalize a backend's output to raw/<stem>.wav.
 
@@ -113,26 +138,73 @@ def collect_output(raw_dir, stem):
         part.unlink()
 
 
+CHATTERBOX_TORCH_SNIPPET = """\
+import sys
+text, ref, lang, exagg, cfgw, out = sys.argv[1:7]
+import torch
+import torchaudio
+if torch.cuda.is_available():
+    device = "cuda"
+elif getattr(torch.backends, "mps", None) is not None and torch.backends.mps.is_available():
+    device = "mps"
+else:
+    device = "cpu"
+kwargs = dict(audio_prompt_path=ref, exaggeration=float(exagg), cfg_weight=float(cfgw))
+if lang != "en":
+    from chatterbox.mtl_tts import ChatterboxMultilingualTTS
+    model = ChatterboxMultilingualTTS.from_pretrained(device=device)
+    wav = model.generate(text, language_id=lang, **kwargs)
+else:
+    from chatterbox.tts import ChatterboxTTS
+    model = ChatterboxTTS.from_pretrained(device=device)
+    wav = model.generate(text, **kwargs)
+torchaudio.save(out, wav, model.sr)
+"""
+
+
 def generate_chatterbox(cfg, project, text, stem, raw_dir):
     ref = require_reference(cfg)
+    python = common.venv_python(cfg)
+    lang = chatterbox_language(cfg, project)
+    exagg = str(cfg.get("chatterbox_exaggeration", 0.5))
+    cfgw = str(cfg.get("chatterbox_cfg_weight", 0.5))
+    if sys.platform == "darwin" and venv_imports(python, "mlx_audio"):
+        common.run(
+            [
+                python,
+                "-m",
+                "mlx_audio.tts.generate",
+                "--model",
+                cfg["chatterbox_model"],
+                "--text",
+                text,
+                "--ref_audio",
+                str(ref),
+                "--lang_code",
+                lang,
+                "--exaggeration",
+                exagg,
+                "--output_path",
+                str(raw_dir),
+                "--file_prefix",
+                stem,
+            ]
+        )
+        collect_output(raw_dir, stem)
+        return
     common.run(
         [
-            common.venv_python(cfg),
-            "-m",
-            "mlx_audio.tts.generate",
-            "--model",
-            cfg["chatterbox_model"],
-            "--text",
+            python,
+            "-c",
+            CHATTERBOX_TORCH_SNIPPET,
             text,
-            "--ref_audio",
             str(ref),
-            "--output_path",
-            str(raw_dir),
-            "--file_prefix",
-            stem,
+            lang,
+            exagg,
+            cfgw,
+            str(raw_dir / f"{stem}.wav"),
         ]
     )
-    collect_output(raw_dir, stem)
 
 
 XTTS_SNIPPET = """\
