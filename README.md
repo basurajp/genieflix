@@ -128,6 +128,8 @@ factory/                      folders-as-state-machine renderer + dashboard
 scheduler/                    matrix -> manifest -> scheduled posts (see scheduler/README.md)
 integrations/ltx2/            photoreal talking avatar via the open LTX-2 model
                               (NVIDIA GPU required; see integrations/ltx2/README.md)
+cartoon/                      multi-character cartoon episodes: voice casting,
+                              camera cuts, lip sync, gags (see cartoon/README.md)
 ```
 
 ## Config reference

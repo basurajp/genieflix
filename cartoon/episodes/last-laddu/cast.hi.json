@@ -1,0 +1,10 @@
+{
+  "speakers": ["nar", "kid", "gma", "nar", "kid", "nar", "nar", "kid", "nar", "gma", "nar", "gpa", "nar", "nar"],
+  "voices": {
+    "nar": {"voice": "hm_omega"},
+    "kid": {"voice": "hf_alpha", "pitch": 1.13},
+    "gma": {"voice": "hf_beta"},
+    "gpa": {"voice": "hm_psi"}
+  },
+  "tints": {"nar": "#ffffff", "kid": "#ffe08a", "gma": "#ffb3c8", "gpa": "#b8f0c0"}
+}

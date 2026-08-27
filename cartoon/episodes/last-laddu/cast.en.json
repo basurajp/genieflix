@@ -1,0 +1,10 @@
+{
+  "speakers": ["nar", "kid", "gma", "nar", "kid", "nar", "nar", "kid", "nar", "gma", "nar", "gpa", "nar", "nar"],
+  "voices": {
+    "nar": {"voice": "am_michael"},
+    "kid": {"voice": "af_sky", "pitch": 1.13},
+    "gma": {"voice": "bf_emma"},
+    "gpa": {"voice": "bm_george"}
+  },
+  "tints": {"nar": "#ffffff", "kid": "#ffe08a", "gma": "#ffb3c8", "gpa": "#b8f0c0"}
+}
