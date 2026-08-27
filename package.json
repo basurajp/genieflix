@@ -1,0 +1,14 @@
+{
+  "name": "views-on-autopilot",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "factory": "node factory/runner.mjs",
+    "new": "node factory/new.mjs",
+    "enqueue": "node factory/enqueue.mjs",
+    "doctor": "npx hyperframes doctor"
+  }
+}

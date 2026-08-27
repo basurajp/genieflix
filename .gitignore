@@ -1,0 +1,46 @@
+# --- toolchain / OS noise ---
+node_modules/
+__pycache__/
+*.pyc
+.DS_Store
+
+# Windows setup creates the voice venv inside the repo
+.voice-clone-venv/
+
+# --- local config & scheduler state (machine-specific / secret-adjacent) ---
+pipeline/config.json
+scheduler/config.json
+scheduler/ledger.jsonl
+scheduler/manifest.csv
+
+# --- voice reference: never commit your voice ---
+voice-samples/*
+!voice-samples/README.md
+
+# --- generated media, everywhere (the plan is committed; outputs are disposable) ---
+raw/
+raw.bak/
+audio/
+audio.bak/
+renders/
+frames/
+snapshots/
+final/
+*.mp4
+*.wav
+*.mp3
+
+# --- factory state machine: folder contents are jobs, not source ---
+factory/building/*
+factory/queue/*
+factory/work/*
+factory/done/*
+factory/failed/*
+factory/output/*
+factory/ready-to-post/*
+
+# --- keeps (order matters: negations after the broad ignores) ---
+# gsap.min.js is vendored on purpose — the pipeline must render offline
+!template/assets/gsap.min.js
+!template/assets/**/README.md
+!**/.gitkeep
