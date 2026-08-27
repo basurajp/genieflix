@@ -66,4 +66,5 @@ fs.mkdirSync(path.dirname(dst), { recursive: true });
 fs.renameSync(src, dst);
 
 console.log(`queued factory/queue/${slug} (${lines.length} line${lines.length === 1 ? '' : 's'})`);
-console.log('the runner picks it up within 3 s — watch it at http://localhost:4300/dashboard.html');
+const port = process.env.PORT || 4300;
+console.log(`the runner picks it up within 3 s — watch it at http://localhost:${port}/dashboard.html`);

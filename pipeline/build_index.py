@@ -163,7 +163,12 @@ def build_audio(project_dir, project, cfg, meta_lines, scenes, total):
     used_scenes = set()
     for entry in project.get("sfx") or []:
         rel = (entry.get("file") or "").strip()
-        at = float(entry.get("at", 0.0))
+        try:
+            at = float(entry.get("at", 0.0))
+        except (TypeError, ValueError):
+            raise SystemExit(
+                f'build_index: sfx entry has a non-numeric "at" (seconds expected): {entry}'
+            )
         sfx_path = project_dir / rel
         if not rel or not sfx_path.is_file():
             warn(f"sfx file not found, skipping: {rel or entry}")

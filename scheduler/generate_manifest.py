@@ -205,7 +205,9 @@ def main():
     validate_accounts(cfg["accounts"])
 
     rows = read_matrix(args.matrix)
-    videos_dir = Path(args.videos_dir)
+    # Absolute paths keep the manifest usable (and the push ledger stable)
+    # no matter which directory push_schedule.py later runs from.
+    videos_dir = Path(args.videos_dir).expanduser().resolve()
     missing = [str(videos_dir / (r["slug"] + ".mp4"))
                for r in rows if not (videos_dir / (r["slug"] + ".mp4")).exists()]
     if missing:

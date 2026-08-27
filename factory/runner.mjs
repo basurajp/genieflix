@@ -397,7 +397,7 @@ function currentState() {
     if (s.running === 'voicing') voicing += 1;
     else if (s.running === 'rendering') rendering += 1;
   }
-  return { paused, active: { voicing, rendering } };
+  return { paused, active: { voicing, rendering }, renderConcurrency: RENDER_CONCURRENCY };
 }
 
 function apiRetry(res, slug) {

@@ -24,7 +24,7 @@ def load_config() -> dict:
     for name in ("config.json", "config.example.json"):
         path = REPO_ROOT / "pipeline" / name
         if path.exists():
-            with open(path, encoding="utf-8") as fh:
+            with open(path, encoding="utf-8-sig") as fh:
                 cfg = json.load(fh)
             cfg["_repo_root"] = str(REPO_ROOT)
             return cfg
@@ -36,7 +36,7 @@ def load_project(project_dir) -> dict:
     path = pathlib.Path(project_dir) / "project.json"
     if not path.exists():
         raise SystemExit(f"missing project.json in {project_dir}")
-    with open(path, encoding="utf-8") as fh:
+    with open(path, encoding="utf-8-sig") as fh:
         return json.load(fh)
 
 
@@ -46,7 +46,7 @@ def read_lines(project_dir) -> list:
     if not path.exists():
         raise SystemExit(f"missing lines.txt in {project_dir}")
     lines = []
-    for raw in path.read_text(encoding="utf-8").splitlines():
+    for raw in path.read_text(encoding="utf-8-sig").splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
             continue
@@ -124,7 +124,7 @@ def load_json(path, default=None):
     path = pathlib.Path(path)
     if not path.exists():
         return default
-    with open(path, encoding="utf-8") as fh:
+    with open(path, encoding="utf-8-sig") as fh:
         return json.load(fh)
 
 

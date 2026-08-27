@@ -111,8 +111,10 @@ if (Test-Path $cfg) {
     $example = Join-Path $RepoRoot "pipeline\config.example.json"
     # On Windows the venv lives inside the repo, so point voice_venv at it
     # (relative paths resolve from the repo root).
-    (Get-Content $example -Raw).Replace('~/.voice-clone-venv', '.voice-clone-venv') |
-        Set-Content -NoNewline -Encoding utf8 $cfg
+    # WriteAllText emits BOM-less UTF-8; Set-Content -Encoding utf8 under
+    # Windows PowerShell 5.1 writes a BOM that breaks strict JSON parsers.
+    $content = (Get-Content $example -Raw).Replace('~/.voice-clone-venv', '.voice-clone-venv')
+    [System.IO.File]::WriteAllText($cfg, $content)
     Ok "created pipeline/config.json (voice_venv -> .voice-clone-venv in this repo)"
 }
 

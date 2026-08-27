@@ -10,9 +10,9 @@ skips ASR entirely — Whisper's English model mangles the words — and writes 
 empty line list; captions.py then times captions proportionally from the written
 text, so spelling stays exactly as authored.
 
-Corrections: ASR mis-hears names ("Anthropic" comes back as "entropic"), so
-pipeline/corrections.json ships a comment-free dictionary shaped as
-{"replacements": {"cloud": "Claude", "entropic": "Anthropic", "mcp": "MCP"}}.
+Corrections: ASR mis-hears brand and product names, so pipeline/corrections.json
+ships a comment-free dictionary shaped as {"replacements": {"misheard": "Correct"}}
+— extend it with the names you use.
 Each transcribed word is matched case-insensitively (surrounding punctuation
 ignored) and its text replaced while the start/end timestamps stay intact.
 The project's cta_keyword is uppercased the same way.

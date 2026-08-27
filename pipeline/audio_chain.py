@@ -78,6 +78,15 @@ def main():
         for entry in meta.get("lines", [])
         if isinstance(entry, dict)
     }
+    if args.line is not None:
+        missing = [str(i) for i in range(1, len(lines) + 1)
+                   if i != args.line and i not in existing]
+        if missing:
+            raise SystemExit(
+                "audio_meta.json has no entry for line(s) "
+                + ", ".join(missing)
+                + " — run audio_chain.py without --line first so the timeline covers every line"
+            )
 
     entries = []
     for index, text in enumerate(lines, 1):

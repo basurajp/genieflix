@@ -260,7 +260,7 @@ const COLUMNS = [
   { key: "building",  label: "Building",  hint: "being created" },
   { key: "queued",    label: "Queued",    hint: "waiting for runner" },
   { key: "voicing",   label: "Voicing",   hint: "one at a time" },
-  { key: "rendering", label: "Rendering", hint: "three at once" },
+  { key: "rendering", label: "Rendering", hint: "" },
   { key: "done",      label: "Done",      hint: "in output/" },
   { key: "failed",    label: "Failed",    hint: "retry or inspect" },
 ];
@@ -292,7 +292,7 @@ for (const c of COLUMNS) {
   body.className = "col-body";
   col.append(head, body);
   board.append(col);
-  cols[c.key] = { body, count };
+  cols[c.key] = { body, count, hint };
 }
 
 const cards = new Map(); // slug -> { el, sig, job, fetchedAt }
@@ -398,6 +398,9 @@ function buildCard(job) {
 
 function render(jobs, state) {
   paused = state.paused;
+  if (state.renderConcurrency) {
+    cols.rendering.hint.textContent = state.renderConcurrency + " at once";
+  }
   const seen = new Set();
   const counts = {};
   for (const c of COLUMNS) counts[c.key] = 0;
