@@ -53,8 +53,11 @@ def gen_edge(text, voice, out_path):
     mp3.unlink()
 
 
-def gen_kokoro(text, voice, out_path):
-    common.run(["npx", "hyperframes", "tts", text, "-v", voice, "-o", str(out_path)])
+def gen_kokoro(text, voice, out_path, speed=1.0):
+    cmd = ["npx", "hyperframes", "tts", text, "-v", voice, "-o", str(out_path)]
+    if abs(speed - 1.0) > 1e-3:
+        cmd += ["-s", f"{speed:g}"]
+    common.run(cmd)
 
 
 def apply_pitch(path, factor):
@@ -108,7 +111,7 @@ def main():
         if used is None:
             if not v.get("kokoro"):
                 raise SystemExit(f'no kokoro fallback voice for "{spk}" and edge is unavailable')
-            gen_kokoro(text, v["kokoro"], out)
+            gen_kokoro(text, v["kokoro"], out, float(v.get("kokoro_speed", 1.0)))
             used = f'kokoro:{v["kokoro"]}'
         engine = used.split(":", 1)[0]
         pitch = float(v.get(f"{engine}_pitch", v.get("pitch", 1.0)))

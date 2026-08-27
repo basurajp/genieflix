@@ -5,9 +5,14 @@ several characters with their own voices, a drawn set, a camera that cuts every
 line, per-speaker lip sync, and scripted physical gags — rendered by the same
 HyperFrames pipeline, still fully local.
 
-The reference episode is **The Last Laddu** (`episodes/last-laddu/`) — a kid,
-his grandma, a scheming cat, and a perfectly timed grandfather — shipped with
-an English and a Hindi cast for the same staging.
+Two episodes ship as references:
+
+- **The Last Laddu** (`episodes/last-laddu/`) — a kid, his grandma, a scheming
+  cat, and a perfectly timed grandfather; English, Indian-English, and Hindi casts.
+- **The Moon in the Bucket** (`episodes/moon-bucket/`) — Anu, her Dadu, and a
+  frog on a summer night; the moon falls into the water bucket, shatters at a
+  touch, and heals when the water sits still. Cast on Kokoro's best-graded
+  voices with `kokoro_speed` storytelling pacing.
 
 ## How an episode is put together
 
@@ -88,3 +93,7 @@ Copy `episodes/last-laddu/compose.py` and treat it as a storyboard in code:
 - Keep the pipeline's rules: every element is a timed clip with an id, fades
   ending on a boundary get a hard `tl.set`, and `npx hyperframes lint` must
   report zero errors before you spend a render.
+- `fromTo` renders its *from*-values at time zero unless you pass
+  `immediateRender: false` — any fromTo whose from-state must not exist before
+  its cue (a shatter, a reveal) needs that flag, or the effect leaks into the
+  opening frames.
