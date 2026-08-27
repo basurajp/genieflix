@@ -5,7 +5,7 @@ several characters with their own voices, a drawn set, a camera that cuts every
 line, per-speaker lip sync, and scripted physical gags — rendered by the same
 HyperFrames pipeline, still fully local.
 
-Three episodes ship as references:
+Four episodes ship as references:
 
 - **The Last Laddu** (`episodes/last-laddu/`) — a kid, his grandma, a scheming
   cat, and a perfectly timed grandfather; English, Indian-English, and Hindi casts.
@@ -16,6 +16,18 @@ Three episodes ship as references:
   frog on a summer night; the moon falls into the water bucket, shatters at a
   touch, and heals when the water sits still. English and Hindi casts on
   Kokoro's best-graded voices with `kokoro_speed` storytelling pacing.
+- **शांतिदूत कृष्ण** (`episodes/krishna-shanti/`) — the big one: a 28-beat,
+  ~2.5-minute Mahabharata episode (Udyoga Parva — Krishna as the Pandavas'
+  peace envoy, Duryodhan's refusal and the chaining attempt, the विश्वरूप).
+  Four sets cut by narration boundaries, one persistent Krishna rig teleported
+  between them (character consistency for free), four Hindi voices derived
+  from two Kokoro bases via per-speaker `kokoro_speed`/`kokoro_pitch`, a
+  synthesized tanpura drone on the music track, and a layered effect stack for
+  the विश्वरूप (flash, aura, ray fan, divine arms, snapping chain links —
+  every `fromTo` cued with `immediateRender: false`, every fade hard-killed).
+  Study this one for: multi-set staging, per-project `speed_up` (it finishes
+  at 1.0×), and scaling a rig via its **wrapper div** — scaling the inner SVG
+  `<g>` clips at the SVG viewport (Krishna loses his head), the div doesn't.
 
 ## How an episode is put together
 
@@ -77,6 +89,13 @@ Three tiers, best first:
 3. **Kokoro** (offline fallback): `npx hyperframes tts` — always works,
    flattest delivery. `cast_voices.py --engine auto` tries edge first and
    falls back per line automatically.
+
+Whatever the engine, the text it *speaks* is normalized first
+(`common.speakable`): Devanagari danda `।`, em-dashes and `...` become plain
+periods/commas. Phonemizers render those literally or drop the pause —
+this is the difference between "pronunciation is wrong" and clean Hindi.
+Captions always show the line exactly as authored. Keep pitch shifts inside
+~0.92–1.08: further out the formants smear and the voice stops sounding human.
 
 ## Authoring a new episode
 

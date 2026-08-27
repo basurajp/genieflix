@@ -119,6 +119,32 @@ def volumedetect(path) -> dict:
     return {"mean_db": float(mean.group(1)), "max_db": float(peak.group(1))}
 
 
+def speakable(text: str) -> str:
+    """Normalize authored text into what a TTS engine should actually say.
+
+    Captions always show the text as written; this only cleans the engine
+    input. Devanagari danda and typographic dashes/ellipses are outside most
+    phonemizers' punctuation set (Kokoro's Hindi G2P in particular renders
+    them as garbage syllables or swallows the pause) — map them to plain
+    punctuation the engine honors as pauses.
+    """
+    out = text
+    for src, dst in [
+        ("॥", "."), ("।", "."),
+        ("…", ", "), ("...", ", "),
+        ("—", ", "), ("–", ", "),
+        ("‘", ""), ("’", ""), ("“", ""), ("”", ""), ('"', ""),
+    ]:
+        out = out.replace(src, dst)
+    # collapse the runs the replacements can leave behind ("वर्षों ,  ,  से")
+    out = re.sub(r"\s*,\s*(?:,\s*)+", ", ", out)
+    out = re.sub(r"\s*\.\s*(?:\.\s*)+", ". ", out)
+    out = re.sub(r"([.!?])\s*[,.]+", r"\1", out)  # "? ,", ". ." → the stronger mark wins
+    out = re.sub(r"\s+([,.!?])", r"\1", out)
+    out = re.sub(r"\s{2,}", " ", out).strip(" ,")
+    return out
+
+
 def load_json(path, default=None):
     """Parse a JSON file, returning `default` when it does not exist."""
     path = pathlib.Path(path)

@@ -98,6 +98,7 @@ def main():
         v = cast["voices"].get(spk)
         if not v:
             raise SystemExit(f'cast.json has no voice for speaker "{spk}"')
+        text = common.speakable(text)  # captions keep the authored text; engines get clean input
         used = None
         if edge_ok and v.get("edge"):
             try:

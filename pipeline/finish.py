@@ -33,7 +33,9 @@ def main():
     project = common.load_project(project_dir)
     slug = project.get("slug") or project_dir.name
 
-    speed = float(cfg.get("speed_up", 1.1))
+    # project.json may pin its own pace (a 3-minute story finishing at 1.0x)
+    # without touching the global config.
+    speed = float(project.get("speed_up") or cfg.get("speed_up", 1.1))
     # Single-stage atempo only accepts 0.5..2.0 — and past ~1.2 the information
     # gets hard to follow anyway; 10% is the ceiling that still tests well.
     if not 0.5 <= speed <= 2.0:

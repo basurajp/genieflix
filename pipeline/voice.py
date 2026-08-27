@@ -348,6 +348,7 @@ def main():
     for index, text in enumerate(lines, 1):
         if args.line is not None and index != args.line:
             continue
+        text = common.speakable(text)  # captions keep the authored text; engines get clean input
         stem = f"line{index:02d}"
         target = raw_dir / f"{stem}.wav"
         if target.exists() and not args.force and args.line is None:

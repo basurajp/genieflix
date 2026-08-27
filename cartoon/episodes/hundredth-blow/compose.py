@@ -47,9 +47,10 @@ def win(i):
     ln = lines[i - 1]
     return ln["start"], ln["start"] + ln["duration"]
 
-STAMPS = ["THE GIVEN-UP ROCK", "KABIR", "EVERY STONE BREAKS", "BLOW × 10", "GIVE IT UP?",
-          "BLOW × 50", "ONE MORE", "BLOW × 99", "THE 100TH", "IT SPLIT",
-          "A MIRACLE?", "EVERY BLOW BEFORE", "WHEN NOTHING MOVES", "REFUSE TO STOP"]
+STAMPS = cast.get("stamps") or [
+    "THE GIVEN-UP ROCK", "KABIR", "EVERY STONE BREAKS", "BLOW × 10", "GIVE IT UP?",
+    "BLOW × 50", "ONE MORE", "BLOW × 99", "THE 100TH", "IT SPLIT",
+    "A MIRACLE?", "EVERY BLOW BEFORE", "WHEN NOTHING MOVES", "REFUSE TO STOP"]
 
 CAM = {
     1: (1.15, 660, 1250), 2: (1.60, 310, 1170), 3: (1.80, 310, 1150), 4: (1.35, 480, 1260),
@@ -207,6 +208,15 @@ for ln in lines:
 pas_start = win(5)[0]
 TITLE = pj.get("title", "The Hundredth Blow")
 KICKER = pj.get("topic", "a story about not stopping").upper()
+deva = project / "assets" / "fonts" / "NotoSansDevanagari-Regular.ttf"
+FONT_FACE = """
+    @font-face { font-family: 'Noto Sans Devanagari'; font-weight: 400;
+      src: url('assets/fonts/NotoSansDevanagari-Regular.ttf'); }
+    @font-face { font-family: 'Noto Sans Devanagari'; font-weight: 700;
+      src: url('assets/fonts/NotoSansDevanagari-Bold.ttf'); }
+""" if deva.exists() else """
+    @font-face { font-family: 'Noto Sans Devanagari'; src: local('Noto Sans Devanagari'); }
+"""
 
 page = f"""<!DOCTYPE html>
 <html>
@@ -214,8 +224,8 @@ page = f"""<!DOCTYPE html>
 <body>
 <div id="stage" data-composition-id="reel" data-start="0" data-duration="{fmt(total)}"
      data-width="1080" data-height="1920" data-fps="30">
-  <style>
-    #stage {{ background: #2a1420; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }}
+  <style>{FONT_FACE}
+    #stage {{ background: #2a1420; font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", Helvetica, Arial, sans-serif; overflow: hidden; }}
     #world, #shaker {{ position: absolute; inset: 0; }}
     #world {{ transform-origin: 0px 0px; }}
     .abs {{ position: absolute; }}

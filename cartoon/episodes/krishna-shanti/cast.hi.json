@@ -1,0 +1,95 @@
+{
+  "speakers": [
+    "nar",
+    "nar",
+    "kri",
+    "nar",
+    "nar",
+    "nar",
+    "kri",
+    "nar",
+    "nar",
+    "kri",
+    "nar",
+    "dur",
+    "dur",
+    "dhr",
+    "nar",
+    "dur",
+    "nar",
+    "nar",
+    "kri",
+    "kri",
+    "nar",
+    "nar",
+    "nar",
+    "nar",
+    "dhr",
+    "nar",
+    "nar",
+    "nar"
+  ],
+  "voices": {
+    "nar": {
+      "edge": "hi-IN-MadhurNeural",
+      "kokoro": "hm_omega",
+      "kokoro_speed": 0.9
+    },
+    "kri": {
+      "edge": "hi-IN-MadhurNeural",
+      "edge_pitch": 1.06,
+      "kokoro": "hm_psi",
+      "kokoro_speed": 0.95,
+      "kokoro_pitch": 1.03
+    },
+    "dur": {
+      "edge": "hi-IN-MadhurNeural",
+      "edge_pitch": 0.88,
+      "kokoro": "hm_omega",
+      "kokoro_pitch": 0.92
+    },
+    "dhr": {
+      "edge": "hi-IN-MadhurNeural",
+      "edge_pitch": 0.82,
+      "kokoro": "hm_psi",
+      "kokoro_speed": 0.9,
+      "kokoro_pitch": 0.93
+    }
+  },
+  "tints": {
+    "nar": "#ffffff",
+    "kri": "#9ecbff",
+    "dur": "#ffb08a",
+    "dhr": "#d9d2c0"
+  },
+  "stamps": [
+    "अंतिम आशा",
+    "शांतिदूत",
+    "अंतिम प्रयास",
+    "हस्तिनापुर",
+    "छप्पन भोग ठुकराए",
+    "विदुर का साग",
+    "भाव बड़ा है",
+    "कौरव सभा",
+    "शांति प्रस्ताव",
+    "पाँच गाँव",
+    "सन्नाटा",
+    "पाँच गाँव?",
+    "सुई की नोक भी नहीं",
+    "पिता की विनती",
+    "षड्यंत्र",
+    "बंदी बना लो!",
+    "लोहे की ज़ंजीरें",
+    "घोर अधर्म",
+    "मेरे लिए?",
+    "देख दुर्योधन",
+    "विराट प्रकाश",
+    "विश्वरूप",
+    "ज़ंजीरें टूटीं",
+    "दिव्य दृष्टि",
+    "क्षमा माधव",
+    "प्रस्थान",
+    "शांति ही चाही",
+    "कोई नहीं बाँध सकता"
+  ]
+}

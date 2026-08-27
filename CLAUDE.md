@@ -103,7 +103,10 @@ re-encodes clips with dense keyframes and strips audio first).
   `transform-box: fill-box` + scale visibly **displaces the element mid-animation** in the
   headless renderer even though the browser preview looks fine. Mouth flaps are `attr: {ry}`
   tweens for exactly this reason.
-- A fade ending exactly at a clip boundary needs an explicit `tl.set(el, {opacity: 0}, t_end)`.
+- A fade ending exactly at a clip boundary needs an explicit `tl.set(el, {opacity: 0}, t_end)`
+  at the fade's exact end time — captions are dense clips, so looping fades hit this constantly.
+- Scaling a character rig: scale the **wrapper div**, never the inner SVG `<g>` — content
+  scaled past the SVG viewport is clipped (a scaled-up rig loses its head).
 - Don't tween a `<video>`'s size or clip-path (opacity/transform only); source footage needs
   dense keyframes (`-g 30 -keyint_min 30`) or seeks freeze; no animated GIFs.
 - The preview lies. Verify by extracting frames **from the rendered MP4** (qa.py does this) —
@@ -114,6 +117,9 @@ re-encodes clips with dense keyframes and strips audio first).
 
 ## Repo-specific conventions
 
+- TTS input goes through `common.speakable()` (danda/em-dash/ellipsis → plain punctuation)
+  in `voice.py` and `cast_voices.py`; captions keep the authored text. Never feed `।` or `—`
+  to a phonemizer. Keep cast pitch multipliers within ~0.92–1.08 or formants smear.
 - ffmpeg calls: `-y -hide_banner -loglevel error`; the voice polish chain in `audio_chain.py`
   (highpass → afftdn → acompressor → loudnorm I=-14) is verbatim from the book — don't tune it
   casually; `remix.py` exists for re-mixing without re-generating voice.

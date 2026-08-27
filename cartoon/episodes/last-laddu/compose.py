@@ -50,12 +50,12 @@ TITLE = pj.get("title", "The Last Laddu")
 KICKER = pj.get("topic", "a tiny cartoon").upper()
 deva = project / "assets" / "fonts" / "NotoSansDevanagari-Regular.ttf"
 FONT_FACE = """
-    @font-face {{ font-family: 'Noto Sans Devanagari'; font-weight: 400;
-      src: url('assets/fonts/NotoSansDevanagari-Regular.ttf'); }}
-    @font-face {{ font-family: 'Noto Sans Devanagari'; font-weight: 700;
-      src: url('assets/fonts/NotoSansDevanagari-Bold.ttf'); }}
+    @font-face { font-family: 'Noto Sans Devanagari'; font-weight: 400;
+      src: url('assets/fonts/NotoSansDevanagari-Regular.ttf'); }
+    @font-face { font-family: 'Noto Sans Devanagari'; font-weight: 700;
+      src: url('assets/fonts/NotoSansDevanagari-Bold.ttf'); }
 """ if deva.exists() else """
-    @font-face {{ font-family: 'Noto Sans Devanagari'; src: local('Noto Sans Devanagari'); }}
+    @font-face { font-family: 'Noto Sans Devanagari'; src: local('Noto Sans Devanagari'); }
 """
 MOUTH = {"kid": "#mouth-kid", "gma": "#mouth-gma", "gpa": "#mouth-gpa"}
 
