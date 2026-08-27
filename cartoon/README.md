@@ -59,6 +59,9 @@ Three tiers, best first:
    actual child voice for Arjun (`en-US-AnaNeural`). `pip install edge-tts`
    (the setup scripts' venv is fine). Note: some restricted networks block the
    speech endpoint; normal home/office networks work.
+   **Indian voices**: `cast.en-in.json` casts the episode in Indian-accented
+   English (`en-IN-PrabhatNeural` / `en-IN-NeerjaNeural`); the Hindi cast's
+   edge upgrade uses `hi-IN-MadhurNeural` / `hi-IN-SwaraNeural`.
 3. **Kokoro** (offline fallback): `npx hyperframes tts` — always works,
    flattest delivery. `cast_voices.py --engine auto` tries edge first and
    falls back per line automatically.

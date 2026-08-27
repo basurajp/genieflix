@@ -1,10 +1,10 @@
 {
   "speakers": ["nar", "kid", "gma", "nar", "kid", "nar", "nar", "kid", "nar", "gma", "nar", "gpa", "nar", "nar"],
   "voices": {
-    "nar": {"voice": "hm_omega"},
-    "kid": {"voice": "hf_alpha", "pitch": 1.13},
-    "gma": {"voice": "hf_beta"},
-    "gpa": {"voice": "hm_psi"}
+    "nar": {"edge": "hi-IN-MadhurNeural", "kokoro": "hm_omega"},
+    "kid": {"edge": "hi-IN-SwaraNeural", "kokoro": "hf_alpha", "pitch": 1.13},
+    "gma": {"edge": "hi-IN-SwaraNeural", "kokoro": "hf_beta", "pitch": 0.95},
+    "gpa": {"edge": "hi-IN-MadhurNeural", "kokoro": "hm_psi", "pitch": 0.93}
   },
   "tints": {"nar": "#ffffff", "kid": "#ffe08a", "gma": "#ffb3c8", "gpa": "#b8f0c0"}
 }

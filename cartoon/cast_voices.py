@@ -9,9 +9,13 @@ Reads <project>/cast.json:
     "speakers": ["nar", "kid", ...],          // one entry per line of lines.txt
     "voices": {
       "nar": {"edge": "en-US-GuyNeural", "kokoro": "am_michael"},
-      "kid": {"edge": "en-US-AnaNeural", "kokoro": "af_sky", "pitch": 1.13}
+      "kid": {"edge": "en-US-AnaNeural", "kokoro": "af_sky", "kokoro_pitch": 1.13}
     }
   }
+
+"pitch" is a post-processing multiplier applied to whichever engine ran;
+"edge_pitch"/"kokoro_pitch" override it per engine (e.g. a real child voice on
+edge needs no shift, while its adult kokoro fallback does).
 
 Two engines, best available wins:
   edge    Microsoft Edge neural voices via edge-tts — human-grade, needs network.
@@ -106,7 +110,8 @@ def main():
                 raise SystemExit(f'no kokoro fallback voice for "{spk}" and edge is unavailable')
             gen_kokoro(text, v["kokoro"], out)
             used = f'kokoro:{v["kokoro"]}'
-        pitch = float(v.get("pitch", 1.0))
+        engine = used.split(":", 1)[0]
+        pitch = float(v.get(f"{engine}_pitch", v.get("pitch", 1.0)))
         if abs(pitch - 1.0) > 1e-3:
             apply_pitch(out, pitch)
             used += f" pitch x{pitch}"
