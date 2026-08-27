@@ -134,8 +134,10 @@ def music_volume(music_path, target_db):
 def build_audio(project_dir, project, cfg, meta_lines, scenes, total):
     out = []
     for ln in meta_lines:
+        # The renderer discovers media elements by id; without one the audio is silent.
         out.append(
-            f'<audio class="clip" src="{html.escape(ln["file"])}" '
+            f'<audio id="voice-line-{ln["index"]:02d}" class="clip" '
+            f'src="{html.escape(ln["file"])}" '
             f'data-start="{fmt(ln["start"])}" data-duration="{fmt(ln["duration"])}" '
             f'data-track-index="{TRACK_VOICE}"></audio>'
         )
@@ -177,7 +179,7 @@ def build_audio(project_dir, project, cfg, meta_lines, scenes, total):
         used_scenes.add(scene_idx)
         duration = min(common.ffprobe_duration(sfx_path), total - at)
         out.append(
-            f'<audio class="clip" src="{html.escape(rel)}" '
+            f'<audio id="sfx-{len(used_scenes):02d}" class="clip" src="{html.escape(rel)}" '
             f'data-start="{fmt(at)}" data-duration="{fmt(duration)}" '
             f'data-track-index="{TRACK_SFX}" data-volume="{sfx_volume:g}"></audio>'
         )
