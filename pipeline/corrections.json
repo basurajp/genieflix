@@ -1,0 +1,14 @@
+{
+  "replacements": {
+    "cloud": "Claude",
+    "claud": "Claude",
+    "entropic": "Anthropic",
+    "anthropic": "Anthropic",
+    "mcp": "MCP",
+    "api": "API",
+    "hyperframes": "HyperFrames",
+    "magicslides": "MagicSlides",
+    "github": "GitHub",
+    "javascript": "JavaScript"
+  }
+}

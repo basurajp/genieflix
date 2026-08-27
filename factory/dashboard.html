@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Video Factory</title>
+<link rel="icon" href="data:,">
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #10141d;
+    --card: #151b27;
+    --card-hover: #182031;
+    --border: #222b3c;
+    --text: #e8ecf4;
+    --dim: #8b94a8;
+    --faint: #5b6478;
+    --building: #8b94a8;
+    --queued: #e3b341;
+    --voicing: #c792ea;
+    --rendering: #58a6ff;
+    --done: #3fb970;
+    --failed: #f47067;
+    --danger-bg: rgba(244, 112, 103, 0.09);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 18px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    flex: none;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--done);
+    box-shadow: 0 0 8px var(--done);
+    transition: background 0.3s, box-shadow 0.3s;
+  }
+  body.offline .dot { background: var(--failed); box-shadow: 0 0 8px var(--failed); }
+  body.paused:not(.offline) .dot { background: var(--queued); box-shadow: 0 0 8px var(--queued); }
+  h1 { font-size: 15px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; }
+  h1 .sub { color: var(--faint); font-weight: 500; text-transform: none; letter-spacing: 0; }
+  #stats { color: var(--dim); font-size: 13px; flex: 1; text-align: center; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #stats b { color: var(--text); font-weight: 600; }
+
+  .btn {
+    font: inherit;
+    color: var(--text);
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 14px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .btn:hover { background: var(--card-hover); border-color: var(--faint); }
+  .btn:disabled { opacity: 0.5; cursor: default; }
+  .btn.small { padding: 3px 10px; font-size: 12px; border-radius: 6px; }
+  .btn.retry { color: var(--rendering); border-color: rgba(88, 166, 255, 0.35); }
+  .btn.retry:hover { background: rgba(88, 166, 255, 0.12); }
+  .btn.cancel { color: var(--failed); border-color: rgba(244, 112, 103, 0.35); }
+  .btn.cancel:hover { background: var(--danger-bg); }
+  #pauseBtn.on { color: var(--queued); border-color: rgba(227, 179, 65, 0.5); }
+
+  #banner {
+    flex: none;
+    padding: 8px 18px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+    display: none;
+  }
+  #banner.offline { display: block; background: var(--danger-bg); color: var(--failed); }
+  #banner.paused { display: block; background: rgba(227, 179, 65, 0.09); color: var(--queued); }
+  #banner code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 12px; }
+
+  main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(252px, 1fr);
+    gap: 12px;
+    padding: 14px 18px 10px;
+    overflow-x: auto;
+  }
+  body.offline main { opacity: 0.45; }
+  body.offline main .btn { pointer-events: none; }
+
+  .col { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .col-head {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 4px 10px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 10px;
+  }
+  .col-head .name { font-size: 12px; font-weight: 700; letter-spacing: 0.09em; text-transform: uppercase; }
+  .col-head .count {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 1px 8px;
+    border-radius: 99px;
+    background: var(--card);
+    color: var(--dim);
+    min-width: 24px;
+    text-align: center;
+  }
+  .col-head .hint { margin-left: auto; font-size: 11px; color: var(--faint); white-space: nowrap; }
+  .col[data-col="building"]  .name { color: var(--building); }
+  .col[data-col="queued"]    .name { color: var(--queued); }
+  .col[data-col="voicing"]   .name { color: var(--voicing); }
+  .col[data-col="rendering"] .name { color: var(--rendering); }
+  .col[data-col="done"]      .name { color: var(--done); }
+  .col[data-col="failed"]    .name { color: var(--failed); }
+
+  .col-body { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding: 1px 2px 8px; }
+  .col-body:empty::before {
+    content: "empty";
+    color: var(--faint);
+    font-size: 12px;
+    text-align: center;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 16px 0;
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--faint);
+    border-radius: 10px;
+    padding: 10px 12px;
+    animation: rise 0.25s ease;
+  }
+  @keyframes rise { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+  .card.st-building  { border-left-color: var(--building); }
+  .card.st-queued    { border-left-color: var(--queued); }
+  .card.st-voicing   { border-left-color: var(--voicing); }
+  .card.st-rendering { border-left-color: var(--rendering); }
+  .card.st-done      { border-left-color: var(--done); }
+  .card.st-failed    { border-left-color: var(--failed); }
+
+  .card-top { display: flex; align-items: baseline; gap: 8px; }
+  .card h3 { font-size: 13.5px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .badge { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+  .st-building  .badge { color: var(--building); }
+  .st-queued    .badge { color: var(--queued); }
+  .st-voicing   .badge { color: var(--voicing); }
+  .st-rendering .badge { color: var(--rendering); }
+  .st-done      .badge { color: var(--done); }
+  .st-failed    .badge { color: var(--failed); }
+
+  .slug { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 11px; color: var(--faint); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .card video {
+    display: block;
+    width: 100%;
+    max-height: 400px;
+    aspect-ratio: 9 / 16;
+    object-fit: contain;
+    background: #000;
+    border-radius: 8px;
+    margin-top: 8px;
+  }
+
+  .err {
+    margin-top: 8px;
+    padding: 8px 10px;
+    background: var(--danger-bg);
+    border: 1px solid rgba(244, 112, 103, 0.25);
+    border-radius: 8px;
+    color: #f9b4ae;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.5;
+    max-height: 150px;
+    overflow: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .note { margin-top: 6px; font-size: 11px; color: var(--queued); }
+
+  .meta { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 12px; color: var(--dim); }
+  .timer {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+  .st-voicing .timer { color: var(--voicing); }
+  .st-rendering .timer { color: var(--rendering); }
+  .spin {
+    display: inline-block;
+    width: 10px; height: 10px;
+    border: 2px solid var(--border);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .actions { display: flex; gap: 8px; margin-left: auto; }
+
+  footer {
+    flex: none;
+    padding: 7px 18px;
+    border-top: 1px solid var(--border);
+    color: var(--faint);
+    font-size: 11.5px;
+    display: flex;
+    gap: 14px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  footer code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+  ::-webkit-scrollbar { width: 8px; height: 8px; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--faint); }
+  ::-webkit-scrollbar-track { background: transparent; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">
+    <span class="dot" id="dot"></span>
+    <h1>Video Factory <span class="sub">· localhost</span></h1>
+  </div>
+  <div id="stats">connecting…</div>
+  <button id="pauseBtn" class="btn" disabled>Pause</button>
+</header>
+
+<div id="banner"></div>
+
+<main id="board"></main>
+
+<footer>
+  <span>folders are the state machine: <code>building/ → queue/ → work/ → done/|failed/</code></span>
+  <span>drag a job folder back into <code>queue/</code> to re-run it by hand</span>
+</footer>
+
+<script>
+"use strict";
+
+const COLUMNS = [
+  { key: "building",  label: "Building",  hint: "being created" },
+  { key: "queued",    label: "Queued",    hint: "waiting for runner" },
+  { key: "voicing",   label: "Voicing",   hint: "one at a time" },
+  { key: "rendering", label: "Rendering", hint: "three at once" },
+  { key: "done",      label: "Done",      hint: "in output/" },
+  { key: "failed",    label: "Failed",    hint: "retry or inspect" },
+];
+const FOLDER_FALLBACK = { building: "building", queue: "queued", work: "rendering", done: "done", failed: "failed" };
+
+const board = document.getElementById("board");
+const stats = document.getElementById("stats");
+const banner = document.getElementById("banner");
+const pauseBtn = document.getElementById("pauseBtn");
+
+const cols = {};
+for (const c of COLUMNS) {
+  const col = document.createElement("section");
+  col.className = "col";
+  col.dataset.col = c.key;
+  const head = document.createElement("div");
+  head.className = "col-head";
+  const name = document.createElement("span");
+  name.className = "name";
+  name.textContent = c.label;
+  const count = document.createElement("span");
+  count.className = "count";
+  count.textContent = "0";
+  const hint = document.createElement("span");
+  hint.className = "hint";
+  hint.textContent = c.hint;
+  head.append(name, count, hint);
+  const body = document.createElement("div");
+  body.className = "col-body";
+  col.append(head, body);
+  board.append(col);
+  cols[c.key] = { body, count };
+}
+
+const cards = new Map(); // slug -> { el, sig, job, fetchedAt }
+let online = false;
+let paused = false;
+
+function columnFor(job) {
+  const s = job.status;
+  if (s === "building" || s === "queued" || s === "voicing" || s === "rendering" || s === "done") return s;
+  if (s === "failed" || s === "cancelled") return "failed";
+  return FOLDER_FALLBACK[job.folder] || "queued";
+}
+
+function fmtTimer(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  const mm = String(m).padStart(2, "0");
+  const ss = String(s).padStart(2, "0");
+  return h ? `${h}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+function fmtAgo(sec) {
+  sec = Math.max(0, Math.floor(sec));
+  if (sec < 60) return `${sec}s`;
+  if (sec < 3600) return `${Math.floor(sec / 60)}m`;
+  if (sec < 86400) return `${Math.floor(sec / 3600)}h ${Math.floor((sec % 3600) / 60)}m`;
+  return `${Math.floor(sec / 86400)}d`;
+}
+
+function el(tag, className, text) {
+  const node = document.createElement(tag);
+  if (className) node.className = className;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+async function post(url, btn) {
+  if (btn) btn.disabled = true;
+  try {
+    await fetch(url, { method: "POST" });
+  } catch { /* next poll reflects reality either way */ }
+  await tick();
+}
+
+function buildCard(job) {
+  const colKey = columnFor(job);
+  const active = colKey === "voicing" || colKey === "rendering";
+  const card = el("article", `card st-${colKey}`);
+  card.dataset.slug = job.slug;
+
+  const top = el("div", "card-top");
+  const title = el("h3", null, job.title || job.slug);
+  title.title = job.title || job.slug;
+  top.append(title, el("span", "badge", job.status));
+  card.append(top, el("div", "slug", job.slug));
+
+  if (colKey === "done") {
+    const video = document.createElement("video");
+    video.controls = true;
+    video.preload = "metadata";
+    video.playsInline = true;
+    video.src = job.output ? "/" + job.output : "/output/" + encodeURIComponent(job.slug) + ".mp4";
+    card.append(video);
+  }
+
+  if (colKey === "failed" && job.error) {
+    card.append(el("pre", "err", job.error));
+  } else if (colKey === "queued" && job.error) {
+    // e.g. the runner's crash-safe requeue note
+    card.append(el("div", "note", "↻ " + job.error));
+  }
+
+  const meta = el("div", "meta");
+  if (active) {
+    meta.append(el("span", "spin"), el("span", "timer", fmtTimer(job.elapsed)));
+  } else {
+    const word = { building: "in building", queued: "waiting", done: "finished", failed: job.status === "cancelled" ? "cancelled" : "failed" }[colKey];
+    const suffix = colKey === "done" || colKey === "failed" ? " ago" : "";
+    const ago = el("span", "ago", `${word} · ${fmtAgo(job.elapsed)}${suffix}`);
+    ago.dataset.word = word;
+    ago.dataset.suffix = suffix;
+    meta.append(ago);
+  }
+  if (job.attempts > 0) meta.append(el("span", null, `· attempt ${job.attempts + 1}`));
+
+  const actions = el("div", "actions");
+  if (colKey === "done" || colKey === "failed") {
+    const b = el("button", "btn small retry", "Retry");
+    b.addEventListener("click", () => post("/api/retry/" + encodeURIComponent(job.slug), b));
+    actions.append(b);
+  }
+  if (colKey === "queued" || active) {
+    const b = el("button", "btn small cancel", "Cancel");
+    b.addEventListener("click", () => post("/api/cancel/" + encodeURIComponent(job.slug), b));
+    actions.append(b);
+  }
+  if (actions.children.length) meta.append(actions);
+  card.append(meta);
+  return card;
+}
+
+function render(jobs, state) {
+  paused = state.paused;
+  const seen = new Set();
+  const counts = {};
+  for (const c of COLUMNS) counts[c.key] = 0;
+
+  // Newest first in the terminal columns, oldest first (FIFO) elsewhere.
+  const ordered = jobs.slice().sort((a, b) => {
+    const ca = columnFor(a);
+    const cb = columnFor(b);
+    if (ca !== cb) return 0;
+    const cmp = String(a.created || "").localeCompare(String(b.created || ""));
+    return ca === "done" || ca === "failed" ? -cmp : cmp;
+  });
+
+  for (const job of ordered) {
+    const colKey = columnFor(job);
+    counts[colKey] += 1;
+    seen.add(job.slug);
+    const sig = [job.status, job.updated, job.output || "", (job.error || "").length, job.attempts].join("|");
+    let entry = cards.get(job.slug);
+    if (!entry || entry.sig !== sig) {
+      const fresh = buildCard(job);
+      if (entry) entry.el.replaceWith(fresh);
+      entry = { el: fresh, sig, job, fetchedAt: Date.now() };
+      cards.set(job.slug, entry);
+    } else {
+      entry.job = job;
+      entry.fetchedAt = Date.now();
+    }
+    // Only re-parent when the card changed columns, so playing videos are not reset.
+    if (entry.el.parentElement !== cols[colKey].body) cols[colKey].body.append(entry.el);
+  }
+
+  for (const [slug, entry] of cards) {
+    if (!seen.has(slug)) {
+      entry.el.remove();
+      cards.delete(slug);
+    }
+  }
+
+  for (const c of COLUMNS) cols[c.key].count.textContent = String(counts[c.key]);
+
+  const total = jobs.length;
+  stats.innerHTML = "";
+  const bits = [
+    [`${total}`, " job" + (total === 1 ? "" : "s")],
+    [`${state.active.voicing}`, " voicing"],
+    [`${state.active.rendering}`, " rendering"],
+    [`${counts.done}`, " done"],
+    [`${counts.failed}`, " failed"],
+  ];
+  bits.forEach(([n, label], i) => {
+    if (i) stats.append("  ·  ");
+    const b = document.createElement("b");
+    b.textContent = n;
+    stats.append(b, label);
+  });
+
+  pauseBtn.disabled = false;
+  pauseBtn.textContent = paused ? "Resume" : "Pause";
+  pauseBtn.classList.toggle("on", paused);
+  document.body.classList.toggle("paused", paused);
+  if (paused) {
+    banner.className = "paused";
+    banner.textContent = "Factory paused — running jobs will finish, nothing new starts.";
+  } else {
+    banner.className = "";
+    banner.textContent = "";
+  }
+}
+
+function setOffline() {
+  document.body.classList.add("offline");
+  banner.className = "offline";
+  banner.innerHTML = "";
+  banner.append("Runner offline — start it with ");
+  const code = document.createElement("code");
+  code.textContent = "./factory/start.command";
+  banner.append(code, " (mac) or ");
+  const code2 = document.createElement("code");
+  code2.textContent = "node factory/runner.mjs";
+  banner.append(code2, ". Retrying…");
+  stats.textContent = "runner offline";
+  pauseBtn.disabled = true;
+}
+
+async function tick() {
+  try {
+    const [jobsRes, stateRes] = await Promise.all([fetch("/api/jobs"), fetch("/api/state")]);
+    if (!jobsRes.ok || !stateRes.ok) throw new Error("bad response");
+    const jobs = await jobsRes.json();
+    const state = await stateRes.json();
+    online = true;
+    document.body.classList.remove("offline");
+    render(jobs, state);
+  } catch {
+    online = false;
+    setOffline();
+  }
+}
+
+pauseBtn.addEventListener("click", () => post("/api/pause", pauseBtn));
+
+// Live timers and "ago" labels tick locally between polls.
+setInterval(() => {
+  if (!online) return;
+  const now = Date.now();
+  for (const entry of cards.values()) {
+    const seconds = entry.job.elapsed + (now - entry.fetchedAt) / 1000;
+    const t = entry.el.querySelector(".timer");
+    if (t) {
+      t.textContent = fmtTimer(seconds);
+      continue;
+    }
+    const ago = entry.el.querySelector(".ago");
+    if (ago) ago.textContent = `${ago.dataset.word} · ${fmtAgo(seconds)}${ago.dataset.suffix}`;
+  }
+}, 500);
+
+setInterval(tick, 2000);
+tick();
+</script>
+</body>
+</html>
