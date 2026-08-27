@@ -21,15 +21,24 @@ import common
 # highpass cuts rumble below the voice, afftdn denoises gently (more sounds
 # underwater), acompressor evens the dynamics into a present radio level, and
 # loudnorm pins the integrated loudness so reel #40 matches reel #1.
-CHAIN = (
-    "highpass=f=80,"
-    "afftdn=nr=12:nf=-32,"
-    "acompressor=threshold=-22dB:ratio=3:attack=8:release=180:makeup=6,"
-    "loudnorm=I=-14:TP=-1.0:LRA=7"
-)
+# One config-gated addition: a gentle de-esser between denoise and compression
+# ("voice_deesser", default on) — synthetic voices carry harsh sibilance, and
+# the compressor would otherwise push those S sounds forward.
+def build_chain(cfg):
+    stages = [
+        "highpass=f=80",
+        "afftdn=nr=12:nf=-32",
+    ]
+    if cfg.get("voice_deesser", True):
+        stages.append("deesser=i=0.3:m=0.5:f=0.5")
+    stages += [
+        "acompressor=threshold=-22dB:ratio=3:attack=8:release=180:makeup=6",
+        "loudnorm=I=-14:TP=-1.0:LRA=7",
+    ]
+    return ",".join(stages)
 
 
-def process_line(project_dir, index):
+def process_line(project_dir, index, chain):
     """Run the chain on raw/lineNN.wav -> audio/lineNN.wav; return the duration."""
     stem = f"line{index:02d}"
     raw = project_dir / "raw" / f"{stem}.wav"
@@ -46,7 +55,7 @@ def process_line(project_dir, index):
         [
             "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
             "-i", str(raw),
-            "-af", CHAIN,
+            "-af", chain,
             "-ac", "1", "-ar", "24000",
             str(out),
         ]
@@ -95,7 +104,7 @@ def main():
             if previous is not None:
                 entries.append(previous)
             continue
-        duration = process_line(project_dir, index)
+        duration = process_line(project_dir, index, build_chain(cfg))
         entry = dict(existing.get(index) or {})
         entry.update(
             {

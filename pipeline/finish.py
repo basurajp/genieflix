@@ -49,11 +49,23 @@ def main():
     final_dir.mkdir(parents=True, exist_ok=True)
     out = final_dir / f"{slug}.mp4"
     spd = f"{speed:g}"
+    # Room tone: perfect digital silence between words is what reads as
+    # "synthetic" — a barely-audible pink-noise bed makes the narration feel
+    # recorded in a real place. config "room_tone_db" (default -52); 0 disables.
+    room_db = float(cfg.get("room_tone_db", -52) or 0)
+    if room_db < 0:
+        graph = (
+            f"[0:v]setpts=PTS/{spd}[v];[0:a]atempo={spd}[a0];"
+            f"anoisesrc=c=pink:r=48000:a=0.4,volume={room_db:g}dB[rt];"
+            f"[a0][rt]amix=inputs=2:duration=first:normalize=0[a]"
+        )
+    else:
+        graph = f"[0:v]setpts=PTS/{spd}[v];[0:a]atempo={spd}[a]"
     common.run(
         [
             "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
             "-i", str(src),
-            "-filter_complex", f"[0:v]setpts=PTS/{spd}[v];[0:a]atempo={spd}[a]",
+            "-filter_complex", graph,
             "-map", "[v]", "-map", "[a]",
             "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p",
             "-c:a", "aac", "-b:a", "192k",

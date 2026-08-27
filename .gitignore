@@ -21,6 +21,7 @@ voice-samples/*
 raw/
 raw.bak/
 audio/
+takes/
 audio.bak/
 renders/
 frames/

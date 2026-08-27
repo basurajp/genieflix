@@ -166,7 +166,11 @@ def generate_chatterbox(cfg, project, text, stem, raw_dir):
     ref = require_reference(cfg)
     python = common.venv_python(cfg)
     lang = chatterbox_language(cfg, project)
-    exagg = str(cfg.get("chatterbox_exaggeration", 0.5))
+    # Per-line emotion: project.json may carry {"exaggeration": {"1": 0.7, "5": 0.4}}
+    # so the hook can hit harder than the CTA without touching the global config.
+    line_no = stem[4:].lstrip("0") or "0"
+    overrides = project.get("exaggeration") or {}
+    exagg = str(overrides.get(line_no, cfg.get("chatterbox_exaggeration", 0.5)))
     cfgw = str(cfg.get("chatterbox_cfg_weight", 0.5))
     if sys.platform == "darwin" and venv_imports(python, "mlx_audio"):
         common.run(
@@ -264,6 +268,36 @@ GENERATORS = {
 }
 
 
+def generate_takes(cfg, project, text, stem, raw_dir, project_dir, backend, takes):
+    """Clone engines are stochastic: generate N takes, keep the most typical.
+
+    The pick is the take whose duration sits closest to the median — glitched
+    generations (dropped words, runaway endings) are duration outliers. All
+    takes stay in takes/ so a human can overrule the pick: copy the one you
+    prefer over raw/<stem>.wav and re-run audio_chain.py.
+    """
+    takes_dir = project_dir / "takes"
+    takes_dir.mkdir(exist_ok=True)
+    target = raw_dir / f"{stem}.wav"
+    candidates = []
+    for k in range(1, takes + 1):
+        GENERATORS[backend](cfg, project, text, stem, raw_dir)
+        if not target.exists():
+            raise SystemExit(f"backend {backend} did not produce raw/{stem}.wav (take {k})")
+        take_path = takes_dir / f"{stem}_t{k}.wav"
+        target.replace(take_path)
+        candidates.append((common.ffprobe_duration(take_path), take_path))
+    durations = sorted(d for d, _ in candidates)
+    median = durations[len(durations) // 2]
+    best = min(candidates, key=lambda c: abs(c[0] - median))
+    shutil.copy2(best[1], target)
+    print(
+        f"{stem}: kept {best[1].name} ({best[0]:.2f}s of "
+        + ", ".join(f"{d:.2f}s" for d, _ in candidates)
+        + ") — alternatives in takes/"
+    )
+
+
 def backup_line(project_dir, stem):
     """Copy the existing raw/audio takes for a line aside before overwriting."""
     for src_name, bak_name in (("raw", "raw.bak"), ("audio", "audio.bak")):
@@ -284,6 +318,12 @@ def main():
         "--force", action="store_true", help="regenerate every line even if its raw WAV exists"
     )
     parser.add_argument("--line", type=int, help="regenerate only this 1-based line")
+    parser.add_argument(
+        "--takes",
+        type=int,
+        help="generate N takes per line and keep the most typical one "
+        "(3 recommended; clone backends only — config voice_takes sets the default)",
+    )
     args = parser.parse_args()
 
     project_dir = pathlib.Path(args.project).expanduser().resolve()
@@ -300,6 +340,11 @@ def main():
     raw_dir = project_dir / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)
 
+    takes = args.takes if args.takes is not None else int(cfg.get("voice_takes", 1))
+    if takes > 1 and backend not in ("chatterbox", "xtts"):
+        print(f"note: {backend} is deterministic — takes make no difference, generating one")
+        takes = 1
+
     for index, text in enumerate(lines, 1):
         if args.line is not None and index != args.line:
             continue
@@ -310,7 +355,10 @@ def main():
             continue
         if target.exists():
             backup_line(project_dir, stem)
-        GENERATORS[backend](cfg, project, text, stem, raw_dir)
+        if takes > 1:
+            generate_takes(cfg, project, text, stem, raw_dir, project_dir, backend, takes)
+        else:
+            GENERATORS[backend](cfg, project, text, stem, raw_dir)
         if not target.exists():
             raise SystemExit(f"backend {backend} did not produce raw/{stem}.wav")
         print(f"wrote raw/{stem}.wav")

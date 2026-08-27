@@ -146,6 +146,9 @@ expanded; relative paths resolve from the repo root.
 | `chatterbox_language` | `auto` | Chatterbox language id (`hi`, `en`, … 23 total); `auto` follows the project's `lang`. |
 | `chatterbox_exaggeration` | `0.5` | Emotion intensity. `0.5` neutral, `~0.7+` dramatic (speech speeds up — compensate with `cfg_weight` `~0.3`). |
 | `chatterbox_cfg_weight` | `0.5` | Pacing/adherence. `~0.3` slower and more expressive; `0.0` keeps the reference clip's accent fully (e.g. an Indian-English reference stays Indian-English in any language). |
+| `voice_takes` | `1` | Clone engines are stochastic: `3` generates three takes per line and keeps the most typical (duration-median pick, alternatives in `takes/`). Per-line emotion: `project.json` may carry `"exaggeration": {"1": 0.7}` to override the global value per line. |
+| `voice_deesser` | `true` | Gentle de-esser between denoise and compression — synthetic voices carry harsh sibilance. |
+| `room_tone_db` | `-52.0` | A barely-audible pink-noise bed mixed under the final render — digital silence between words is what reads as "robot". `0` disables. |
 | `xtts_model` | `tts_models/multilingual/multi-dataset/xtts_v2` | Coqui XTTS v2 — the Windows/Linux clone path. |
 | `edge_voice` | `en-US-GuyNeural` | edge-tts voice (free, not your clone, needs network). |
 | `kokoro_voice` | `am_michael` | Kokoro voice for the built-in fallback TTS. |

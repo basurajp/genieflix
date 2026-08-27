@@ -6,6 +6,8 @@
   "chatterbox_language": "auto",
   "chatterbox_exaggeration": 0.5,
   "chatterbox_cfg_weight": 0.5,
+  "voice_takes": 1,
+  "voice_deesser": true,
   "xtts_model": "tts_models/multilingual/multi-dataset/xtts_v2",
   "edge_voice": "en-US-GuyNeural",
   "kokoro_voice": "am_michael",
@@ -14,6 +16,7 @@
   "music_target_db": -31.0,
   "sfx_volume": 0.22,
   "speed_up": 1.1,
+  "room_tone_db": -52.0,
   "loudness_min_db": -17.0,
   "loudness_max_db": -13.0,
   "ready_to_post_dir": "factory/ready-to-post"
