@@ -1,0 +1,9 @@
+{
+  "speakers": ["nar", "nar", "kab", "nar", "pas", "nar", "kab", "nar", "nar", "nar", "nar", "kab", "nar", "nar"],
+  "voices": {
+    "nar": {"edge": "en-US-AriaNeural", "kokoro": "af_heart", "kokoro_speed": 0.92},
+    "kab": {"edge": "en-US-GuyNeural", "kokoro": "am_michael", "kokoro_speed": 0.95},
+    "pas": {"edge": "en-GB-SoniaNeural", "kokoro": "bf_emma", "pitch": 0.96}
+  },
+  "tints": {"nar": "#ffffff", "kab": "#ffd98a", "pas": "#c9b8f0"}
+}

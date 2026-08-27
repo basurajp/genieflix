@@ -5,10 +5,13 @@ several characters with their own voices, a drawn set, a camera that cuts every
 line, per-speaker lip sync, and scripted physical gags — rendered by the same
 HyperFrames pipeline, still fully local.
 
-Two episodes ship as references:
+Three episodes ship as references:
 
 - **The Last Laddu** (`episodes/last-laddu/`) — a kid, his grandma, a scheming
   cat, and a perfectly timed grandfather; English, Indian-English, and Hindi casts.
+- **The Hundredth Blow** (`episodes/hundredth-blow/`) — motivational: Kabir
+  and the rock everyone gave up on; strike choreography, a doubting passerby,
+  and the split on blow one hundred. Narrator on `af_heart`, ear-written script.
 - **The Moon in the Bucket** (`episodes/moon-bucket/`) — Anu, her Dadu, and a
   frog on a summer night; the moon falls into the water bucket, shatters at a
   touch, and heals when the water sits still. English and Hindi casts on
