@@ -1,0 +1,11 @@
+{
+  "speakers": ["nar", "nar", "ekl", "nar", "nar", "nar", "nar", "nar", "arj", "nar", "dro", "ekl", "nar", "dro", "nar", "nar"],
+  "voices": {
+    "nar": {"edge": "hi-IN-SwaraNeural", "kokoro": "hf_alpha", "kokoro_speed": 0.92},
+    "ekl": {"edge": "hi-IN-MadhurNeural", "edge_pitch": 1.08, "kokoro": "hm_psi", "kokoro_speed": 0.98, "kokoro_pitch": 1.06},
+    "dro": {"edge": "hi-IN-MadhurNeural", "edge_pitch": 0.92, "kokoro": "hm_omega", "kokoro_speed": 0.92, "kokoro_pitch": 0.95},
+    "arj": {"edge": "hi-IN-MadhurNeural", "edge_pitch": 1.12, "kokoro": "hm_psi", "kokoro_speed": 1.02, "kokoro_pitch": 1.08}
+  },
+  "tints": {"nar": "#ffffff", "ekl": "#a8e8b0", "dro": "#f0d9a0", "arj": "#a8c8f0"},
+  "stamps": ["वन का बालक", "द्वार बंद", "संकल्प", "मिट्टी के गुरु", "श्रद्धा", "अभ्यास... अभ्यास", "वन में आगमन", "सात तीर!", "कौन है यह?", "चरणों में", "गुरु कौन?", "आप ही गुरु", "वचन की याद", "गुरुदक्षिणा", "अँगूठा अर्पण", "गुरुभक्त एकलव्य"]
+}

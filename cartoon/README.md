@@ -5,7 +5,7 @@ several characters with their own voices, a drawn set, a camera that cuts every
 line, per-speaker lip sync, and scripted physical gags — rendered by the same
 HyperFrames pipeline, still fully local.
 
-Four episodes ship as references:
+Five episodes ship as references:
 
 - **The Last Laddu** (`episodes/last-laddu/`) — a kid, his grandma, a scheming
   cat, and a perfectly timed grandfather; English, Indian-English, and Hindi casts.
@@ -28,6 +28,15 @@ Four episodes ship as references:
   Study this one for: multi-set staging, per-project `speed_up` (it finishes
   at 1.0×), and scaling a rig via its **wrapper div** — scaling the inner SVG
   `<g>` clips at the SVG viewport (Krishna loses his head), the div doesn't.
+- **एकलव्य** (`episodes/eklavya/`) — the counterpoint to the sabha episode:
+  one sun-lit forest clearing (daylight greens/marigold palette), a female
+  narrator (`hf_alpha`), and the Adi Parva guru-dakshina story — the clay
+  statue rising from the earth, target practice, seven harmless arrows that
+  silence the dog mid-bark, and the thumb offered with a smile. Study this
+  one for: single-set staging, flipping a rig with `scaleX: -1` on its
+  wrapper div at hard cuts (Eklavya turns between target and statue), and
+  props that ride inside a character's own SVG (the arrow muzzle moves with
+  the dog for free).
 
 ## How an episode is put together
 
