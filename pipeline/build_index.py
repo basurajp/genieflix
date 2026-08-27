@@ -89,15 +89,27 @@ def ensure_assets(project_dir):
                 shutil.copy2(src, dst)
 
 
-def build_slides(scenes):
+def build_slides(scenes, project_dir):
     out = []
     for scene in scenes:
-        out.append(
-            f'<img id="scene-{scene["index"]}" class="clip slide" '
-            f'src="{html.escape(scene["slide"])}" alt="" '
+        timing = (
             f'data-start="{fmt(scene["start"])}" data-duration="{fmt(scene["duration"])}" '
-            f'data-track-index="{TRACK_SLIDES}">'
+            f'data-track-index="{TRACK_SLIDES}"'
         )
+        footage = f'assets/footage/line{scene["index"]:02d}.mp4'
+        if (project_dir / footage).is_file():
+            # Staged clip (integrations/ltx2/stage_footage.py): already muted and
+            # re-encoded with dense keyframes; animated with opacity/transform
+            # only — the renderer ignores clip-path and size tweens on <video>.
+            out.append(
+                f'<video id="scene-{scene["index"]}" class="clip slide" '
+                f'src="{html.escape(footage)}" muted playsinline {timing}></video>'
+            )
+        else:
+            out.append(
+                f'<img id="scene-{scene["index"]}" class="clip slide" '
+                f'src="{html.escape(scene["slide"])}" alt="" {timing}>'
+            )
     return "\n  ".join(out)
 
 
@@ -311,7 +323,7 @@ def main():
         "<!--HF:CTA_START-->": fmt(cta_start),
         "<!--HF:CTA_DURATION-->": fmt(total - cta_start),
         "<!--HF:CTA_KEYWORD-->": html.escape(cta_keyword),
-        "<!--HF:SLIDES-->": build_slides(scenes),
+        "<!--HF:SLIDES-->": build_slides(scenes, project_dir),
         "<!--HF:CAPTIONS-->": build_captions(captions),
         "<!--HF:AUDIO-->": build_audio(project_dir, project, cfg, meta_lines, scenes, total),
         "<!--HF:TIMELINE-->": build_timeline_js(scenes, title_end, cta_start),

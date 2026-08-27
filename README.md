@@ -126,6 +126,8 @@ factory/                      folders-as-state-machine renderer + dashboard
   ready-to-post/              finished, named, verified MP4s
   runner.mjs, dashboard.html  the worker and the live view on :4300
 scheduler/                    matrix -> manifest -> scheduled posts (see scheduler/README.md)
+integrations/ltx2/            photoreal talking avatar via the open LTX-2 model
+                              (NVIDIA GPU required; see integrations/ltx2/README.md)
 ```
 
 ## Config reference
