@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>reel</title>
+<style>
+  /* Reel composition template — 1080x1920 @ 30fps, dark stage + glow.
+     The HF comment markers below are filled in by pipeline/build_index.py.
+     A project's generated index.html is disposable: it gets rebuilt from
+     this template, so anything meant to survive belongs in the plan
+     (lines.txt, project.json, slides) — or here in the template. */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #0b0e14; }
+
+  #stage {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    background: #0b0e14;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+  }
+
+  /* Optional custom fonts: drop files in assets/fonts/ and declare them here.
+     Local files only — renders must work offline.
+  @font-face {
+    font-family: "ReelSans";
+    src: url("assets/fonts/ReelSans.woff2") format("woff2");
+    font-weight: 800;
+  }
+  */
+
+  /* track 0 — background: dark base + radial glow, spans the full duration. */
+  #bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(720px 620px at 50% 30%, rgba(94, 130, 255, 0.26), rgba(11, 14, 20, 0) 70%),
+      radial-gradient(900px 760px at 50% 82%, rgba(64, 220, 190, 0.10), rgba(11, 14, 20, 0) 72%),
+      #0b0e14;
+  }
+
+  /* track 1 — slides. Contained on the stage, clear of the caption band
+     (top: 1380px) and the phone UI zones (bottom 420px, top 220px).
+     Animate opacity/transform ONLY — the frame renderer ignores clip-path
+     and width/height tweens on media elements, even though the preview
+     honors them. */
+  .slide {
+    position: absolute;
+    left: 60px;
+    top: 480px;
+    width: 960px;
+    height: 850px;
+    object-fit: contain;
+    transform-origin: 50% 50%;
+    filter: drop-shadow(0 24px 60px rgba(0, 0, 0, 0.55));
+  }
+
+  /* track 2 — title kicker + chip. On screen from frame one (the promise
+     beats the viewer's decision to scroll); fades when scene 1 ends. */
+  #title-card {
+    position: absolute;
+    left: 0;
+    top: 232px; /* just below the top ~220px status zone */
+    width: 1080px;
+    text-align: center;
+  }
+  .kicker {
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: #8fb0ff;
+    margin-bottom: 16px;
+  }
+  .title-chip {
+    display: inline-block;
+    max-width: 840px; /* right edge stays out of the right ~120px UI strip */
+    padding: 18px 36px;
+    background: rgba(0, 0, 0, 0.85);
+    border: 2px solid rgba(143, 176, 255, 0.35);
+    border-radius: 22px;
+    font-size: 58px;
+    font-weight: 800;
+    line-height: 1.15;
+  }
+
+  /* track 2 — CTA stamp, pops in at the last scene and holds to the end.
+     The tweened element (#cta-stamp) carries no CSS transform of its own;
+     the rotation lives on the inner .stamp so GSAP scale/opacity tweens
+     can't clobber it. */
+  #cta-stamp {
+    position: absolute;
+    left: 0;
+    top: 800px;
+    width: 1080px;
+    text-align: center;
+    transform-origin: 50% 50%;
+  }
+  .stamp {
+    display: inline-block;
+    transform: rotate(-3deg);
+    padding: 26px 52px;
+    background: rgba(0, 0, 0, 0.72);
+    border: 6px solid #8fb0ff;
+    border-radius: 26px;
+  }
+  .stamp-label {
+    font-size: 32px;
+    font-weight: 800;
+    letter-spacing: 0.26em;
+    color: #8fb0ff;
+    margin-bottom: 6px;
+  }
+  .stamp-word {
+    font-size: 96px;
+    font-weight: 900;
+    letter-spacing: 0.06em;
+  }
+
+  /* track 3 — caption chips. top: 1380px is deliberate: it clears the
+     phone UI. 1600px sits inside the strip Instagram covers — never use it.
+     Chips are never tweened (their centering lives in the transform). */
+  .caption {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 1380px;
+    max-width: 840px;
+    padding: 18px 34px;
+    background: rgba(0, 0, 0, 0.85);
+    border-radius: 18px;
+    color: #ffffff;
+    font-size: 56px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="reel" data-start="0" data-width="1080" data-height="1920" data-fps="30" data-duration="<!--HF:DURATION-->">
+
+  <!-- track 0: background (full duration) -->
+  <div id="bg" class="clip" data-start="0" data-duration="<!--HF:DURATION-->" data-track-index="0"></div>
+
+  <!-- track 1: slide clips, one per scene (generated) -->
+  <!--HF:SLIDES-->
+
+  <!-- track 2: title kicker + chip, visible from t=0 -->
+  <div id="title-card" class="clip" data-start="0" data-duration="<!--HF:TITLE_DURATION-->" data-track-index="2">
+    <div class="kicker"><!--HF:KICKER--></div>
+    <div class="title-chip"><!--HF:TITLE--></div>
+  </div>
+
+  <!-- track 2: CTA stamp, held from the last scene to the end.
+       Every overlay is a timed clip on a track above what it covers —
+       untimed elements composite beneath media and vanish. -->
+  <div id="cta-stamp" class="clip" data-start="<!--HF:CTA_START-->" data-duration="<!--HF:CTA_DURATION-->" data-track-index="2">
+    <div class="stamp">
+      <div class="stamp-label">Comment the word</div>
+      <div class="stamp-word"><!--HF:CTA_KEYWORD--></div>
+    </div>
+  </div>
+
+  <!-- track 3: caption chips, one per word group (generated) -->
+  <!--HF:CAPTIONS-->
+
+  <!-- tracks 4-6: voice / music / sfx audio clips (generated) -->
+  <!--HF:AUDIO-->
+
+  <script src="assets/gsap.min.js"></script>
+  <script>
+    // One single PAUSED timeline — the renderer drives the clock and seeks
+    // to arbitrary moments, so every tween must be a pure function of time.
+    // Never autoplay, never wall-clock animation.
+    //
+    // Rules the generated tweens follow (each learned from a broken render):
+    //  - Media elements: tween opacity and transforms only. clip-path and
+    //    width/height tweens on <video> render wrong even when the preview
+    //    looks right. Reframes = multiple static clips cross-faded.
+    //  - A fade-out ending exactly at a clip boundary also gets a hard
+    //    tl.set(el, {opacity: 0}, tEnd) so the last frame cannot flicker.
+    //  - No animated GIFs anywhere: the renderer cannot reproduce them
+    //    deterministically. Static image or real video only.
+    const tl = gsap.timeline({ paused: true });
+<!--HF:TIMELINE-->
+    window.__timelines = window.__timelines || {};
+    window.__timelines.reel = tl;
+  </script>
+</div>
+</body>
+</html>

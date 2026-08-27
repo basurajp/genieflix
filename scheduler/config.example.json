@@ -1,0 +1,11 @@
+{
+  "api_base": "https://api.post-bridge.com/v1",
+  "api_key_env": "POSTBRIDGE_API_KEY",
+  "timezone": "+05:30",
+  "start_date": "2026-09-01",
+  "platform_slots": {"instagram": ["09:30", "18:30"], "x": ["10:00", "19:00"], "youtube": ["11:00"]},
+  "accounts": [{"id": "ig-main", "platform": "instagram"}, {"id": "x-main", "platform": "x"}, {"id": "yt-tutorials", "platform": "youtube"}],
+  "max_posts_per_day_per_account": 2,
+  "max_uploads_per_day_per_youtube_channel": 1,
+  "min_days_between_same_topic": 14
+}

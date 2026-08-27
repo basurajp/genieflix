@@ -1,0 +1,14 @@
+# The five lines — hook, action, proof, contrast, CTA. One line per row.
+# Blank lines and '#' comments are ignored. Replace the sample below with
+# your own lines; this working sample is the book's worked example.
+#
+# 1) HOOK — the wildest true thing, first. On screen in the first beat.
+I made this entire deck in sixty seconds. I typed one line, that's it.
+# 2) ACTION — what you actually did, plainly. No adjectives yet.
+Wrote the topic, hit generate, and the tool built the whole thing.
+# 3) PROOF — concrete nouns that make it believable, not praise.
+Every slide has real images, clean layout, proper headings. All automatic.
+# 4) CONTRAST — the pain being deleted; the viewer's problem, named.
+No Canva. No PowerPoint. No formatting headache.
+# 5) CTA — one clear next step, and only one.
+Comment the word LINK and I'll send you the full guide.
