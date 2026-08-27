@@ -11,8 +11,8 @@ Two episodes ship as references:
   cat, and a perfectly timed grandfather; English, Indian-English, and Hindi casts.
 - **The Moon in the Bucket** (`episodes/moon-bucket/`) — Anu, her Dadu, and a
   frog on a summer night; the moon falls into the water bucket, shatters at a
-  touch, and heals when the water sits still. Cast on Kokoro's best-graded
-  voices with `kokoro_speed` storytelling pacing.
+  touch, and heals when the water sits still. English and Hindi casts on
+  Kokoro's best-graded voices with `kokoro_speed` storytelling pacing.
 
 ## How an episode is put together
 

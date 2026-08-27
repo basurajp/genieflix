@@ -190,6 +190,15 @@ for ln in lines:
 dadu_start = win(7)[0]
 TITLE = pj.get("title", "The Moon in the Bucket")
 KICKER = pj.get("topic", "a tiny cartoon").upper()
+deva = project / "assets" / "fonts" / "NotoSansDevanagari-Regular.ttf"
+FONT_FACE = """
+    @font-face {{ font-family: 'Noto Sans Devanagari'; font-weight: 400;
+      src: url('assets/fonts/NotoSansDevanagari-Regular.ttf'); }}
+    @font-face {{ font-family: 'Noto Sans Devanagari'; font-weight: 700;
+      src: url('assets/fonts/NotoSansDevanagari-Bold.ttf'); }}
+""" if deva.exists() else """
+    @font-face {{ font-family: 'Noto Sans Devanagari'; src: local('Noto Sans Devanagari'); }}
+"""
 
 page = f"""<!DOCTYPE html>
 <html>
@@ -197,8 +206,8 @@ page = f"""<!DOCTYPE html>
 <body>
 <div id="stage" data-composition-id="reel" data-start="0" data-duration="{fmt(total)}"
      data-width="1080" data-height="1920" data-fps="30">
-  <style>
-    #stage {{ background: #0a1228; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }}
+  <style>{FONT_FACE}
+    #stage {{ background: #0a1228; font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans Devanagari", Helvetica, Arial, sans-serif; overflow: hidden; }}
     #world {{ position: absolute; inset: 0; transform-origin: 0px 0px; }}
     .abs {{ position: absolute; }}
     .caption {{ position: absolute; top: 1380px; left: 50%; transform: translateX(-50%);
