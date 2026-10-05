@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>JAIN PODCAST intro</title>
+<style>
+  /* JAIN PODCAST intro: 1920x1080 @ 60fps, exactly 12 s.
+     Concept: SIGNAL -> CONVERSATION -> IDENTITY. One cyan line becomes a
+     waveform, folds into a microphone, its cradle arc closes into a charcoal
+     pop-filter disc that sweeps across the lens, and the oversized title it
+     uncovers settles into the final lock-up.
+
+     Everything visible is drawn by draw(t) below, a pure function of time,
+     driven by one paused GSAP timeline. Seeking to any frame gives the same
+     picture, so the render matches the preview frame for frame.
+
+     Authored source, not generated: edit CONFIG (palette, timing, logo) here. */
+
+  @font-face {
+    font-family: "Inter";
+    src: url("assets/fonts/Inter-Medium.woff2") format("woff2");
+    font-weight: 500;
+    font-style: normal;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #000000; }
+
+  #stage {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    background: #000000;
+  }
+  #scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; }
+
+  .word {
+    font-family: "Inter", sans-serif;
+    font-weight: 500;
+    font-size: 150px;
+    letter-spacing: -2px;   /* brand rule: -2px on headlines at 1920x1080 */
+  }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="jain-podcast" data-start="0" data-duration="12"
+     data-width="1920" data-height="1080" data-fps="60">
+
+  <!-- track 1: the whole picture is one procedural SVG scene -->
+  <svg id="scene" class="clip" data-start="0" data-duration="12" data-track-index="1"
+       viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Every filter is in user space: a perfectly flat line has a zero-height
+           bounding box, and a bbox-relative filter region would erase it. -->
+      <filter id="glow" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2320" height="1480">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="b"/>
+        <feColorMatrix in="b" type="matrix" result="soft"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.55 0"/>
+        <feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="blurText" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2320" height="1480">
+        <feGaussianBlur id="blurTextK" in="SourceGraphic" stdDeviation="0 0"/>
+      </filter>
+      <filter id="blurDisc" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2320" height="1480">
+        <feGaussianBlur id="blurDiscK" in="SourceGraphic" stdDeviation="0 0"/>
+      </filter>
+      <radialGradient id="discGrad" gradientUnits="userSpaceOnUse" cx="960" cy="540" r="150" fx="900" fy="480">
+        <stop offset="0" stop-color="#2e2e2e"/>
+        <stop offset="0.62" stop-color="#262626"/>
+        <stop offset="1" stop-color="#151515"/>
+      </radialGradient>
+      <clipPath id="bandJ"><rect id="bandJR" x="-400" y="-3000" width="2720" height="7000"/></clipPath>
+      <clipPath id="bandP"><rect id="bandPR" x="-400" y="-3000" width="2720" height="7000"/></clipPath>
+      <clipPath id="logoClip"><rect id="logoClipR" x="0" y="0" width="0" height="0"/></clipPath>
+    </defs>
+
+    <!-- charcoal construction geometry (deep layer, slow parallax) -->
+    <g id="geo" fill="none" stroke-width="1.5"></g>
+
+    <!-- the signal: point -> waveform -> microphone -->
+    <g id="micLayer">
+      <path id="grille" fill="none" stroke-width="2" stroke-linecap="round" opacity="0"/>
+      <path id="signal" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)"/>
+      <circle id="dot" cx="960" cy="540" r="0" filter="url(#glow)"/>
+    </g>
+
+    <!-- identity: the cyan line runs BEHIND the words, so letter counters and
+         gaps act as its mask -->
+    <g id="titleLayer" opacity="0">
+      <path id="titleLine" fill="none" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
+      <g filter="url(#blurText)">
+        <g clip-path="url(#bandJ)"><text id="wJ" class="word" x="0" y="0">JAIN</text></g>
+        <g clip-path="url(#bandP)"><text id="wP" class="word" x="0" y="0">PODCAST</text></g>
+      </g>
+    </g>
+
+    <g id="logoWrap" clip-path="url(#logoClip)" opacity="0">
+      <image id="logo" x="0" y="0" width="0" height="0" preserveAspectRatio="xMidYMid meet"/>
+    </g>
+
+    <!-- the pop-filter disc: foreground occluder for the invisible transition -->
+    <g id="disc" filter="url(#blurDisc)" opacity="0">
+      <path id="discFill" fill="url(#discGrad)"/>
+      <path id="discRings" fill="none" stroke-width="1.5"/>
+      <path id="discRim" fill="none" stroke-width="3" pathLength="1" filter="url(#glow)"/>
+    </g>
+
+    <rect id="fade" x="0" y="0" width="1920" height="1080" opacity="0"/>
+  </svg>
+
+  <!-- track 5: music (python3 intros/jain-podcast/music.py writes it) -->
+  <audio id="cue" class="clip" data-start="0" data-duration="12" data-track-index="5"
+         src="assets/audio/cue.wav"></audio>
+
+  <script src="assets/gsap.min.js"></script>
+  <script>
+  // ======================================================================
+  // CONFIG: palette, timing and replaceable assets live here.
+  // ======================================================================
+  const CONFIG = {
+    palette: { bg: "#000000", accent: "#00DAC4", text: "#FFFFFF", charcoal: "#262626" },
+    duration: 12,
+    // 100 BPM, 4/4: one bar = 2.4 s; phases change on the bar lines.
+    T: { point: 0.10, morph: 2.4, sweep: 4.8, identity: 7.2, finish: 9.6, fade: 11.5 },
+    // Kick hits in music.py (time, velocity): the waveform breathes with them.
+    kicks: [[0.10, 0.5], [2.4, 0.55], [3.6, 0.55], [4.8, 0.95], [5.7, 0.75], [6.0, 0.75],
+            [7.2, 0.95], [8.1, 0.75], [8.4, 0.75], [9.3, 0.75], [9.6, 1.0]],
+    // Official logo: drop the file in assets/logo/ and set src + its width/height ratio.
+    // preserveAspectRatio="meet" means a wrong ratio letterboxes, never distorts.
+    logo: { src: "assets/logo/jain-online-logo.svg", aspect: 6.0, height: 62 },
+    title: { size: 150, baseline: 494, capHeight: 0.727 },  // Inter cap height = 1490/2048 em
+  };
+
+  const C = CONFIG.palette;
+  const W = 1920, H = 1080, CX = 960, CY = 540, F = 1600;   // F = perspective focal length
+  const $ = (id) => document.getElementById(id);
+
+  // ---------------------------------------------------------------- easing
+  // CSS-style cubic-bezier, solved by bisection (monotonic, deterministic).
+  function bez(x1, y1, x2, y2) {
+    const cx = (t, a, b) => 3 * a * t * (1 - t) * (1 - t) + 3 * b * t * t * (1 - t) + t * t * t;
+    return (x) => {
+      if (x <= 0) return 0;
+      if (x >= 1) return 1;
+      let lo = 0, hi = 1, t = x;
+      for (let i = 0; i < 28; i++) {
+        t = (lo + hi) / 2;
+        if (cx(t, x1, x2) < x) lo = t; else hi = t;
+      }
+      return cx(t, y1, y2);
+    };
+  }
+  const E = {
+    out:   bez(0.16, 1, 0.3, 1),       // fast start, long settle
+    inOut: bez(0.65, 0, 0.35, 1),
+    soft:  bez(0.4, 0, 0.2, 1),
+    push:  bez(0.45, 0, 0.75, 0.55),   // camera: accelerates into the transition
+    approach: bez(0.5, 0, 0.25, 1),    // disc flies at the lens, then slows
+    sweep: bez(0.42, 0, 0.45, 1),      // disc crosses the frame
+    drift: bez(0.12, 0.55, 0.22, 1),   // title fragments: inherit speed, then settle
+    shrink: bez(0.35, 0.1, 0.2, 1),    // title fragments recede in depth
+  };
+  const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+  const lerp = (a, b, u) => a + (b - a) * u;
+  const range = (t, a, b) => clamp((t - a) / (b - a), 0, 1);
+  const bump = (u) => Math.sin(Math.PI * clamp(u, 0, 1));
+
+  function beat(t) {
+    let e = 0;
+    for (const [tk, v] of CONFIG.kicks) if (t >= tk) e += v * Math.exp(-(t - tk) / 0.16);
+    return e;
+  }
+
+  function pathOf(pts, close) {
+    let d = "";
+    for (let i = 0; i < pts.length; i++) {
+      d += (i ? "L" : "M") + pts[i][0].toFixed(1) + " " + pts[i][1].toFixed(1);
+    }
+    return close ? d + "Z" : d;
+  }
+
+  // ---------------------------------------------------------------- the microphone
+  // One continuous stroke (it has to be: the waveform becomes it). Segments that
+  // are traced twice overlap exactly, so the doubling is invisible.
+  const NPTS = 720;
+  const MIC = { capR: 85, capTop: -185, capBot: -55, uCy: -70, uR: 150, stemBot: 210, baseW: 95, pivotY: -70 };
+
+  function resample(P, n) {
+    const acc = [0];
+    for (let i = 1; i < P.length; i++) {
+      acc.push(acc[i - 1] + Math.hypot(P[i][0] - P[i - 1][0], P[i][1] - P[i - 1][1]));
+    }
+    const total = acc[acc.length - 1];
+    const out = [];
+    let j = 1;
+    for (let k = 0; k < n; k++) {
+      const s = (total * k) / (n - 1);
+      while (j < acc.length - 1 && acc[j] < s) j++;
+      const seg = acc[j] - acc[j - 1] || 1;
+      const u = (s - acc[j - 1]) / seg;
+      out.push([lerp(P[j - 1][0], P[j][0], u), lerp(P[j - 1][1], P[j][1], u)]);
+    }
+    return out;
+  }
+
+  function buildMic() {
+    const m = MIC, P = [];
+    const to = (x, y) => P.push([x, y]);
+    const line = (x1, y1, n) => {
+      const [x0, y0] = P[P.length - 1];
+      for (let i = 1; i <= n; i++) to(lerp(x0, x1, i / n), lerp(y0, y1, i / n));
+    };
+    const arc = (cx, cy, r, a0, a1, n) => {
+      for (let i = 1; i <= n; i++) {
+        const a = lerp(a0, a1, i / n);
+        to(cx + r * Math.cos(a), cy + r * Math.sin(a));
+      }
+    };
+    const capsuleUpper = (toY) => {        // left pivot -> over the top -> right side down to toY
+      line(-m.capR, m.capTop, 12);
+      arc(0, m.capTop, m.capR, Math.PI, 2 * Math.PI, 48);
+      line(m.capR, toY, 14);
+    };
+    to(-m.baseW, m.stemBot);
+    line(0, m.stemBot, 16);
+    line(0, m.uCy + m.uR, 16);                                  // stem up
+    arc(0, m.uCy, m.uR, Math.PI / 2, Math.PI, 44);               // cradle, left half
+    line(-m.capR, m.pivotY, 8);                                  // pivot
+    capsuleUpper(m.capBot);                                      // capsule, full loop
+    arc(0, m.capBot, m.capR, 0, Math.PI, 48);
+    line(-m.capR, m.pivotY, 4);
+    capsuleUpper(m.pivotY);                                      // retrace to the right pivot
+    line(m.uR, m.pivotY, 8);
+    arc(0, m.uCy, m.uR, 0, Math.PI / 2, 44);                     // cradle, right half
+    line(0, m.stemBot, 16);                                      // stem down (retrace)
+    line(m.baseW, m.stemBot, 16);
+    return resample(P, NPTS);
+  }
+  const MIC_PTS = buildMic();
+
+  // ---------------------------------------------------------------- camera + 3D
+  function cam(t) {
+    return {
+      s: 1 + 0.5 * E.push(range(t, 0.3, 5.6)),
+      cx: 0,
+      cy: lerp(0, -30, E.inOut(range(t, 2.6, 4.0))) + lerp(0, -40, E.inOut(range(t, 4.0, 5.0))),
+    };
+  }
+  // Mic sways in depth around its vertical axis (0 -> ~24deg -> 0): smooth both ways,
+  // so the disc that inherits it keeps the same angular velocity.
+  const theta = (t) => (24 * Math.PI / 180) * Math.pow(bump(range(t, 3.0, 5.6)), 1.2);
+
+  function rot3(x, y, th) {
+    const z = x * Math.sin(th);
+    const phi = th * 0.3, yc = -30;                     // slight tilt with the sway
+    const y2 = yc + (y - yc) * Math.cos(phi) - z * Math.sin(phi);
+    const z2 = (y - yc) * Math.sin(phi) + z * Math.cos(phi);
+    return [x * Math.cos(th), y2, z2];
+  }
+  function proj(x, y, z, c) {
+    const k = F / (F + z);
+    return [CX + c.s * (x - c.cx) * k, CY + c.s * (y - c.cy) * k, c.s * k];
+  }
+
+  // ---------------------------------------------------------------- signal
+  function waveY(u, t, amp) {
+    const env = Math.pow(Math.sin(Math.PI * u), 1.6);
+    const carrier = 0.62 * Math.sin(2 * Math.PI * 2.5 * u - 3.1 * t)
+                  + 0.38 * Math.sin(2 * Math.PI * 6.5 * u + 4.3 * t + 1.1);
+    const phrase = 0.6 + 0.4 * Math.sin(2 * Math.PI * (0.9 * u - 0.4 * t));
+    return amp * env * carrier * phrase;
+  }
+
+  function signalPoints(t) {
+    const c = cam(t), th = theta(t);
+    const half = 640 * E.out(range(t, 0.32, 1.5));
+    const amp = 120 * E.inOut(range(t, 0.5, 1.8)) * (0.88 + 0.12 * Math.sin(2 * Math.PI * t / 1.2))
+              * (1 + 0.22 * beat(t));
+    const m = range(t, CONFIG.T.morph, 3.95);
+    const pts = [];
+    for (let i = 0; i < NPTS; i++) {
+      const u = i / (NPTS - 1);
+      const d = Math.abs(2 * u - 1);                       // centre folds first, ends last
+      const e = E.inOut(clamp((m - 0.38 * d) / 0.62, 0, 1));
+      const wx = (2 * u - 1) * half, wy = waveY(u, t, amp) * (1 - e);
+      const [mx, my] = MIC_PTS[i];
+      const lift = -46 * bump(e) * (1 - d * 0.5);          // the line arcs up as it folds
+      const x = lerp(wx, mx, e), y = lerp(wy, my, e) + lift;
+      const [rx, ry, rz] = rot3(x, y, th);
+      pts.push(proj(rx, ry, rz, c));
+    }
+    return pts;
+  }
+
+  function grillePoints(t) {
+    const c = cam(t), th = theta(t), lines = [];
+    for (const gy of [-205, -175, -145]) {
+      const seg = [];
+      for (let k = 0; k <= 8; k++) {
+        const [rx, ry, rz] = rot3(lerp(-46, 46, k / 8), gy, th);
+        seg.push(proj(rx, ry, rz, c));
+      }
+      lines.push(seg);
+    }
+    return lines;
+  }
+
+  // ---------------------------------------------------------------- disc
+  // Rim desired on screen during the sweep: left edge crosses the frame left->right.
+  const rimX = (t) => lerp(-420, 2140, E.sweep(range(t, 5.25, 6.45)));
+  function discState(t) {
+    const c = cam(t), th = theta(t);
+    const dz = -1480 * E.approach(range(t, 4.55, 5.55));
+    const k = c.s * F / (F + dz);
+    // Early: stay on the mic. Late: put the left rim where rimX() wants it.
+    const wantDx = c.cx + MIC.uR + (rimX(t) - CX) / k;
+    const w = E.inOut(range(t, 4.85, 5.35));
+    const dx = lerp(0, wantDx, w);
+    return { c, th, dx, dz, k };
+  }
+  function discRing(t, r, n) {
+    const s = discState(t), pts = [];
+    for (let i = 0; i <= n; i++) {
+      const a = -Math.PI / 2 + (2 * Math.PI * i) / n;      // starts at the top, clockwise
+      const [rx, ry, rz] = rot3(r * Math.cos(a), MIC.uCy + r * Math.sin(a), s.th);
+      pts.push(proj(rx + s.dx, ry, rz + s.dz, s.c));
+    }
+    return pts;
+  }
+
+  // ---------------------------------------------------------------- title
+  let metrics = null;
+  function measure() {
+    const ts = CONFIG.title;
+    const wJ = $("wJ").getComputedTextLength(), wP = $("wP").getComputedTextLength();
+    const gap = ts.size * 0.26;
+    const x0 = CX - (wJ + gap + wP) / 2;
+    const capH = ts.capHeight * ts.size;
+    metrics = {
+      capH,
+      J: { x: x0, w: wJ, cx: x0 + wJ / 2, cy: ts.baseline - capH / 2 },
+      P: { x: x0 + wJ + gap, w: wP, cx: x0 + wJ + gap + wP / 2, cy: ts.baseline - capH / 2 },
+    };
+    $("wJ").setAttribute("x", metrics.J.x.toFixed(2));
+    $("wP").setAttribute("x", metrics.P.x.toFixed(2));
+    $("wJ").setAttribute("y", ts.baseline);
+    $("wP").setAttribute("y", ts.baseline);
+  }
+
+  // Each word: enters oversized from the left (inheriting the sweep), recedes in
+  // depth while stacked (JAIN above, PODCAST below, so they never collide), then
+  // drops vertically into its band-mask slot on the final line.
+  const WORDS = {
+    J: { from: [-1480, -330], s0: 5.0, t0: 5.25, t1: 7.75, ys: [7.5, 8.2], side: -1 },
+    P: { from: [-1720,  370], s0: 4.2, t0: 5.25, t1: 7.95, ys: [7.75, 8.45], side: 1 },
+  };
+  const scaleOf = (w, t) => 1 + (w.s0 - 1) * (1 - E.shrink(range(t, w.t0, w.t1)));
+  function wordState(key, t) {
+    const w = WORDS[key], m = metrics[key];
+    const u = range(t, w.t0, w.t1);
+    const p = 1 - E.drift(u);
+    const s = scaleOf(w, t);
+    const sep = metrics.capH * (scaleOf(WORDS.J, t) + scaleOf(WORDS.P, t)) / 2 + 28;
+    const settle = E.inOut(range(t, w.ys[0], w.ys[1]));
+    const yOff = lerp(w.from[1], w.side * sep / 2, 1 - p) * (1 - settle);
+    return { x: m.cx + w.from[0] * p, y: m.cy + yOff, s, m };
+  }
+
+  // ---------------------------------------------------------------- draw(t)
+  function draw(t) {
+    t = clamp(t, 0, CONFIG.duration);
+    if (!metrics) measure();
+    const T = CONFIG.T;
+
+    // Charcoal geometry: rings + hairlines, own depth, follows the camera at 40%.
+    {
+      const c = cam(t);
+      const gs = 1 + (c.s - 1) * 0.4;
+      const drift = lerp(-240, 0, E.out(range(t, 5.25, 9.6)));          // inherits the sweep
+      const gx = t < 5.25 ? 0 : drift + 240 * (1 - range(t, 5.25, 5.26));
+      const gy = c.cy * 0.4 * gs;
+      const geo = $("geo");
+      geo.setAttribute("transform",
+        `translate(${(CX + gx).toFixed(2)} ${(CY - gy).toFixed(2)}) scale(${gs.toFixed(4)})`);
+      geo.setAttribute("opacity", (E.soft(range(t, 0.45, 1.9)) * (1 - 0.35 * range(t, 7.2, 9.0))).toFixed(3));
+    }
+
+    // Opening point.
+    const dotIn = E.out(range(t, T.point, 0.3)), dotOut = range(t, 0.34, 0.62);
+    $("dot").setAttribute("r", (7 * dotIn * (1 - dotOut) + 2.5 * bump(range(t, T.point, 0.5))).toFixed(2));
+    $("dot").setAttribute("opacity", (1 - dotOut).toFixed(3));
+
+    // Signal: waveform -> microphone. Hidden once the disc fully covers it.
+    const micOn = t >= 0.3 && t < 5.4;
+    $("micLayer").setAttribute("opacity", t < 5.4 ? 1 : 0);
+    if (micOn) {
+      const pts = signalPoints(t);
+      $("signal").setAttribute("d", pathOf(pts));
+      $("signal").setAttribute("stroke-width", (2.6 * Math.sqrt(cam(t).s)).toFixed(2));
+      const g = grillePoints(t);
+      $("grille").setAttribute("d", g.map((s) => pathOf(s)).join(""));
+      $("grille").setAttribute("opacity", (0.42 * E.soft(range(t, 3.6, 4.1))).toFixed(3));
+    } else {
+      $("signal").setAttribute("d", "");
+    }
+
+    // Disc: the cradle arc closes into a ring, fills, flies at the lens, sweeps right.
+    if (t >= 4.15 && t < 6.6) {
+      const ds = discState(t);
+      const rim = discRing(t, MIC.uR, 180);
+      $("discFill").setAttribute("d", pathOf(rim, true));
+      $("discRings").setAttribute("d", pathOf(discRing(t, MIC.uR * 0.82, 120)) + pathOf(discRing(t, MIC.uR * 0.64, 100)));
+      $("discRim").setAttribute("d", pathOf(rim));
+      const close = 0.5 + 0.5 * E.inOut(range(t, 4.15, 4.6));             // 0.5 = exactly the cradle
+      $("discRim").setAttribute("stroke-dasharray", `${close.toFixed(4)} ${(1 - close + 0.0001).toFixed(4)}`);
+      $("discRim").setAttribute("stroke-dashoffset", (-(0.5 - close / 2)).toFixed(4));
+      $("discRim").setAttribute("stroke-width", (3 * Math.min(1.6, Math.sqrt(ds.k / ds.c.s))).toFixed(2));
+      const fill = E.soft(range(t, 4.42, 4.85));
+      $("discFill").setAttribute("opacity", fill.toFixed(3));
+      $("discRings").setAttribute("opacity", (0.9 * fill).toFixed(3));
+      const ctr = proj(ds.dx, MIC.uCy, ds.dz, ds.c);
+      const rS = MIC.uR * ds.k;
+      const gr = $("discGrad");
+      gr.setAttribute("cx", ctr[0].toFixed(1)); gr.setAttribute("cy", ctr[1].toFixed(1));
+      gr.setAttribute("r", rS.toFixed(1));
+      gr.setAttribute("fx", (ctr[0] - rS * 0.22).toFixed(1)); gr.setAttribute("fy", (ctr[1] - rS * 0.25).toFixed(1));
+      // Directional motion blur from the screen velocity of the disc centre.
+      const a = proj(discState(t - 1 / 120).dx, MIC.uCy, discState(t - 1 / 120).dz, discState(t - 1 / 120).c);
+      const b = proj(discState(t + 1 / 120).dx, MIC.uCy, discState(t + 1 / 120).dz, discState(t + 1 / 120).c);
+      const vx = (b[0] - a[0]) * 60;                                       // px per second
+      $("blurDiscK").setAttribute("stdDeviation", `${clamp(Math.abs(vx) / 60 * 0.18, 0, 9).toFixed(2)} 0`);
+      $("disc").setAttribute("opacity", 1);
+    } else {
+      $("disc").setAttribute("opacity", 0);
+    }
+
+    // Title layer: oversized fragments behind the disc, settling into the lock-up.
+    if (t >= 5.25) {
+      $("titleLayer").setAttribute("opacity", 1);
+      let vmax = 0;
+      for (const key of ["J", "P"]) {
+        const st = wordState(key, t);
+        const el = $(key === "J" ? "wJ" : "wP");
+        el.setAttribute("transform",
+          `translate(${st.x.toFixed(2)} ${st.y.toFixed(2)}) scale(${st.s.toFixed(4)}) translate(${(-st.m.cx).toFixed(2)} ${(-st.m.cy).toFixed(2)})`);
+        el.setAttribute("fill", C.text);
+        const nx = wordState(key, t + 1 / 120).x, px = wordState(key, t - 1 / 120).x;
+        vmax = Math.max(vmax, Math.abs(nx - px) * 60);
+        // Typographic band mask: closes onto the final cap band as the word lands,
+        // slicing the still-oversized glyphs along their own baseline grid.
+        const w = WORDS[key];
+        const close = E.out(range(t, w.ys[0] - 0.15, w.ys[1] - 0.1));
+        const top = lerp(-3000, CONFIG.title.baseline - metrics.capH - 10, close);
+        const bot = lerp(4000, CONFIG.title.baseline + 12, close);
+        const r = $(key === "J" ? "bandJR" : "bandPR");
+        r.setAttribute("y", top.toFixed(1));
+        r.setAttribute("height", (bot - top).toFixed(1));
+      }
+      $("blurTextK").setAttribute("stdDeviation", `${clamp(vmax / 60 * 0.16, 0, 8).toFixed(2)} 0`);
+
+      // The cyan line: behind the words at mid-cap height, then it gathers into
+      // the small waveform accent under the title.
+      const g = E.inOut(range(t, 7.35, 8.6));
+      const accY = CONFIG.title.baseline + 78;
+      const lineY = lerp(CONFIG.title.baseline - metrics.capH * 0.5, accY, g);
+      const xL = lerp(-60, CX - 66, E.inOut(range(t, 7.2, 8.5)));
+      const xR = lerp(W + 60, CX + 66, E.inOut(range(t, 7.5, 8.65)));
+      const accAmp = lerp(5, 13, g) * (0.75 + 0.25 * Math.min(1.5, beat(t))) * (t > 11 ? 1 - 0.4 * range(t, 11, 12) : 1);
+      const lp = [];
+      for (let i = 0; i <= 260; i++) {
+        const u = i / 260, x = lerp(xL, xR, u);
+        const env = lerp(1, Math.pow(Math.sin(Math.PI * u), 1.4), g);
+        const k = lerp(2 * Math.PI / 340, 2 * Math.PI * 4.5 / 132, g);       // long wave -> tight accent
+        lp.push([x, lineY + accAmp * env * Math.sin(k * (x - CX) - 5.2 * t)]);
+      }
+      $("titleLine").setAttribute("d", pathOf(lp));
+      $("titleLine").setAttribute("stroke-width", lerp(2.4, 3, g).toFixed(2));
+    } else {
+      $("titleLayer").setAttribute("opacity", 0);
+    }
+
+    // Logo: rises into a fixed window (mask reveal), never scaled.
+    {
+      const L = CONFIG.logo, lw = L.height * L.aspect;
+      const top = CONFIG.title.baseline + 118;
+      const u = E.out(range(t, 8.55, 9.5));
+      $("logo").setAttribute("x", (CX - lw / 2).toFixed(1));
+      $("logo").setAttribute("y", (top + 30 * (1 - u)).toFixed(2));
+      $("logo").setAttribute("width", lw.toFixed(1));
+      $("logo").setAttribute("height", L.height);
+      const r = $("logoClipR");
+      r.setAttribute("x", (CX - lw / 2 - 20).toFixed(1));
+      r.setAttribute("y", (top - 6).toFixed(1));
+      r.setAttribute("width", (lw + 40).toFixed(1));
+      r.setAttribute("height", (L.height + 12).toFixed(1));
+      $("logoWrap").setAttribute("opacity", Math.min(1, u * 1.6).toFixed(3));
+    }
+
+    // Fade to black over the last half second.
+    $("fade").setAttribute("opacity", E.inOut(range(t, T.fade, CONFIG.duration)).toFixed(3));
+  }
+
+  // ---------------------------------------------------------------- static setup
+  (function setup() {
+    $("signal").setAttribute("stroke", C.accent);
+    $("grille").setAttribute("stroke", C.accent);
+    $("dot").setAttribute("fill", C.accent);
+    $("discRim").setAttribute("stroke", C.accent);
+    $("discRings").setAttribute("stroke", "#333333");
+    $("titleLine").setAttribute("stroke", C.accent);
+    $("fade").setAttribute("fill", C.bg);
+    $("logo").setAttribute("href", CONFIG.logo.src);
+    const geo = $("geo");
+    geo.setAttribute("stroke", C.charcoal);
+    let svg = "";
+    for (const r of [250, 400, 570, 760, 980]) svg += `<circle cx="0" cy="0" r="${r}"/>`;
+    svg += `<line x1="-1400" y1="0" x2="1400" y2="0"/>`;
+    for (const x of [-570, 570]) svg += `<line x1="${x}" y1="-900" x2="${x}" y2="900"/>`;
+    geo.innerHTML = svg;
+  })();
+
+  // ---------------------------------------------------------------- timeline
+  // One paused tween over a proxy; the modifier runs draw() on every render,
+  // including renderer seeks that suppress callbacks.
+  const proxy = { t: 0 };
+  const tl = gsap.timeline({ paused: true });
+  tl.to(proxy, {
+    t: CONFIG.duration, duration: CONFIG.duration, ease: "none",
+    modifiers: { t: (v) => { draw(+v); return v; } },
+  }, 0);
+  window.__timelines = window.__timelines || {};
+  window.__timelines["jain-podcast"] = tl;
+  draw(0);
+  if (document.fonts) document.fonts.ready.then(() => { metrics = null; draw(proxy.t); });
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>JAIN PODCAST preview</title>
+<style>
+  /* Replayable preview with controls OUTSIDE the 1920x1080 canvas.
+     Serve this folder over http (file:// blocks iframe scripting):
+       python3 -m http.server 8080 --directory intros/jain-podcast
+       open http://localhost:8080/preview.html
+     It seeks the composition's own paused timeline, so what you scrub is
+     exactly what the renderer captures. */
+  :root { --accent: #00DAC4; --charcoal: #262626; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #000; color: #cfcfcf; font: 500 14px Inter, system-ui, sans-serif; }
+  #holder { position: relative; overflow: hidden; margin: 24px auto 0; outline: 1px solid var(--charcoal); }
+  #holder iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; }
+  #bar { display: flex; gap: 12px; align-items: center; margin: 14px auto; padding: 0 16px; }
+  button { background: var(--charcoal); color: #fff; border: 1px solid var(--accent); border-radius: 999px;
+           padding: 6px 16px; font: inherit; cursor: pointer; }
+  input[type=range] { flex: 1; accent-color: var(--accent); }
+  #time { min-width: 64px; text-align: right; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<div id="holder"><iframe id="comp" src="index.html" title="JAIN PODCAST intro"></iframe></div>
+<div id="bar">
+  <button id="play">Play</button>
+  <button id="replay">Replay</button>
+  <input id="scrub" type="range" min="0" max="12" step="0.0166667" value="0">
+  <span id="time">0.00 s</span>
+</div>
+<script>
+  const DUR = 12;
+  const frame = document.getElementById("comp"), holder = document.getElementById("holder");
+  const bar = document.getElementById("bar");
+  let tl = null, audio = null, playing = false, t0 = 0, wall = 0;
+
+  function fit() {
+    const k = Math.min(1, (innerWidth - 32) / 1920, (innerHeight - 110) / 1080);
+    frame.style.transform = `scale(${k})`;
+    holder.style.width = bar.style.width = 1920 * k + "px";
+    holder.style.height = 1080 * k + "px";
+  }
+  addEventListener("resize", fit); fit();
+
+  frame.addEventListener("load", () => {
+    const w = frame.contentWindow;
+    tl = w.__timelines && w.__timelines["jain-podcast"];
+    audio = w.document.getElementById("cue");
+    show(0);
+  });
+
+  const now = () => !playing ? t0
+    : (audio && audio.readyState > 0 && !audio.paused ? audio.currentTime : t0 + (performance.now() - wall) / 1000);
+  function show(t) {
+    if (tl) tl.seek(t, false);
+    document.getElementById("scrub").value = t;
+    document.getElementById("time").textContent = t.toFixed(2) + " s";
+  }
+  function play(from) {
+    t0 = from; wall = performance.now(); playing = true;
+    if (audio) { audio.currentTime = from; audio.play().catch(() => {}); }
+    document.getElementById("play").textContent = "Pause";
+  }
+  function pause() {
+    t0 = now(); playing = false;
+    if (audio) audio.pause();
+    document.getElementById("play").textContent = "Play";
+  }
+  document.getElementById("play").onclick = () => playing ? pause() : play(t0 >= DUR ? 0 : t0);
+  document.getElementById("replay").onclick = () => play(0);
+  document.getElementById("scrub").oninput = (e) => { pause(); t0 = +e.target.value; show(t0); };
+  (function loop() {
+    if (playing) {
+      const t = now();
+      if (t >= DUR) { pause(); t0 = DUR; }
+      show(Math.min(t, DUR));
+    }
+    requestAnimationFrame(loop);
+  })();
+</script>
+</body>
+</html>

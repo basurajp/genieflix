@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="100" viewBox="0 0 600 100">
+  <!-- PLACEHOLDER, not the logo. Replace this file with the official JAIN Online
+       logo (SVG or transparent PNG) and set LOGO.src / LOGO.aspect in index.html. -->
+  <rect x="1.5" y="1.5" width="597" height="97" rx="8" fill="none" stroke="#5a5a5a" stroke-width="2" stroke-dasharray="10 7"/>
+  <text x="300" y="47" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="26" font-weight="600" fill="#9a9a9a" letter-spacing="3">JAIN ONLINE LOGO</text>
+  <text x="300" y="76" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" fill="#6f6f6f" letter-spacing="1">PLACEHOLDER · replace assets/logo/jain-online-logo.svg</text>
+</svg>

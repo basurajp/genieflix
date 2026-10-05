@@ -38,6 +38,9 @@ python3 -m py_compile pipeline/*.py scheduler/*.py   # plus node --check factory
 python3 cartoon/cast_voices.py --project <dir>            # needs <dir>/cast.json
 python3 cartoon/episodes/last-laddu/compose.py --project <dir>   # instead of build_index.py
 
+# Standalone motion pieces (16:9 intros; authored index.html, not generated)
+python3 intros/jain-podcast/music.py && npx hyperframes render intros/jain-podcast --fps 60 --quality delivery
+
 # Scheduler
 python3 scheduler/generate_manifest.py --matrix m.csv --videos-dir factory/ready-to-post --out manifest.csv
 python3 scheduler/push_schedule.py --manifest manifest.csv        # dry-run; --push to execute
