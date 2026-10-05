@@ -136,7 +136,7 @@ async function main() {
       const r = execSync(`ffmpeg -hide_banner -nostats -i "${path.join(OUT, 'score.wav')}" -af ebur128=peak=true -f null - 2>&1 | tail -14`).toString();
       console.log(r);
     } else if (cmd === 'budget') {
-      const page = await openPage(browser, port, 0.25);
+      const page = await openPage(browser, port, scale); // sample counts scale with output pixels
       const n = await page.evaluate(() => window.__exp.budget());
       const sum = n.reduce((a, b) => a + b, 0);
       console.log(`subframes: ${sum} for ${n.length} frames (avg ${(sum / n.length).toFixed(2)})`);

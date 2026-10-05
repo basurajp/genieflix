@@ -31,7 +31,7 @@ What it does: serves this folder, opens `render/export.html` in headless Chromiu
 720 frames at 1920 x 1080 with shutter-sampled motion blur, streams raw RGBA into ffmpeg
 (H.264 High, CRF 14, yuv420p, BT.709 tags), renders the score offline to a 48 kHz WAV, then
 muxes AAC 256 kbps with `+faststart`. On a 4-core CPU with no GPU (SwiftShader) this takes
-roughly 30-40 minutes. With a GPU it's a few minutes; drop the `--use-angle=swiftshader`
+roughly 75-90 minutes. With a GPU it's a few minutes; drop the `--use-angle=swiftshader`
 flags in `render.mjs` `launch()` to use hardware WebGL.
 
 Other commands:
@@ -40,7 +40,7 @@ Other commands:
 node render/render.mjs stills 2.4,6.15,9.8 --scale 0.5   # PNG stills into renders/stills
 node render/render.mjs audio                             # renders/score.wav + EBU R128 report
 node render/render.mjs check                             # clearance, speed, yaw rate, plan.svg
-node render/render.mjs budget                            # motion-blur subframes per frame
+node render/render.mjs budget                            # motion-blur subframes per frame (full res)
 ```
 
 `check` is the path QA: minimum camera distance to every letter, the column and the star;
