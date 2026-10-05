@@ -112,8 +112,8 @@ texture through the orbit (2.4-4.6 s), a stereo whoosh panned left to right with
 (4.62 s), a short swish and low tick at the fastest pass (6.0 s), a low air pass for the letter
 wipe (6.38 s) and a three-partial chime with the star pulse (9.6 s).
 
-Master: 30 Hz high-pass and a gentle compressor. The rendered WAV measures about -14 LUFS
-integrated with true peak around -1.9 dBFS.
+Master: 30 Hz high-pass and a gentle compressor. The exported MP4 measures -13.8 LUFS
+integrated with a true peak of -1.6 dBTP.
 
 ### Replacing the music
 
