@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>JAIN Podcast Intro (export)</title>
+<style>html,body{margin:0;background:#000}canvas{display:block}</style>
+</head>
+<body>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script type="importmap">{ "imports": { "three": "../vendor/three/three.module.js" } }</script>
+<script type="module">
+import { createEngine } from '../src/engine.js';
+import { renderScore, encodeWav } from '../src/audio/score.js';
+import { FORMAT } from '../src/config.js';
+
+const canvas = document.getElementById('c');
+const q = new URLSearchParams(location.search);
+const scale = Number(q.get('scale') || 1);
+const engine = await createEngine(canvas, { width: FORMAT.width, height: FORMAT.height, pixelRatio: scale, baseUrl: '../' });
+const gl = engine.renderer.getContext();
+const W = Math.round(FORMAT.width * scale), H = Math.round(FORMAT.height * scale);
+const px = new Uint8Array(W * H * 4);
+
+function grab() { gl.readPixels(0, 0, W, H, gl.RGBA, gl.UNSIGNED_BYTE, px); return px; }
+
+window.__exp = {
+  W, H,
+  async still(t, name, motionBlur = true) {
+    const info = engine.renderFrame(t, { motionBlur });
+    await fetch(`/still/${encodeURIComponent(name)}?w=${W}&h=${H}`, { method: 'POST', body: grab() });
+    return info;
+  },
+  async frames(worker, i0, i1, motionBlur = true) {
+    const log = [];
+    for (let i = i0; i < i1; i++) {
+      const t0 = performance.now();
+      const info = engine.renderFrame(i / FORMAT.fps, { motionBlur });
+      await fetch(`/frame/${worker}/${i}`, { method: 'POST', body: grab() });
+      log.push([i, info.samples, Math.round(performance.now() - t0)]);
+    }
+    return log;
+  },
+  samples(step = 1 / 60) {
+    const out = [];
+    for (let t = 0; t <= FORMAT.duration + 1e-9; t += step) out.push({ t: +t.toFixed(4), ...engine.sample(t) });
+    return { out, layout: { starFinal: engine.layout.starFinal.toArray(), columns: engine.envColumns } };
+  },
+  budget() { const n = []; for (let i = 0; i < FORMAT.fps * FORMAT.duration; i++) n.push(engine.shutterSamples(i / FORMAT.fps)); return n; },
+  async audio() {
+    const buf = await renderScore();
+    await fetch('/audio', { method: 'POST', body: encodeWav(buf) });
+    let peak = 0;
+    for (let c = 0; c < buf.numberOfChannels; c++) for (const v of buf.getChannelData(c)) peak = Math.max(peak, Math.abs(v));
+    return { peak, seconds: buf.duration };
+  },
+};
+window.__ready = true;
+</script>
+</body>
+</html>
