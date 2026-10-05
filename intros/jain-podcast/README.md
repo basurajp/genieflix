@@ -30,9 +30,9 @@ then open `http://localhost:8080/preview.html` (play, replay, frame scrub, synce
 
 - **Palette, timing, logo, title size**: the `CONFIG` block at the top of the script in `index.html`.
   Every frame is `draw(t)`, a pure function of time, so any change previews and renders identically.
-- **Logo**: `assets/logo/jain-online-logo.svg` is a **placeholder**. Replace it with the official
-  file (SVG or transparent PNG), update `CONFIG.logo.src` and `CONFIG.logo.aspect` (width ÷ height).
-  It is drawn with `preserveAspectRatio="meet"` and never scaled non-uniformly.
+- **Logo**: `assets/logo/jain-online-logo.svg` is the official JAIN Online dark-background lock-up
+  (447×73). To swap it, replace the file and set `CONFIG.logo.aspect` (width ÷ height). It is drawn
+  with `preserveAspectRatio="meet"`, so a wrong ratio letterboxes and never distorts.
 - **Music**: `music.py` (stdlib only, fixed seed, so it's reproducible). Kick times are mirrored in
   `CONFIG.kicks` so the waveform breathes with the track; keep them in sync if you change drums.
 - Font: Inter Medium (OFL, `assets/fonts/`). Playfair Display was left out; the intro has no
