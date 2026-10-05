@@ -68,6 +68,7 @@ if (RENDER) {
       draw(t, { subframes: 1 });
     },
     clearance: (t) => world.clearance(t),
+    motionPx: (t) => world.motionPx(t, POST.shutter / FORMAT.fps),
     async wavBase64() {
       cueBuf = cueBuf || (await renderCue());
       const bytes = encodeWav(cueBuf);

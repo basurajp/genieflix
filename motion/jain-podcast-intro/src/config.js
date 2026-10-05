@@ -148,9 +148,9 @@ export const GLASS = {
 
 export const POST = {
   msaa: 4,
-  shutter: 0.5, // fraction of a frame (180 deg shutter)
-  maxSubframes: 6,
-  blurPxPerSubframe: 3.0,
+  shutter: 0.4, // fraction of a frame (144 deg shutter, restrained)
+  maxSubframes: 5,
+  blurPxPerSubframe: 8.0,
   vignette: 0.12,
   dither: true,
 };

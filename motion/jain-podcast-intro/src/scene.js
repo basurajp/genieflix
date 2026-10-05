@@ -316,34 +316,46 @@ export async function buildScene(renderer, pipeline) {
     };
   }
 
-  // Screen-space motion probe for adaptive motion-blur sub-frames.
-  const probeCam = camera.clone();
+  // Screen-space motion probe for adaptive motion-blur sub-frames: a 3x3
+  // grid of screen points at the focus depth and at a near depth (camera
+  // motion), plus the moving objects that are on screen.
+  const probeA = camera.clone();
+  const probeB = camera.clone();
   function motionPx(t, dt) {
-    const pts = [];
-    const sample = (tt) => {
-      poseCamera(tt, probeCam);
-      probeCam.updateProjectionMatrix();
-      const r = [];
-      const objs = [starPath.at(tt), look.at(tt), V(0, 0, 0)];
-      if (tt >= ribbonWindow[0] && tt <= ribbonWindow[1]) {
-        objs.push(V(beadX.at(tt), 0, -0.62).applyQuaternion(occ.quat).add(occ.pos));
+    const t0 = t - dt / 2;
+    const t1 = t + dt / 2;
+    const tgt = poseCamera(t0, probeA).clone();
+    poseCamera(t1, probeB);
+    probeA.updateProjectionMatrix();
+    probeB.updateProjectionMatrix();
+    const focus = probeA.position.distanceTo(tgt);
+    const world0 = [];
+    const world1 = [];
+    for (const depth of [focus, Math.min(focus, 2.0)]) {
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          // point on the view ray of NDC (0.8i, 0.8j) at distance `depth`
+          const dir = V(0.8 * i, 0.8 * j, 0.5).unproject(probeA).sub(probeA.position).normalize();
+          const p = probeA.position.clone().addScaledVector(dir, depth);
+          world0.push(p);
+          world1.push(p);
+        }
       }
-      for (const p of objs) {
-        const v = p.clone().project(probeCam);
-        r.push(v.z < 1 && v.z > -1 ? v : null);
-      }
-      return r;
-    };
-    const a0 = sample(t - dt / 2);
-    const a1 = sample(t + dt / 2);
+    }
+    world0.push(starPath.at(t0));
+    world1.push(starPath.at(t1));
+    if (t0 >= ribbonWindow[0] && t1 <= ribbonWindow[1]) {
+      world0.push(V(beadX.at(t0), 0, -0.62).applyQuaternion(occ.quat).add(occ.pos));
+      world1.push(V(beadX.at(t1), 0, -0.62).applyQuaternion(occ.quat).add(occ.pos));
+    }
     let m = 0;
-    a0.forEach((p, i) => {
-      const q = a1[i];
-      if (!p || !q) return;
-      const dx = ((q.x - p.x) * FORMAT.width) / 2;
-      const dy = ((q.y - p.y) * FORMAT.height) / 2;
-      m = Math.max(m, Math.hypot(dx, dy));
-    });
+    for (let k = 0; k < world0.length; k++) {
+      const a = world0[k].clone().project(probeA);
+      const b = world1[k].clone().project(probeB);
+      const onScreen = (v) => v.z > -1 && v.z < 1 && Math.abs(v.x) < 1.05 && Math.abs(v.y) < 1.05;
+      if (!onScreen(a) || !onScreen(b)) continue;
+      m = Math.max(m, Math.hypot(((b.x - a.x) * FORMAT.width) / 2, ((b.y - a.y) * FORMAT.height) / 2));
+    }
     return Math.min(m, 4000);
   }
 
