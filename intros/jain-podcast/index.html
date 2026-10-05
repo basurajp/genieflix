@@ -88,9 +88,9 @@
         <feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
       <filter id="sparkGlow" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2320" height="1480">
-        <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b"/>
+        <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="b"/>
         <feColorMatrix in="b" type="matrix" result="soft"
-          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.7 0"/>
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.8 0"/>
         <feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
       <radialGradient id="discGrad" gradientUnits="userSpaceOnUse" cx="960" cy="540" r="150" fx="900" fy="480">
@@ -163,8 +163,10 @@
     // Title lock-up. h = glyph height above the baseline used for masks and stacking:
     // Inter caps 1490/2048 em; Playfair italic ascender ("d") ~0.78 em.
     title: { baseline: 510, gap: 36, J: { size: 150, h: 0.727 }, P: { size: 168, h: 0.78 } },
-    // Sparkle: four rays [angle deg (y down), length px], sits off the end of "Podcast".
-    spark: { rays: [[-25, 150], [75, 118], [155, 138], [-100, 104]], dx: 30, dy: 58 },
+    // Sparkle: symmetric four-point star (supplied artwork: hairline rays, full concave
+    // body). Spins counter-clockwise 90deg every 1.4 s like the reference, with a slight
+    // tilt in depth so opposite rays foreshorten. Sits off the end of "Podcast".
+    spark: { ray: 142, dx: 30, dy: 58, degPerSec: 90 / 1.4, tilt: 24 },
   };
 
   const C = CONFIG.palette;
@@ -382,20 +384,39 @@
     $("wP").setAttribute("y", ts.baseline);
   }
 
-  // Four-point sparkle: slender concave rays around a full centre.
-  function sparkPath(cx, cy, s, rotDeg) {
-    const rays = CONFIG.spark.rays.map(([a, l]) => [((a + rotDeg) * Math.PI) / 180, l * s]);
-    const pt = (a, r) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
-    let d = "";
-    for (let i = 0; i < rays.length; i++) {
-      const [a0, l0] = rays[i], [a1, l1] = rays[(i + 1) % rays.length];
-      let da = a1 - a0;
-      while (da <= 0) da += 2 * Math.PI;
-      const tip0 = pt(a0, l0), tip1 = pt(a1, l1);
-      const c0 = pt(a0 + da * 0.36, 0.26 * l0), c1 = pt(a1 - da * 0.36, 0.26 * l1);
-      if (i === 0) d += `M${tip0[0].toFixed(1)} ${tip0[1].toFixed(1)}`;
-      d += `C${c0[0].toFixed(1)} ${c0[1].toFixed(1)} ${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${tip1[0].toFixed(1)} ${tip1[1].toFixed(1)}`;
+  // Four-point sparkle traced from the supplied star: each ray stays a hairline out to
+  // ~55% of its length, then the edge sweeps into the concave body (~0.25 L at 45deg).
+  const SPARK_LOCAL = (() => {
+    const bezier = (pts, u) => {                        // de Casteljau, any degree
+      let q = pts;
+      while (q.length > 1) q = q.slice(1).map((p, i) => [lerp(q[i][0], p[0], u), lerp(q[i][1], p[1], u)]);
+      return q[0];
+    };
+    // One quadrant in units of ray length: up tip -> right tip (y down).
+    const segs = [
+      [[[0, -1], [0.007, -0.8], [0.02, -0.55]], 10],                         // hairline ray
+      [[[0.02, -0.55], [0.03, -0.25], [0.25, -0.03], [0.55, -0.02]], 24],    // concave body
+      [[[0.55, -0.02], [0.8, -0.007], [1, 0]], 10],                          // hairline ray
+    ];
+    const quadrant = [];
+    for (const [ctrl, n] of segs) for (let i = 0; i < n; i++) quadrant.push(bezier(ctrl, i / n));
+    const out = [];
+    for (let q = 0; q < 4; q++) {
+      const a = (q * Math.PI) / 2, c = Math.cos(a), sn = Math.sin(a);
+      for (const [x, y] of quadrant) out.push([x * c - y * sn, x * sn + y * c]);
     }
+    return out;
+  })();
+  function sparkPath(cx, cy, s, rotDeg) {
+    const L = CONFIG.spark.ray * s, th = (rotDeg * Math.PI) / 180, tl = (CONFIG.spark.tilt * Math.PI) / 180;
+    const c = Math.cos(th), sn = Math.sin(th);
+    let d = "";
+    SPARK_LOCAL.forEach(([x, y], i) => {
+      const rx = (x * c - y * sn) * L, ry = (x * sn + y * c) * L;       // spin in its own plane
+      const z = ry * Math.sin(tl), k = F / (F + z);                    // then tilt back in depth
+      const px = cx + rx * k, py = cy + ry * Math.cos(tl) * k;
+      d += (i ? "L" : "M") + px.toFixed(1) + " " + py.toFixed(1);
+    });
     return d + "Z";
   }
 
@@ -521,43 +542,58 @@
       }
       $("blurTextK").setAttribute("stdDeviation", `${clamp(vmax / 60 * 0.16, 0, 8).toFixed(2)} 0`);
 
-      // The cyan line: behind the words at mid-cap height, then it collapses to a
-      // single point off the end of "Podcast" (the opening point, returned).
+      // The cyan line: behind the words at mid-cap height, then it gathers into the
+      // small waveform accent under the title. On its way in, its right end passes the
+      // end of "Podcast" and leaves the point the sparkle blooms from.
       const [SX, SY] = metrics.spark;
-      const g = E.inOut(range(t, 7.35, 8.35));
-      const lineY = lerp(CONFIG.title.baseline - metrics.J.h * 0.5, SY, g);
-      const xL = lerp(-60, SX, E.inOut(range(t, 7.2, 8.3)));
-      const xR = lerp(W + 60, SX, E.inOut(range(t, 7.45, 8.38)));
-      const amp = 5 * (1 - g);
+      const g = E.inOut(range(t, 7.35, 8.6));
+      const accY = CONFIG.title.baseline + 62;
+      const lineYAt = (tt) => lerp(CONFIG.title.baseline - metrics.J.h * 0.5, accY, E.inOut(range(tt, 7.35, 8.6)));
+      const xRAt = (tt) => lerp(W + 60, CX + 66, E.inOut(range(tt, 7.5, 8.65)));
+      const lineY = lineYAt(t);
+      const xL = lerp(-60, CX - 66, E.inOut(range(t, 7.2, 8.5)));
+      const xR = xRAt(t);
+      const accAmp = lerp(5, 13, g) * (0.75 + 0.25 * Math.min(1.5, beat(t))) * (t > 11 ? 1 - 0.4 * range(t, 11, 12) : 1);
       const lp = [];
       for (let i = 0; i <= 260; i++) {
         const u = i / 260, x = lerp(xL, xR, u);
-        lp.push([x, lineY + amp * Math.sin((2 * Math.PI / 340) * (x - CX) - 5.2 * t)]);
+        const env = lerp(1, Math.pow(Math.sin(Math.PI * u), 1.4), g);
+        const k = lerp(2 * Math.PI / 340, 2 * Math.PI * 4.5 / 132, g);       // long wave -> tight accent
+        lp.push([x, lineY + accAmp * env * Math.sin(k * (x - CX) - 5.2 * t)]);
       }
-      $("titleLine").setAttribute("d", xR - xL > 1 ? pathOf(lp) : "");
-      $("titleLine").setAttribute("stroke-width", lerp(2.4, 4, g).toFixed(2));
+      $("titleLine").setAttribute("d", pathOf(lp));
+      $("titleLine").setAttribute("stroke-width", lerp(2.4, 3, g).toFixed(2));
 
-      // Sparkle: blooms from that point on the 8.4 s accent, then twinkles through the hold.
-      const b = range(t, 8.3, 8.95);
-      if (b > 0) {
+      // Sparkle: seeded where the line's end crosses SX, blooms, then spins steadily.
+      if (metrics.sparkT == null) {                     // first frame: solve xR(t) = SX once
+        let lo = 7.5, hi = 8.65;
+        for (let i = 0; i < 40; i++) { const m = (lo + hi) / 2; if (xRAt(m) > SX) lo = m; else hi = m; }
+        metrics.sparkT = (lo + hi) / 2;
+        metrics.sparkY0 = lineYAt(metrics.sparkT);
+      }
+      const t0 = metrics.sparkT, b = range(t, t0, t0 + 0.65);
+      if (t >= t0) {
         const e = E.out(b);
-        const hold = range(t, 8.95, 9.4);
-        let sc = e * (1 + 0.04 * hold * Math.sin(2 * Math.PI * (t - 8.95) / 1.2));
+        let sc = 0.02 + 0.98 * e;
         if (t >= 9.6) sc *= 1 + 0.05 * Math.exp(-(t - 9.6) / 0.25);           // final downbeat
-        const rot = -55 * (1 - e) + 5 * hold * Math.sin(2 * Math.PI * (t - 8.95) / 2.4);
-        $("spark").setAttribute("d", sparkPath(SX, SY, Math.max(0.001, sc), rot));
-        $("spark").setAttribute("opacity", Math.min(1, b * 5).toFixed(3));
+        // Constant counter-clockwise spin, plus an extra half turn that unwinds during
+        // the bloom; the extra term's velocity reaches 0 as the bloom ends, so speed is continuous.
+        const rot = -CONFIG.spark.degPerSec * (t - t0) - 120 * (1 - e);
+        const cy = lerp(metrics.sparkY0, SY, e);
+        $("spark").setAttribute("d", sparkPath(SX, cy, sc, rot));
+        $("spark").setAttribute("opacity", Math.min(1, b * 6).toFixed(3));
       } else {
         $("spark").setAttribute("opacity", 0);
       }
     } else {
       $("titleLayer").setAttribute("opacity", 0);
+      $("spark").setAttribute("opacity", 0);
     }
 
     // Logo: rises into a fixed window (mask reveal), never scaled.
     {
       const L = CONFIG.logo, lw = L.height * L.aspect;
-      const top = CONFIG.title.baseline + 96;
+      const top = CONFIG.title.baseline + 104;
       const u = E.out(range(t, 8.55, 9.5));
       $("logo").setAttribute("x", (CX - lw / 2).toFixed(1));
       $("logo").setAttribute("y", (top + 30 * (1 - u)).toFixed(2));
