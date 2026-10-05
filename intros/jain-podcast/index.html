@@ -2,13 +2,14 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>JAIN PODCAST intro</title>
+<title>Jain Podcast intro</title>
 <style>
   /* JAIN PODCAST intro: 1920x1080 @ 60fps, exactly 12 s.
      Concept: SIGNAL -> CONVERSATION -> IDENTITY. One cyan line becomes a
      waveform, folds into a microphone, its cradle arc closes into a charcoal
      pop-filter disc that sweeps across the lens, and the oversized title it
-     uncovers settles into the final lock-up.
+     uncovers settles into the final lock-up, where the line collapses back to
+     a point and blooms into the sparkle.
 
      Everything visible is drawn by draw(t) below, a pure function of time,
      driven by one paused GSAP timeline. Seeking to any frame gives the same
@@ -23,6 +24,13 @@
     font-style: normal;
   }
 
+  @font-face {
+    font-family: "Playfair Display";
+    src: url("assets/fonts/PlayfairDisplay-SemiBoldItalic.woff2") format("woff2");
+    font-weight: 600;
+    font-style: italic;
+  }
+
   * { margin: 0; padding: 0; box-sizing: border-box; }
   html, body { background: #000000; }
 
@@ -35,11 +43,19 @@
   }
   #scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; }
 
-  .word {
+  /* Title pairing: "Jain" in Inter Medium, "Podcast" in Playfair Display italic. */
+  .word-sans {
     font-family: "Inter", sans-serif;
     font-weight: 500;
     font-size: 150px;
     letter-spacing: -2px;   /* brand rule: -2px on headlines at 1920x1080 */
+  }
+  .word-serif {
+    font-family: "Playfair Display", serif;
+    font-style: italic;
+    font-weight: 600;
+    font-size: 168px;       /* optically matches Inter's x-height at 150px */
+    letter-spacing: -1px;
   }
 </style>
 </head>
@@ -64,6 +80,18 @@
       </filter>
       <filter id="blurDisc" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2320" height="1480">
         <feGaussianBlur id="blurDiscK" in="SourceGraphic" stdDeviation="0 0"/>
+      </filter>
+      <filter id="softGlow" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2320" height="1480">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="9" result="b"/>
+        <feColorMatrix id="softGlowA" in="b" type="matrix" result="soft"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0 0"/>
+        <feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
+      </filter>
+      <filter id="sparkGlow" filterUnits="userSpaceOnUse" x="-200" y="-200" width="2320" height="1480">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="11" result="b"/>
+        <feColorMatrix in="b" type="matrix" result="soft"
+          values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.7 0"/>
+        <feMerge><feMergeNode in="soft"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
       <radialGradient id="discGrad" gradientUnits="userSpaceOnUse" cx="960" cy="540" r="150" fx="900" fy="480">
         <stop offset="0" stop-color="#2e2e2e"/>
@@ -90,10 +118,13 @@
     <g id="titleLayer" opacity="0">
       <path id="titleLine" fill="none" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
       <g filter="url(#blurText)">
-        <g clip-path="url(#bandJ)"><text id="wJ" class="word" x="0" y="0">JAIN</text></g>
-        <g clip-path="url(#bandP)"><text id="wP" class="word" x="0" y="0">PODCAST</text></g>
+        <g clip-path="url(#bandJ)"><text id="wJ" class="word-sans" x="0" y="0">Jain</text></g>
+        <g clip-path="url(#bandP)"><text id="wP" class="word-serif" x="0" y="0" filter="url(#softGlow)">Podcast</text></g>
       </g>
     </g>
+
+    <!-- the sparkle: the signal's last form, bloomed from the point the line collapses into -->
+    <path id="spark" opacity="0" filter="url(#sparkGlow)"/>
 
     <g id="logoWrap" clip-path="url(#logoClip)" opacity="0">
       <image id="logo" x="0" y="0" width="0" height="0" preserveAspectRatio="xMidYMid meet"/>
@@ -129,7 +160,11 @@
     // Official JAIN Online logo (dark-background version). To swap: replace the file, set the ratio.
     // preserveAspectRatio="meet" means a wrong ratio letterboxes, never distorts.
     logo: { src: "assets/logo/jain-online-logo.svg", aspect: 447 / 73, height: 72 },
-    title: { size: 150, baseline: 494, capHeight: 0.727 },  // Inter cap height = 1490/2048 em
+    // Title lock-up. h = glyph height above the baseline used for masks and stacking:
+    // Inter caps 1490/2048 em; Playfair italic ascender ("d") ~0.78 em.
+    title: { baseline: 510, gap: 36, J: { size: 150, h: 0.727 }, P: { size: 168, h: 0.78 } },
+    // Sparkle: four rays [angle deg (y down), length px], sits off the end of "Podcast".
+    spark: { rays: [[-25, 150], [75, 118], [155, 138], [-100, 104]], dx: 30, dy: 58 },
   };
 
   const C = CONFIG.palette;
@@ -334,22 +369,44 @@
   function measure() {
     const ts = CONFIG.title;
     const wJ = $("wJ").getComputedTextLength(), wP = $("wP").getComputedTextLength();
-    const gap = ts.size * 0.26;
-    const x0 = CX - (wJ + gap + wP) / 2;
-    const capH = ts.capHeight * ts.size;
+    const x0 = CX - (wJ + ts.gap + wP) / 2;
+    const hJ = ts.J.h * ts.J.size, hP = ts.P.h * ts.P.size;
     metrics = {
-      capH,
-      J: { x: x0, w: wJ, cx: x0 + wJ / 2, cy: ts.baseline - capH / 2 },
-      P: { x: x0 + wJ + gap, w: wP, cx: x0 + wJ + gap + wP / 2, cy: ts.baseline - capH / 2 },
+      J: { x: x0, w: wJ, h: hJ, cx: x0 + wJ / 2, cy: ts.baseline - hJ / 2 },
+      P: { x: x0 + wJ + ts.gap, w: wP, h: hP, cx: x0 + wJ + ts.gap + wP / 2, cy: ts.baseline - hP / 2 },
     };
+    metrics.spark = [metrics.P.x + wP + CONFIG.spark.dx, ts.baseline + CONFIG.spark.dy];
     $("wJ").setAttribute("x", metrics.J.x.toFixed(2));
     $("wP").setAttribute("x", metrics.P.x.toFixed(2));
     $("wJ").setAttribute("y", ts.baseline);
     $("wP").setAttribute("y", ts.baseline);
   }
 
+  // Four-point sparkle: slender concave rays around a full centre.
+  function sparkPath(cx, cy, s, rotDeg) {
+    const rays = CONFIG.spark.rays.map(([a, l]) => [((a + rotDeg) * Math.PI) / 180, l * s]);
+    const pt = (a, r) => [cx + r * Math.cos(a), cy + r * Math.sin(a)];
+    let d = "";
+    for (let i = 0; i < rays.length; i++) {
+      const [a0, l0] = rays[i], [a1, l1] = rays[(i + 1) % rays.length];
+      let da = a1 - a0;
+      while (da <= 0) da += 2 * Math.PI;
+      const tip0 = pt(a0, l0), tip1 = pt(a1, l1);
+      const c0 = pt(a0 + da * 0.36, 0.26 * l0), c1 = pt(a1 - da * 0.36, 0.26 * l1);
+      if (i === 0) d += `M${tip0[0].toFixed(1)} ${tip0[1].toFixed(1)}`;
+      d += `C${c0[0].toFixed(1)} ${c0[1].toFixed(1)} ${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${tip1[0].toFixed(1)} ${tip1[1].toFixed(1)}`;
+    }
+    return d + "Z";
+  }
+
+  function mixHex(a, b, u) {
+    const pa = [1, 3, 5].map((i) => parseInt(a.slice(i, i + 2), 16));
+    const pb = [1, 3, 5].map((i) => parseInt(b.slice(i, i + 2), 16));
+    return "#" + pa.map((v, i) => Math.round(lerp(v, pb[i], u)).toString(16).padStart(2, "0")).join("");
+  }
+
   // Each word: enters oversized from the left (inheriting the sweep), recedes in
-  // depth while stacked (JAIN above, PODCAST below, so they never collide), then
+  // depth while stacked (Jain above, Podcast below, so they never collide), then
   // drops vertically into its band-mask slot on the final line.
   const WORDS = {
     J: { from: [-1480, -330], s0: 5.0, t0: 5.25, t1: 7.75, ys: [7.5, 8.2], side: -1 },
@@ -361,7 +418,7 @@
     const u = range(t, w.t0, w.t1);
     const p = 1 - E.drift(u);
     const s = scaleOf(w, t);
-    const sep = metrics.capH * (scaleOf(WORDS.J, t) + scaleOf(WORDS.P, t)) / 2 + 28;
+    const sep = (metrics.J.h * scaleOf(WORDS.J, t) + metrics.P.h * scaleOf(WORDS.P, t)) / 2 + 28;
     const settle = E.inOut(range(t, w.ys[0], w.ys[1]));
     const yOff = lerp(w.from[1], w.side * sep / 2, 1 - p) * (1 - settle);
     return { x: m.cx + w.from[0] * p, y: m.cy + yOff, s, m };
@@ -444,38 +501,55 @@
         const el = $(key === "J" ? "wJ" : "wP");
         el.setAttribute("transform",
           `translate(${st.x.toFixed(2)} ${st.y.toFixed(2)}) scale(${st.s.toFixed(4)}) translate(${(-st.m.cx).toFixed(2)} ${(-st.m.cy).toFixed(2)})`);
-        el.setAttribute("fill", C.text);
+        // Podcast stays white while oversized (keeps cyan to ~8% of frame), turns cyan as it lands.
+        const tint = key === "P" ? E.inOut(range(t, 6.7, 7.9)) : 0;
+        el.setAttribute("fill", mixHex(C.text, C.accent, tint));
+        if (key === "P") {
+          $("softGlowA").setAttribute("values", `1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 ${(0.42 * tint).toFixed(3)} 0`);
+        }
         const nx = wordState(key, t + 1 / 120).x, px = wordState(key, t - 1 / 120).x;
         vmax = Math.max(vmax, Math.abs(nx - px) * 60);
         // Typographic band mask: closes onto the final cap band as the word lands,
         // slicing the still-oversized glyphs along their own baseline grid.
         const w = WORDS[key];
         const close = E.out(range(t, w.ys[0] - 0.15, w.ys[1] - 0.1));
-        const top = lerp(-3000, CONFIG.title.baseline - metrics.capH - 10, close);
-        const bot = lerp(4000, CONFIG.title.baseline + 12, close);
+        const top = lerp(-3000, CONFIG.title.baseline - metrics[key].h - 10, close);
+        const bot = lerp(4000, CONFIG.title.baseline + 16, close);
         const r = $(key === "J" ? "bandJR" : "bandPR");
         r.setAttribute("y", top.toFixed(1));
         r.setAttribute("height", (bot - top).toFixed(1));
       }
       $("blurTextK").setAttribute("stdDeviation", `${clamp(vmax / 60 * 0.16, 0, 8).toFixed(2)} 0`);
 
-      // The cyan line: behind the words at mid-cap height, then it gathers into
-      // the small waveform accent under the title.
-      const g = E.inOut(range(t, 7.35, 8.6));
-      const accY = CONFIG.title.baseline + 78;
-      const lineY = lerp(CONFIG.title.baseline - metrics.capH * 0.5, accY, g);
-      const xL = lerp(-60, CX - 66, E.inOut(range(t, 7.2, 8.5)));
-      const xR = lerp(W + 60, CX + 66, E.inOut(range(t, 7.5, 8.65)));
-      const accAmp = lerp(5, 13, g) * (0.75 + 0.25 * Math.min(1.5, beat(t))) * (t > 11 ? 1 - 0.4 * range(t, 11, 12) : 1);
+      // The cyan line: behind the words at mid-cap height, then it collapses to a
+      // single point off the end of "Podcast" (the opening point, returned).
+      const [SX, SY] = metrics.spark;
+      const g = E.inOut(range(t, 7.35, 8.35));
+      const lineY = lerp(CONFIG.title.baseline - metrics.J.h * 0.5, SY, g);
+      const xL = lerp(-60, SX, E.inOut(range(t, 7.2, 8.3)));
+      const xR = lerp(W + 60, SX, E.inOut(range(t, 7.45, 8.38)));
+      const amp = 5 * (1 - g);
       const lp = [];
       for (let i = 0; i <= 260; i++) {
         const u = i / 260, x = lerp(xL, xR, u);
-        const env = lerp(1, Math.pow(Math.sin(Math.PI * u), 1.4), g);
-        const k = lerp(2 * Math.PI / 340, 2 * Math.PI * 4.5 / 132, g);       // long wave -> tight accent
-        lp.push([x, lineY + accAmp * env * Math.sin(k * (x - CX) - 5.2 * t)]);
+        lp.push([x, lineY + amp * Math.sin((2 * Math.PI / 340) * (x - CX) - 5.2 * t)]);
       }
-      $("titleLine").setAttribute("d", pathOf(lp));
-      $("titleLine").setAttribute("stroke-width", lerp(2.4, 3, g).toFixed(2));
+      $("titleLine").setAttribute("d", xR - xL > 1 ? pathOf(lp) : "");
+      $("titleLine").setAttribute("stroke-width", lerp(2.4, 4, g).toFixed(2));
+
+      // Sparkle: blooms from that point on the 8.4 s accent, then twinkles through the hold.
+      const b = range(t, 8.3, 8.95);
+      if (b > 0) {
+        const e = E.out(b);
+        const hold = range(t, 8.95, 9.4);
+        let sc = e * (1 + 0.04 * hold * Math.sin(2 * Math.PI * (t - 8.95) / 1.2));
+        if (t >= 9.6) sc *= 1 + 0.05 * Math.exp(-(t - 9.6) / 0.25);           // final downbeat
+        const rot = -55 * (1 - e) + 5 * hold * Math.sin(2 * Math.PI * (t - 8.95) / 2.4);
+        $("spark").setAttribute("d", sparkPath(SX, SY, Math.max(0.001, sc), rot));
+        $("spark").setAttribute("opacity", Math.min(1, b * 5).toFixed(3));
+      } else {
+        $("spark").setAttribute("opacity", 0);
+      }
     } else {
       $("titleLayer").setAttribute("opacity", 0);
     }
@@ -483,7 +557,7 @@
     // Logo: rises into a fixed window (mask reveal), never scaled.
     {
       const L = CONFIG.logo, lw = L.height * L.aspect;
-      const top = CONFIG.title.baseline + 118;
+      const top = CONFIG.title.baseline + 96;
       const u = E.out(range(t, 8.55, 9.5));
       $("logo").setAttribute("x", (CX - lw / 2).toFixed(1));
       $("logo").setAttribute("y", (top + 30 * (1 - u)).toFixed(2));
@@ -509,6 +583,7 @@
     $("discRim").setAttribute("stroke", C.accent);
     $("discRings").setAttribute("stroke", "#333333");
     $("titleLine").setAttribute("stroke", C.accent);
+    $("spark").setAttribute("fill", C.accent);
     $("fade").setAttribute("fill", C.bg);
     $("logo").setAttribute("href", CONFIG.logo.src);
     const geo = $("geo");
