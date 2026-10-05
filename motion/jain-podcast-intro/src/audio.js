@@ -35,7 +35,7 @@ export const SCORE = (() => {
   const hats = [];
   const bass = [];
   // bar 1: tonal pulse only (soft sub pulse on each beat)
-  for (let b = 0; b < 4; b++) bass.push({ t: at(0, b), dur: 0.42, note: 'B1', level: 0.32 + 0.06 * b });
+  for (let b = 0; b < 4; b++) bass.push({ t: at(0, b), dur: 0.42, note: 'B1', level: 0.22 + 0.05 * b });
   // bars 2-4: groove
   for (let b = 1; b <= 3; b++) {
     kicks.push(at(b, 0), at(b, 2));
@@ -57,7 +57,7 @@ export const SCORE = (() => {
   }
   // bar 5: resolution
   kicks.push(at(4, 0));
-  bass.push({ t: at(4, 0), dur: 2.2, note: 'D1', level: 0.75 });
+  bass.push({ t: at(4, 0), dur: 2.0, note: 'D2', level: 0.6 });
 
   // The motif: F#-A-B, answered; resolves to D on the title lock.
   const motif = [
@@ -131,7 +131,11 @@ export async function renderCue() {
   comp.ratio.value = 3;
   comp.attack.value = 0.008;
   comp.release.value = 0.22;
-  master.connect(comp).connect(ctx.destination);
+  const hpf = ctx.createBiquadFilter();
+  hpf.type = 'highpass';
+  hpf.frequency.value = 32;
+  hpf.Q.value = 0.6;
+  master.connect(hpf).connect(comp).connect(ctx.destination);
 
   const music = ctx.createGain();
   music.gain.value = 1.0;
@@ -186,8 +190,8 @@ export async function renderCue() {
     const env = ctx.createGain();
     const atk = p.t0 === 0 ? 0.9 : 0.25;
     env.gain.setValueAtTime(0, p.t0);
-    env.gain.linearRampToValueAtTime(p.level * 0.06, p.t0 + atk);
-    env.gain.setValueAtTime(p.level * 0.06, p.t1 - 0.3);
+    env.gain.linearRampToValueAtTime(p.level * 0.075, p.t0 + atk);
+    env.gain.setValueAtTime(p.level * 0.075, p.t1 - 0.3);
     env.gain.linearRampToValueAtTime(0, p.t1 + (p.t1 > 12 ? 0 : 0.35));
     lp.connect(env).connect(out);
     p.notes.forEach((n, i) => {
@@ -214,7 +218,7 @@ export async function renderCue() {
     o.frequency.exponentialRampToValueAtTime(46, t + 0.11);
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.75, t + 0.004);
+    g.gain.exponentialRampToValueAtTime(0.55, t + 0.004);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.42);
     o.connect(g);
     send(g, 1.0, 0.05);
@@ -232,7 +236,7 @@ export async function renderCue() {
     bp.Q.value = 1.4;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, t);
-    g.gain.linearRampToValueAtTime(0.22, t + 0.003);
+    g.gain.linearRampToValueAtTime(0.32, t + 0.003);
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
     src.connect(bp).connect(g);
     send(g, 0.8, 0.3);
@@ -248,7 +252,7 @@ export async function renderCue() {
     hp.frequency.value = 8200;
     const g = ctx.createGain();
     g.gain.setValueAtTime(0, h.t);
-    g.gain.linearRampToValueAtTime(0.07 * h.accent, h.t + 0.002);
+    g.gain.linearRampToValueAtTime(0.13 * h.accent, h.t + 0.002);
     g.gain.exponentialRampToValueAtTime(0.0001, h.t + 0.045);
     const pan = ctx.createStereoPanner();
     pan.pan.value = 0.25;
@@ -266,8 +270,8 @@ export async function renderCue() {
     lp.frequency.exponentialRampToValueAtTime(220, n.t + Math.min(0.4, n.dur));
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, n.t);
-    g.gain.exponentialRampToValueAtTime(0.32 * n.level, n.t + 0.01);
-    g.gain.setValueAtTime(0.32 * n.level, n.t + n.dur * 0.6);
+    g.gain.exponentialRampToValueAtTime(0.17 * n.level, n.t + 0.01);
+    g.gain.setValueAtTime(0.17 * n.level, n.t + n.dur * 0.6);
     g.gain.exponentialRampToValueAtTime(0.0001, n.t + n.dur);
     for (const [type, mul, lvl] of [['sine', 1, 1], ['sawtooth', 1, 0.35], ['sine', 2, 0.18]]) {
       const o = ctx.createOscillator();
@@ -292,7 +296,7 @@ export async function renderCue() {
     lp.frequency.exponentialRampToValueAtTime(1300, t + 0.35);
     const g = ctx.createGain();
     g.gain.setValueAtTime(0.0001, t);
-    g.gain.exponentialRampToValueAtTime(0.16, t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.24, t + 0.006);
     g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.5);
     for (const [type, mul, lvl] of [['triangle', 1, 1], ['sine', 2, 0.25], ['sine', 3.01, 0.06]]) {
       const o = ctx.createOscillator();
@@ -313,7 +317,7 @@ export async function renderCue() {
     const f = hz(note);
     const out = ctx.createGain();
     out.gain.setValueAtTime(0.0001, t);
-    out.gain.exponentialRampToValueAtTime(level * 0.2, t + 0.004);
+    out.gain.exponentialRampToValueAtTime(level * 0.28, t + 0.004);
     out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     const car = ctx.createOscillator();
     car.frequency.value = f;

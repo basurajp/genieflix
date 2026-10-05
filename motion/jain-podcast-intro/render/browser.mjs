@@ -51,7 +51,13 @@ export async function openRenderer({ gpu = false } = {}) {
     if (m.type() === 'error' || m.type() === 'warning') console.error('[page]', m.text());
   });
   await page.goto(`http://127.0.0.1:${port}/index.html?render=1`);
-  await page.waitForFunction(() => window.__ready === true, null, { timeout: 180000 });
+  // fail fast if the page throws while building the scene
+  const failed = new Promise((_, reject) => page.once('pageerror', reject));
+  await Promise.race([page.waitForFunction(() => window.__ready === true, null, { timeout: 300000 }), failed]).catch(async (e) => {
+    await browser.close();
+    srv.close();
+    throw e;
+  });
   const close = async () => {
     await browser.close();
     srv.close();

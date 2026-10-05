@@ -33,6 +33,8 @@ export function buildEnvironment(renderer) {
   panel(0.22, 12, [-4, -2, 11], 0xffffff, 2.2, [0, 0, -0.35]);
   // rim source behind the subject
   panel(9, 0.4, [2, 3, -12], 0xffffff, 2.6, [0, 0, 0.12]);
+  // the final glint: placed on the star's mirror direction at the 10.2 s accent
+  panel(0.4, 14, [10.9, 2.6, 6.6], 0xffffff, 3.4, [0, 0, 0.08]);
   // restrained cyan strip, low back right
   panel(0.3, 11, [9, -5, -8], PALETTE.cyan, 2.0, [0, 0, 0.3]);
   // faint floor bounce so surfaces never go fully dead
@@ -90,7 +92,7 @@ vec4 glassRefraction( const in vec3 n, const in vec3 v, const in float roughness
   float absorbLen = thickness * ( modelScale.x + modelScale.y + modelScale.z ) / 3.0 * ( 1.0 + edgeBoost * edgeK );
   vec3 transmittance = diffuseColor * volumeAttenuation( absorbLen, attenuationColor, attenuationDistance );
   vec3 F = EnvironmentBRDF( n, v, specularColor, specularF90, roughness );
-  vec3 scatter = scatterColor * scatterStrength * ( 0.15 + edgeK );
+  vec3 scatter = scatterColor * scatterStrength * ( 0.1 + edgeK );
   float tf = ( transmittance.r + transmittance.g + transmittance.b ) / 3.0;
   return vec4( ( 1.0 - F ) * ( transmittance * light.rgb + scatter ), 1.0 - ( 1.0 - light.a ) * tf );
 }
@@ -120,7 +122,10 @@ function glassMaterial(p, { tier2Texture = null } = {}) {
   m.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, u);
     let fs = shader.fragmentShader;
-    fs = fs.replace('void main() {', REFRACTION_GLSL + '\nvoid main() {');
+    // Includes are expanded after onBeforeCompile, so inline the chunks we patch.
+    fs = fs.replace('#include <transmission_pars_fragment>', THREE.ShaderChunk.transmission_pars_fragment);
+    fs = fs.replace('#include <transmission_fragment>', THREE.ShaderChunk.transmission_fragment);
+    fs = fs.replace('void main() {', '#ifdef USE_TRANSMISSION\n' + REFRACTION_GLSL + '\n#endif\nvoid main() {');
     const call = /vec4 transmitted = getIBLVolumeRefraction\([\s\S]*?\);/;
     if (!call.test(fs)) throw new Error('three.js transmission chunk changed; update REFRACTION_GLSL hook');
     fs = fs.replace(
@@ -164,18 +169,22 @@ export function buildBackground(scene) {
     new THREE.ShaderMaterial({
       side: THREE.BackSide,
       depthWrite: false,
-      uniforms: { cyan: { value: lin(PALETTE.cyan) } },
+      uniforms: { cyan: { value: lin(PALETTE.cyan) }, glowFrom: { value: new THREE.Vector3() }, glowDir: { value: new THREE.Vector3(0, 0, -1) }, glowLevel: { value: 0 } },
       vertexShader: /* glsl */ `
-        varying vec3 vDir;
-        void main() { vDir = normalize(position); gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
+        varying vec3 vDir; varying vec3 vWorld;
+        void main() { vDir = normalize(position); vWorld = (modelMatrix * vec4(position, 1.0)).xyz; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
       fragmentShader: /* glsl */ `
-        uniform vec3 cyan; varying vec3 vDir;
+        uniform vec3 cyan; uniform vec3 glowFrom; uniform vec3 glowDir; uniform float glowLevel;
+        varying vec3 vDir; varying vec3 vWorld;
         void main() {
+          // soft pool aimed behind the resting star (as seen from the final camera)
+          float gd = max(dot(normalize(vWorld - glowFrom), glowDir), 0.0);
+          float glow = exp(-(1.0 - gd) * 900.0) * glowLevel;
           // two soft pools of teal haze: lower right, and a fainter one upper left behind
           float a = pow(max(dot(vDir, normalize(vec3(0.55, -0.42, -0.72))), 0.0), 9.0);
           float b = pow(max(dot(vDir, normalize(vec3(-0.6, 0.35, -0.72))), 0.0), 14.0);
           float c = pow(max(dot(vDir, normalize(vec3(0.0, -0.2, 1.0))), 0.0), 6.0);
-          vec3 col = cyan * (0.013 * a + 0.006 * b + 0.004 * c);
+          vec3 col = cyan * (0.013 * a + 0.006 * b + 0.004 * c + glow);
           gl_FragColor = vec4(col, 1.0);
         }`,
     }),
@@ -189,7 +198,7 @@ export function buildBackground(scene) {
   // Grid on a distant plane.
   const grid = new THREE.Group();
   const gz = -26;
-  const gMat = lineMat(0.75);
+  const gMat = lineMat(0.6);
   const spacing = 3.2;
   for (let i = -20; i <= 20; i++) {
     const v = new THREE.Mesh(new THREE.PlaneGeometry(0.035, 90), gMat);
@@ -283,5 +292,11 @@ export function buildBackground(scene) {
       w.mesh.geometry.attributes.position.needsUpdate = true;
     }
   }
-  return { group, updateSound };
+  function setStarGlow(from, at, level = 0.042) {
+    const u = sky.material.uniforms;
+    u.glowFrom.value.copy(from);
+    u.glowDir.value.copy(at).sub(from).normalize();
+    u.glowLevel.value = level;
+  }
+  return { group, updateSound, setStarGlow };
 }

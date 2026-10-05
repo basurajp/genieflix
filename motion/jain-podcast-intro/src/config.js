@@ -97,7 +97,7 @@ export const STAR = {
   depth: 0.11,
   bevelThickness: 0.065,
   bevelSize: 0.07,
-  bevelOffset: -0.05,
+  bevelOffset: -0.025,
   bevelSegments: 12,
   finalScale: 0.75,
 };
@@ -113,8 +113,8 @@ export const GLASS = {
     attenuationColor: '#86ece2', // #00DAC4 lifted toward white; longer paths deepen it
     attenuationDistance: 0.3,
     edgeBoost: 3.5, // extra optical path at grazing angles (thick edges read richer cyan)
-    scatter: 0.05, // restrained internal scattering, cyan
-    envMapIntensity: 1.35,
+    scatter: 0.11, // restrained internal scattering, cyan
+    envMapIntensity: 1.7,
     specularIntensity: 1.0,
   },
   frosted: {

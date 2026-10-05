@@ -1,7 +1,7 @@
 // Scene assembly + choreography. `pose(t)` places every object and the camera
 // for an absolute time t (seconds). No state carries between frames.
 import * as THREE from 'three';
-import { FORMAT, TIMING, LENS, FINAL, TYPE, BRAND_CREDIT, STAR, GLASS } from './config.js';
+import { FORMAT, TIMING, LENS, FINAL, TYPE, BRAND_CREDIT, STAR, GLASS, PALETTE } from './config.js';
 import { Rail, VecTrack, EulerTrack, Hermite, smootherstep, smoothstep, clamp, deg } from './math.js';
 import { buildStarGeometry, buildPanelGeometry, buildRibbonGeometry } from './geometry.js';
 import { loadFont, layoutLine, buildLetter, typeMaterials, buildCredit } from './type.js';
@@ -80,6 +80,10 @@ export async function buildScene(renderer, pipeline) {
 
   const titleRight = Math.max(lineP.width, lineJ.width) / 2;
   const starFinal = V(titleRight + 1.02, yb1 + capH * 0.42, 0.55);
+
+  // Soft backlight in the sky layer behind the star's resting place: gives the
+  // glass something to transmit and refract against black.
+  bg.setStarGlow(V(0, 0, D), starFinal.clone().add(V(0.3, -0.1, 0)));
 
   // Frosted panel (blur-to-clarity during the pullback).
   const panel = new THREE.Mesh(buildPanelGeometry(5.4, 3.3, 0.16), frostedMaterial(pipeline.tier2Texture));
@@ -202,11 +206,11 @@ export async function buildScene(renderer, pipeline) {
     [4.8, [0, 52, 0]],
     [5.4, [-4, 40, -6]],
     [6.4, [-6, 28, -8]],
-    [7.6, [-4, 22, -4]],
-    [9.6, [-3, 16, 0]],
-    [9.9, [-3, 16, 0]],
-    [10.9, [-3, 3, 0]],
-    [12.0, [-3, 2, 0]],
+    [7.6, [-5, 28, -4]],
+    [9.6, [-6, 27, 0]],
+    [9.9, [-6, 26, 0]],
+    [10.9, [-6, 12, 0]],
+    [12.0, [-6, 10, 0]],
   ]);
 
   const podJourney = { p: V(-0.6, -3.9, -10.2), q: new THREE.Quaternion().setFromEuler(new THREE.Euler(deg(-74), deg(4), 0)) };

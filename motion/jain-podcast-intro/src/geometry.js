@@ -32,7 +32,8 @@ export function starOutline(cfg) {
   for (let i = 0; i < fN; i++) half.push(flank.getPoint(i / fN));
   // Mirror across y = x (reversed) for the right tip's half: tangents stay continuous.
   const quadrant = [...half, V.clone()];
-  for (let i = half.length - 1; i >= 0; i--) quadrant.push(new THREE.Vector2(half[i].y, half[i].x));
+  // The mirrored apex is skipped: it is the next quadrant's first point.
+  for (let i = half.length - 1; i >= 1; i--) quadrant.push(new THREE.Vector2(half[i].y, half[i].x));
   // Rotate the quadrant by -90deg three times to close the loop (clockwise).
   const pts = [];
   for (let q = 0; q < 4; q++) {
