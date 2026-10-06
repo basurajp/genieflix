@@ -40,8 +40,9 @@ logo or poster export needs new crops.
 ## Notes
 
 - No 1.1× speed-up. That pass exists for narrated reels and would detune the music.
-- The music is a stdlib synth bed. For reach, post a copy with Instagram's
-  in-app trending audio instead. `renders/reel-silent.mp4` is the version for that.
+- The music is a stdlib synth bed. To post with Instagram's in-app audio
+  instead, upload `renders/deeksharambh-2026-recap-silent.mp4` (same picture,
+  no audio track).
 - Renderer lessons from this piece: a `<video>` must not sit inside a timed
   wrapper (the frame extractor ignores the wrapper's offset), so the wall is an
   untimed div whose opacity is set on its window; and `-webkit-text-stroke` on
