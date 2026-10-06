@@ -32,6 +32,11 @@ cp template/assets/gsap.min.js $D/project/assets/
 python3 $D/compose.py --project $D/project
 npx hyperframes lint $D/project                # 0 errors
 npx hyperframes render $D/project --quality high -o $D/project/renders/reel.mp4
+# upload copy: the master is ~46 MB; two-pass 5.2 Mbps lands ~26 MB at SSIM 0.996
+ffmpeg -i $D/project/renders/reel.mp4 -c:v libx264 -preset slow -b:v 5200k -x264-params aq-mode=3 \
+  -pass 1 -an -f mp4 /dev/null
+ffmpeg -i $D/project/renders/reel.mp4 -c:v libx264 -preset slow -b:v 5200k -x264-params aq-mode=3 \
+  -pass 2 -c:a aac -b:a 192k -movflags +faststart $D/project/renders/deeksharambh-2026-recap-ig.mp4
 ```
 
 `prep_assets.py` has crop boxes measured on the supplied files. A different
@@ -41,7 +46,7 @@ logo or poster export needs new crops.
 
 - No 1.1× speed-up. That pass exists for narrated reels and would detune the music.
 - The music is a stdlib synth bed. To post with Instagram's in-app audio
-  instead, upload `renders/deeksharambh-2026-recap-silent.mp4` (same picture,
+  instead, upload `renders/deeksharambh-2026-recap-ig-silent.mp4` (same picture,
   no audio track).
 - Renderer lessons from this piece: a `<video>` must not sit inside a timed
   wrapper (the frame extractor ignores the wrapper's offset), so the wall is an
