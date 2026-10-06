@@ -38,6 +38,9 @@ python3 -m py_compile pipeline/*.py scheduler/*.py   # plus node --check factory
 python3 cartoon/cast_voices.py --project <dir>            # needs <dir>/cast.json
 python3 cartoon/episodes/last-laddu/compose.py --project <dir>   # instead of build_index.py
 
+# Motion pieces (no narration, music-clocked kinetic type; see motion/<name>/README.md)
+python3 motion/deeksharambh-2026/compose.py --project motion/deeksharambh-2026/project
+
 # Scheduler
 python3 scheduler/generate_manifest.py --matrix m.csv --videos-dir factory/ready-to-post --out manifest.csv
 python3 scheduler/push_schedule.py --manifest manifest.csv        # dry-run; --push to execute

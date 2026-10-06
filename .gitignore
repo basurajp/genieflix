@@ -40,6 +40,9 @@ factory/failed/*
 factory/output/*
 factory/ready-to-post/*
 
+# --- motion pieces: project folders hold brand assets and footage, not source ---
+motion/*/project/
+
 # --- keeps (order matters: negations after the broad ignores) ---
 # gsap.min.js is vendored on purpose — the pipeline must render offline
 !template/assets/gsap.min.js
