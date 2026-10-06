@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>grid-wave</title>
+<style>
+  /* Seamless background loop: a dark teal grid that undulates gently while
+     the side glows breathe with a faint flicker. 1080x1920 @ 30fps, 10 s.
+     Every motion term completes a whole number of cycles per loop, so the
+     last frame flows straight back into the first.
+     Render: npx hyperframes render backgrounds/grid-wave -o grid-wave.mp4 */
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #000; }
+
+  #stage {
+    position: relative;
+    width: 1080px;
+    height: 1920px;
+    overflow: hidden;
+    background: #000;
+  }
+
+  #grid {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 1080px;
+    height: 1920px;
+  }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="reel" data-start="0" data-width="1080" data-height="1920" data-fps="30" data-duration="10">
+  <canvas id="grid" class="clip" width="1080" height="1920" data-start="0" data-duration="10" data-track-index="0"></canvas>
+</div>
+
+<script src="assets/gsap.min.js"></script>
+<script>
+(function () {
+  var W = 1080, H = 1920;
+  var LOOP = 10;          // seconds; every frequency below is a whole number of cycles per LOOP
+  var CELL = 86;          // grid pitch in px (matches the reference still)
+  var TILT = 0.8 * Math.PI / 180;   // reference grid leans ~0.8 deg clockwise
+  var STEP = 24;          // polyline sample spacing along each grid line
+  var TAU = Math.PI * 2;
+
+  var canvas = document.getElementById("grid");
+  var ctx = canvas.getContext("2d");
+  var lines = document.createElement("canvas");
+  lines.width = W; lines.height = H;
+  var lctx = lines.getContext("2d");
+
+  // phase in radians of a term that runs k whole cycles per loop
+  function ph(t, k) { return TAU * k * t / LOOP; }
+
+  // Smooth glow intensity: a slow breath plus a few faster, tiny shimmers.
+  // Amplitudes stay under ~10% so the flicker reads as light, not strobe.
+  function flicker(t, seed) {
+    return 1
+      + 0.060 * Math.sin(ph(t, 2) + seed)
+      + 0.030 * Math.sin(ph(t, 5) + seed * 1.7)
+      + 0.016 * Math.sin(ph(t, 11) + seed * 2.3)
+      + 0.009 * Math.sin(ph(t, 19) + seed * 3.1);
+  }
+
+  // Gentle cloth-like displacement field (px). Long wavelengths, small amplitude.
+  function warp(x, y, t) {
+    var dx = 7 * Math.sin(TAU * y / 1300 + ph(t, 1))
+           + 4 * Math.sin(TAU * (x / 1500 + y / 900) - ph(t, 2) + 0.6);
+    var dy = 6 * Math.sin(TAU * x / 1100 - ph(t, 1) + 1.3)
+           + 4 * Math.sin(TAU * (y / 1200 - x / 1700) + ph(t, 2) + 2.1);
+    return [x + dx, y + dy];
+  }
+
+  // grid space -> screen: tilt about the canvas centre, then warp
+  var cosT = Math.cos(TILT), sinT = Math.sin(TILT);
+  function project(u, v, t) {
+    var x = u - W / 2, y = v - H / 2;
+    return warp(W / 2 + x * cosT - y * sinT, H / 2 + x * sinT + y * cosT, t);
+  }
+
+  function glows(t) {
+    return [
+      // left glow, mid-height
+      { x: -40 + 18 * Math.sin(ph(t, 1)), y: 700 + 40 * Math.sin(ph(t, 1) + 1.0),
+        r: 560, rgb: [0, 96, 82], a: 0.80 * flicker(t, 0.0) },
+      // right glow, a little lower
+      { x: W + 50 + 18 * Math.sin(ph(t, 1) + 2.4), y: 780 + 40 * Math.sin(ph(t, 1) + 3.2),
+        r: 520, rgb: [0, 92, 86], a: 0.72 * flicker(t, 2.2) },
+      // broad top wash so the upper half sits lighter than the bottom
+      { x: 60, y: 160, r: 1000, rgb: [0, 40, 36], a: 0.50 * flicker(t, 4.1) }
+    ];
+  }
+
+  function paintGlows(c, gs, gain) {
+    c.globalCompositeOperation = "lighter";
+    for (var i = 0; i < gs.length; i++) {
+      var g = gs[i], a = Math.min(1, g.a * gain);
+      var grad = c.createRadialGradient(g.x, g.y, 0, g.x, g.y, g.r);
+      var col = "rgba(" + g.rgb[0] + "," + g.rgb[1] + "," + g.rgb[2] + ",";
+      grad.addColorStop(0.00, col + a + ")");
+      grad.addColorStop(0.35, col + (a * 0.55) + ")");
+      grad.addColorStop(0.70, col + (a * 0.16) + ")");
+      grad.addColorStop(1.00, col + "0)");
+      c.fillStyle = grad;
+      c.fillRect(0, 0, W, H);
+    }
+    c.globalCompositeOperation = "source-over";
+  }
+
+  function strokeGrid(c, t) {
+    var pad = CELL * 3;
+    var u0 = -pad, u1 = W + pad, v0 = -pad, v1 = H + pad;
+    var u, v, p;
+    c.beginPath();
+    for (u = u0; u <= u1; u += CELL) {
+      p = project(u, v0, t); c.moveTo(p[0], p[1]);
+      for (v = v0 + STEP; v <= v1; v += STEP) { p = project(u, v, t); c.lineTo(p[0], p[1]); }
+    }
+    for (v = v0; v <= v1; v += CELL) {
+      p = project(u0, v, t); c.moveTo(p[0], p[1]);
+      for (u = u0 + STEP; u <= u1; u += STEP) { p = project(u, v, t); c.lineTo(p[0], p[1]); }
+    }
+    c.stroke();
+  }
+
+  function draw(t) {
+    var gs = glows(t);
+
+    // 1. background: near-black base, teal glows, bottom fades to black
+    ctx.globalCompositeOperation = "source-over";
+    ctx.fillStyle = "#010806";
+    ctx.fillRect(0, 0, W, H);
+    paintGlows(ctx, gs, 0.30);
+    var fade = ctx.createLinearGradient(0, 0, 0, H);
+    fade.addColorStop(0.00, "rgba(0,0,0,0)");
+    fade.addColorStop(0.55, "rgba(0,0,0,0.10)");
+    fade.addColorStop(1.00, "rgba(0,0,0,0.92)");
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, 0, W, H);
+
+    // 2. grid lines: stroke white, then tint them with a base line colour
+    //    plus the same glows (stronger), so lines catch the light near them
+    lctx.globalCompositeOperation = "source-over";
+    lctx.clearRect(0, 0, W, H);
+    lctx.lineWidth = 2.6;
+    lctx.lineJoin = "round";
+    lctx.strokeStyle = "#fff";
+    strokeGrid(lctx, t);
+    lctx.globalCompositeOperation = "source-in";
+    lctx.fillStyle = "rgb(28,38,38)";
+    lctx.fillRect(0, 0, W, H);
+    lctx.globalCompositeOperation = "source-atop";
+    paintGlows(lctx, gs, 0.36);
+    lctx.globalCompositeOperation = "source-atop";
+    var lfade = lctx.createLinearGradient(0, 0, 0, H);
+    lfade.addColorStop(0.00, "rgba(0,0,0,0)");
+    lfade.addColorStop(0.60, "rgba(0,0,0,0.05)");
+    lfade.addColorStop(1.00, "rgba(0,0,0,0.45)");
+    lctx.fillStyle = lfade;
+    lctx.fillRect(0, 0, W, H);
+    lctx.globalCompositeOperation = "source-over";
+
+    ctx.drawImage(lines, 0, 0);
+  }
+
+  // Seek-safe clock: GSAP writes `t` on every seek, the setter repaints.
+  var now = -1;
+  var clock = {
+    get t() { return now; },
+    set t(v) { if (v !== now) { now = v; draw(v); } }
+  };
+
+  var tl = gsap.timeline({ paused: true });
+  tl.fromTo(clock, { t: 0 }, { t: LOOP, duration: LOOP, ease: "none" }, 0);
+  draw(0);
+
+  window.__timelines = window.__timelines || {};
+  window.__timelines.reel = tl;
+})();
+</script>
+</body>
+</html>
