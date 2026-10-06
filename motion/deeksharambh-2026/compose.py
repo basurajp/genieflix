@@ -148,7 +148,7 @@ page = f"""<!DOCTYPE html>
     .chip {{ display: inline-block; padding: 18px 34px; border-radius: 999px; background: rgba(3,10,46,0.82);
       border: 2px solid rgba(47,224,198,0.7); font-size: 44px; font-weight: 800; letter-spacing: 6px; }}
     #s2-e {{ top: 300px; }}
-    #s2-f {{ top: 1430px; font-size: 50px; font-weight: 800; letter-spacing: 4px; }}
+    #s2-f {{ top: 1410px; font-size: 42px; font-weight: 800; letter-spacing: 3px; }}
 
     /* S3 */
     #s3-logo, #s3-glint {{ position: absolute; left: 80px; top: 460px; width: 860px; height: 286px; }}
@@ -190,7 +190,7 @@ page = f"""<!DOCTYPE html>
       letter-spacing: 8px; color: var(--teal); }}
     #m-l, #m-ll {{ left: 30px; }}
     #m-r, #m-rl {{ left: 550px; }}
-    #m-plus {{ position: absolute; left: 455px; top: 615px; width: 110px; text-align: center; font-size: 150px;
+    #m-plus {{ position: absolute; left: 455px; top: 588px; width: 110px; text-align: center; font-size: 150px;
       font-weight: 900; color: var(--teal); }}
     #m-merged {{ top: 600px; font-size: 160px; }}
     #m-under {{ position: absolute; left: 210px; top: 845px; width: 600px; height: 10px; border-radius: 5px;
@@ -298,7 +298,7 @@ page = f"""<!DOCTYPE html>
     <div id="s2-c" class="row">{words("FIRST DAYS")}</div>
     <div id="s2-d" class="row">{words("LOOK LIKE.")}</div>
     <div id="s2-e" class="row"><span class="chip">THE <span class="teal">2026</span> BATCH</span></div>
-    <div id="s2-f" class="row">{words("11,500+ NEW LEARNERS")}</div>
+    <div id="s2-f" class="row">{words("EVERY TILE, A NEW LEARNER.")}</div>
   </div>
 
   <!-- S3 the event -->
@@ -436,8 +436,8 @@ TIMELINE = r"""
     tl.fromTo(".ghost", { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0);
     tl.fromTo("#g1", { x: -900 }, { x: -200, duration: 6.15, ease: "none" }, 0);
     tl.fromTo("#g2", { x: -100 }, { x: -800, duration: 6.15, ease: "none" }, 0);
-    tl.fromTo("#s1-kicker .ch", { opacity: 0, y: -30 }, { opacity: 1, y: 0, duration: 0.3, stagger: 0.012, ease: "power3.out" }, 0);
-    tl.fromTo("#s1-numwrap", { opacity: 0, scale: 1.5, filter: "blur(14px)" },
+    tl.fromTo("#s1-kicker .ch", { opacity: 0.2, y: -30 }, { opacity: 1, y: 0, duration: 0.25, stagger: 0.01, ease: "power3.out" }, 0);
+    tl.fromTo("#s1-numwrap", { opacity: 0.35, scale: 1.5, filter: "blur(14px)" },
       { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.55, ease: "expo.out" }, 0);
     const counter = { v: 9000 };
     const numEl = $("#s1-num");
@@ -455,7 +455,7 @@ TIMELINE = r"""
     leave(["#s1-numwrap", "#s1-sub", "#s1-day", ".ghost"], 4.9, { opacity: 0, y: "-=60", duration: 0.35, ease: "power2.in" });
     enter("#s1-zoom", 5.1, { scale: 1 }, { scale: 9, duration: 0.9, ease: "power3.in" });
     leave("#s1-screen", 5.6, { opacity: 0, duration: 0.35 });
-    flash(6.0, 0.9);
+    flash(6.0, 0.75);
 
     // ---------- S2 scale wall (6-12) ----------
     tl.set(["#wall", "#s6-bgwrap"], { opacity: 0 }, 0);
@@ -465,7 +465,7 @@ TIMELINE = r"""
     tl.fromTo("#wall-plane", { scale: 1.64, rotation: 1, rotationX: 0, y: 0, opacity: 1, transformOrigin: "1104px 684px" },
       { scale: 1.5, rotation: -1.5, duration: 3.0, ease: "power1.out" }, 6.0);
     tl.fromTo("#wall-plane", { scale: 1.5, rotation: -1.5, rotationX: 0, y: 0 },
-      { immediateRender: false, scale: 0.6, rotation: -7, rotationX: 22, y: 30, duration: 1.4, ease: "power3.inOut" }, 9.0);
+      { immediateRender: false, scale: 0.6, rotation: -7, rotationX: 22, y: -50, duration: 1.4, ease: "power3.inOut" }, 9.0);
     tl.fromTo("#wall-plane", { scale: 0.6 }, { immediateRender: false, scale: 0.65, duration: 1.2, ease: "none" }, 10.4);
     tl.fromTo("#wall-plane", { opacity: 1 }, { immediateRender: false, scale: 2.8, opacity: 0, duration: 0.6, ease: "power3.in" }, 11.6);
     tl.set("#wall-plane", { opacity: 0 }, 12.2);
@@ -478,7 +478,7 @@ TIMELINE = r"""
     enter("#s2-e", 9.6, { opacity: 0, y: -40, scale: 0.8 }, { opacity: 1, y: 0, scale: 1, duration: 0.45, ease: "back.out(2)" });
     rise("#s2-f .w", 10.0, 0.1);
     leave(["#s2-e", "#s2-f"], 11.5, { opacity: 0, duration: 0.3 });
-    flash(12.0, 0.8);
+    flash(12.0, 0.6);
 
     // ---------- S3 the event (12-16) ----------
     tl.fromTo("#s3-logo", { clipPath: "inset(0% 100% 0% 0%)", scale: 1.08, y: 30 },
@@ -526,7 +526,7 @@ TIMELINE = r"""
     slam("#m-b .w", 27.0, 0.1);
     enter("#s5-zoom", 27.55, { scale: 1, opacity: 1 }, { scale: 3, opacity: 0, duration: 0.45, ease: "power3.in" });
     tl.set("#s5-zoom", { opacity: 0 }, 28.0);
-    flash(28.0, 0.9);
+    flash(28.0, 0.8);
 
     // ---------- S6 welcome + CTA (28-36) ----------
     tl.fromTo("#welcome-bg", { scale: 1.5, opacity: 0.24, transformOrigin: "0px 0px" }, { scale: 1.6, duration: 7, ease: "none" }, 28.0);
@@ -550,7 +550,7 @@ TIMELINE = r"""
     tl.fromTo("#c-handle", { y: 0 }, { immediateRender: false, y: -12, duration: 0.5, repeat: 2, yoyo: true, ease: "sine.inOut" }, 34.6);
     leave("#s6-b", 35.6, { opacity: 0, scale: 0.92, duration: 0.4, ease: "power2.in" });
     tl.set("#s6-b", { opacity: 0 }, 36.0);
-    flash(36.0, 0.7);
+    flash(36.0, 0.5);
 
     // ---------- S7 end card (36-40) ----------
     enter("#e-logo", 36.0, { opacity: 0, scale: 0.86 }, { opacity: 1, scale: 1, duration: 0.8, ease: "expo.out" });
