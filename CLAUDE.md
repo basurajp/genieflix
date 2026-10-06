@@ -41,6 +41,7 @@ python3 cartoon/episodes/last-laddu/compose.py --project <dir>   # instead of bu
 # Motion pieces (no narration, music-clocked kinetic type; see motion/<name>/README.md)
 python3 motion/deeksharambh-2026/compose.py --project motion/deeksharambh-2026/project
 python3 motion/deeksharambh-2026-cinematic/compose.py --project motion/deeksharambh-2026-cinematic/project
+python3 motion/deeksharambh-2026-kinetic/compose.py --project motion/deeksharambh-2026-kinetic/project
 
 # Scheduler
 python3 scheduler/generate_manifest.py --matrix m.csv --videos-dir factory/ready-to-post --out manifest.csv
