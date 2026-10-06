@@ -389,7 +389,7 @@ $FONTS
 
 /* cued elements start hidden */
 #a-learners, #a-chose .w, #b-every .w, #b-diff .w, #b-amb, #c-you .w, #c-for .w, #c-trust, #c-means .w,
-#d-making .w, #d-future .w, #e-year, #e-amb .w, #e-com .w, .lp-l, .lp-w, #lp-ellipse, #sym2, #sym6 { opacity: 0; }
+#d-making .w, #d-future .w, #e-year, #e-amb .w, #e-com .w, .lp-l, .lp-w, #lp-ellipse, #sym2, #sym6, #e-flare { opacity: 0; }
 """)
 
 page_css = CSS.substitute(
