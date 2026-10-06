@@ -341,7 +341,7 @@ def main():
             "[pd][dr][pu][be][pe][rev]amix=inputs=6:normalize=0,"
             "highpass=f=32,bass=g=-6:f=120,equalizer=f=1500:width_type=o:width=1.6:g=3,treble=g=2.5:f=4000,"
             "acompressor=threshold=-16dB:ratio=2:attack=20:release=250:makeup=1.5,"
-            "loudnorm=I=-14:TP=-1.5:LRA=11,aresample=48000,"
+            "loudnorm=I=-12.5:TP=-1.5:LRA=11,aresample=48000,"
             f"atrim=0:{TOTAL:.3f},afade=t=out:st={TOTAL - 1.6:.3f}:d=1.6,alimiter=limit=0.84:level=disabled"
         ).format(**lv)
         cmd = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error"]

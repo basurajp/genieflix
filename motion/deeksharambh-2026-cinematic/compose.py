@@ -612,13 +612,13 @@ tl.fromTo("#d-thank", { "--tw": "-2%", y: 20, filter: "blur(10px) drop-shadow(0p
 rise(19.5, "#d-making .w", 0.07, 1.0);
 rise(20.25, "#d-future .w", 0.09, 1.0);
 tl.fromTo("#d-hold", { scale: 1 }, { scale: 1.04, duration: 5.2, ease: "none" }, 18.0);
-drift(23.1, ["#d-thank", "#d-making", "#d-future"], 0.06);
+drift(22.95, ["#d-thank", "#d-making", "#d-future"], 0.06);
 tl.to("#cd-head", { opacity: 0, duration: 0.6 }, 23.1);
 tl.to(["#cd-ribbons", "#d-rays", "#cd-glow"], { opacity: 0, duration: 0.8, ease: "power1.in" }, 23.3);
 
 // ---------- E (24-30): the logo assembles ----------
 cue(23.5, "#e-spot", { opacity: 0 }, { opacity: 1, duration: 1.2, ease: "power2.out" });
-cue(23.55, "#e-flare", { opacity: 0, scaleX: 1.7 }, { opacity: 1, scaleX: $FLARE_SX, duration: 0.45, ease: "power3.in" });
+cue(23.65, "#e-flare", { opacity: 0, scaleX: 1.7 }, { opacity: 1, scaleX: $FLARE_SX, duration: 0.35, ease: "power3.in" });
 tl.fromTo("#lp-bar", { clipPath: "inset(0% 50% 0% 50%)" }, { clipPath: "inset(0% 0% 0% 0%)", duration: 0.55, ease: "expo.out" }, 24.0);
 tl.to("#e-flare", { opacity: 0, scaleY: 0.3, duration: 0.7, ease: "power2.out" }, 24.1);
 cue(24.15, ".lp-l", { opacity: 0, y: -34, filter: "blur(6px)" },

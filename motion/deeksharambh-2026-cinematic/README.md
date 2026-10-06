@@ -56,3 +56,4 @@ written.
   the emotional words (chose, ambition, trust, Thank you, future, commitment).
   Swap it out in `compose.py` if it reads off-brand.
 - No 1.1× speed-up. That pass exists for narrated reels and would detune the score.
+- The score is mastered to about −14 dB mean. The renderer's mix lands about 1.3 dB lower, near −15.5 dB in the MP4, inside the −17…−13 gate.
