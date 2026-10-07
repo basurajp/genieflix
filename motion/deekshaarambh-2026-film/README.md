@@ -55,7 +55,14 @@ cp template/assets/gsap.min.js $D/project/assets/
 python3 $D/compose.py --project $D/project        # also checks the script word for word
 npx hyperframes lint $D/project                   # 0 errors
 npx hyperframes render $D/project --quality high -o $D/project/renders/film.mp4
+# finishing: lay the mastered score onto the picture (the renderer's audio path
+# re-levels the mix, so the master WAV goes on directly; same track, same 0 s start)
+ffmpeg -i $D/project/renders/film.mp4 -i $D/project/assets/audio/score.wav -map 0:v -map 1:a \
+  -c:v copy -c:a aac -b:a 256k -t 32 -movflags +faststart $D/project/renders/deekshaarambh-2026-master.mp4
 ```
+
+The master lands at -14.8 dB mean (volumedetect). The renderer's own mix came
+out at -16.6 and -18.2 dB on two passes.
 
 `project/` is gitignored because it holds brand files and learner faces.
 
