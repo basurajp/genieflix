@@ -612,7 +612,8 @@ for n, f in enumerate(BM.BRICKS):
     r, c = 3 - n // 4, n % 4
     bricks.append(f'<div class="bk" id="bk{n}" style="left:{c * BK:.0f}px; top:{FH - (4 - r) * BK:.0f}px; width:{BK:.0f}px; height:{BK:.0f}px; '
                   f'{sheet_bg(BK)} background-position:{sheet_pos(b_ids[n], BK)};"></div>')
-    J.append(f'tl.fromTo("#bk{n}", {{y: -260, opacity: 0}}, {{immediateRender: false, y: 0, opacity: 1, duration: {D(3)}, ease: "power3.in"}}, {T(f - 3)});')
+    J.append(f'tl.set("#bk{n}", {{opacity: 1}}, {T(f - 2)});')
+    J.append(f'tl.fromTo("#bk{n}", {{y: -180}}, {{immediateRender: false, y: 0, duration: {D(2)}, ease: "power2.in"}}, {T(f - 2)});')
 J.append(f'tl.to("#Wdim", {{opacity: 0.55, duration: {D(6)}}}, {T(736)});')
 w_html = f"""
   <div id="W" class="clip full" {clip(704, 768, 7)}>
