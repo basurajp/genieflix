@@ -173,8 +173,29 @@ def faces_for(n, offset):
 big_pool = [k for k in BIG if k not in reserved]
 
 
-def big_for(n, offset):
-    return [big_pool[(offset + i) % len(big_pool)] for i in range(n)]
+def assign_big():
+    """Every eye-locked window cut gets a face from BIG; the cuts that stay up longest get the
+    cleanest faces, 1-frame burst cuts get what is left. Returns {layer: [face per change]}."""
+    ends = {"hero": 64, "win": 416, "flash_b": 192, "flash_e": 656}
+    layers = {"hero": BM.FACES["hero"][:-1], "win": BM.FACES["win"],
+              "flash_b": [f for f in BM.FACES["flash"] if f < 192], "flash_e": [f for f in BM.FACES["flash"] if f >= 640]}
+    full = {"hero": BM.FACES["hero"], "win": BM.FACES["win"], "flash_b": layers["flash_b"], "flash_e": layers["flash_e"]}
+    slots = []
+    for nm, frs in layers.items():
+        seq = full[nm] + [ends[nm]]
+        for i, f in enumerate(frs):
+            slots.append((-(seq[i + 1] - f), f, nm, i))
+    out = {nm: [None] * len(frs) for nm, frs in layers.items()}
+    for n, (_, f, nm, i) in enumerate(sorted(slots)):
+        k = big_pool[n % len(big_pool)]
+        if i and out[nm][i - 1] == k:
+            k = big_pool[(n + 1) % len(big_pool)]
+        out[nm][i] = k
+    out["hero"].append(HERO_LAST)
+    return out
+
+
+BIG_IDS = assign_big()
 
 
 def sheet_pos(k, d):
@@ -300,7 +321,7 @@ eye_x = hero_l + hero_size * 0.5
 eye_y = hero_t + hero_size * FEY / FO
 EYE_SCREEN = (540.0, 880.0)
 Z0 = 1080 / hero_size                  # the hero fills the width at the start
-hero_ids = big_for(len(BM.FACES["hero"]) - 1, 0) + [HERO_LAST]
+hero_ids = BIG_IDS["hero"]
 learn_cap = n2_base + 70
 jo_cap = learn_cap + CAP * SUB_PX + 44
 a_html = f"""
@@ -402,7 +423,7 @@ screen("b2", 168, 176, NAVY, [("to the", 900, 300)], "punch", WHITE)
 screen("b3", 176, 184, TEAL, [("Batch of", 900, 300)], "slam", NAVY)
 
 # ---- b: shutter burst (f184-192) on its own track below
-flash_b = big_for(4, 17)
+flash_b = BIG_IDS["flash_b"]
 
 # ---- b: 20 / 26. stencil over the scroll recording
 YPX = min(fit("20", 900, 600), fit("26.", 900, 600))
@@ -455,7 +476,7 @@ J.append(f'tl.set("#teal26", {{opacity: 0}}, {T(280)});')
 # ================================================================ c: window, counter, wall
 WIN = 1080.0
 WIN_T = 40.0
-c_ids = big_for(len(BM.FACES["win"]), 21)
+c_ids = BIG_IDS["win"]
 eyes_c = WIN_T + WIN * FEY / FO
 band = 1190.0
 CNT_PX = fit("11,000+", 900, 230)
@@ -559,7 +580,7 @@ screen("d7", 560, 640, None, [("each one.", 900, 170)], "rise", center=1420)
 
 # ================================================================ e: the peak
 screen("e1", 640, 648, WHITE, [("Because", 900, 300)], "slam", NAVY)
-flash_e = big_for(4, 60)
+flash_e = BIG_IDS["flash_e"]
 screen("e2", 648, 656, None, [("every learner", 900, 200)], "punch", center=1470)
 screen("e3", 656, 672, TEAL, [("who chooses", 900, 220)], "slam", NAVY)
 mos_bg = (f'<div class="full" id="e4_m" style="background:url(\'assets/img/face_mosaic.jpg\') 0px 0px / auto 1920px repeat-x;"></div>'
