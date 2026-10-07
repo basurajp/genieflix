@@ -42,6 +42,7 @@ python3 cartoon/episodes/last-laddu/compose.py --project <dir>   # instead of bu
 python3 motion/deeksharambh-2026/compose.py --project motion/deeksharambh-2026/project
 python3 motion/deeksharambh-2026-cinematic/compose.py --project motion/deeksharambh-2026-cinematic/project
 python3 motion/deeksharambh-2026-kinetic/compose.py --project motion/deeksharambh-2026-kinetic/project
+python3 motion/deekshaarambh-2026-film/compose.py --project motion/deekshaarambh-2026-film/project   # brief-driven, config.json
 
 # Scheduler
 python3 scheduler/generate_manifest.py --matrix m.csv --videos-dir factory/ready-to-post --out manifest.csv

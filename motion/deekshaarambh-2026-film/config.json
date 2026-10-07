@@ -1,0 +1,80 @@
+{
+  "film": { "width": 1080, "height": 1920, "fps": 30, "duration": 32.0 },
+
+  "script": [
+    "11,000+ learners chose JAIN Online.",
+    "Welcome to the Batch of 2026.",
+    "We are proud to nurture 11,000+ ambitions this year.",
+    "But even more than that, we are proud to carry the trust behind each one.",
+    "Because every learner who chooses JAIN Online brings us one step closer to building a more skilled, future-ready India.",
+    "Deekshaarambh 2026",
+    "Your ambition. Our commitment."
+  ],
+
+  "colors": {
+    "navy": "#071C5B",
+    "text": "#FFFFFF",
+    "accent": "#2FE0C8",
+    "_accent_note": "the artwork's mint accent; set to a yellow such as #FFC629 to follow the brief's default"
+  },
+
+  "type": {
+    "family": "Montserrat",
+    "heavy": 800,
+    "medium": 500,
+    "hero_px": 226,
+    "hero_small_px": 172,
+    "heavy_px": 100,
+    "sentence_px": 80,
+    "ascent": 0.968, "descent": 0.251, "cap": 0.70, "xheight": 0.542
+  },
+
+  "grid": { "left": 88, "right": 140, "top": 180, "bottom": 320, "step": 760 },
+
+  "media": {
+    "logo": "assets/brand/deekshaarambh.png",
+    "logo_show_descriptor": false,
+    "_logo_note": "the authentic artwork, untouched; with logo_show_descriptor false a CSS mask hides its 'Student Induction Program' line, which is not in the locked script",
+    "jain_online": "assets/brand/jain-online.png",
+    "footage": "assets/footage/learners.mp4",
+    "footage_first": "assets/footage/first.jpg",
+    "footage_last": "assets/footage/last.jpg",
+    "footage_crop": [10, 300, 604, 524],
+    "_footage_note": "REPLACEMENT POINT: put any 3 s clip at footage.source and rerun prep_assets.py; footage_crop is x, y, w, h in source pixels and sets the panel's aspect ratio",
+    "footage_source_start": 10.5,
+    "footage_seconds": 3.0
+  },
+
+  "timing": {
+    "s1": [0.0, 3.5],
+    "s2": [3.5, 6.5],
+    "s3": [6.5, 11.0],
+    "footage_play": [7.0, 10.0],
+    "s4": [11.0, 18.0],
+    "s4_phrases": [[11.0, 13.0], [13.0, 15.3], [15.3, 18.0]],
+    "s5": [18.0, 27.5],
+    "s5_phrases": [[18.0, 21.1], [21.1, 24.0], [24.0, 27.5]],
+    "s6": [27.5, 32.0],
+    "accents": [0.85, 6.4, 16.05, 28.15]
+  },
+
+  "copy": {
+    "s1": { "number": "11,000", "lines": [["learners chose", "medium"], ["JAIN Online.", "heavy"]] },
+    "s2": { "lines": [["Welcome to the", "medium"], ["Batch of", "medium"], ["2026.", "hero"]] },
+    "s3": { "above": [["We are proud", "medium"], ["to nurture", "medium"]],
+            "number": "11,000",
+            "below": [["ambitions", "heavy"], ["this year.", "medium"]] },
+    "s4": [
+      [["But even", "medium"], ["more than that,", "heavy"]],
+      [["we are proud", "medium"], ["to carry", "heavy"]],
+      [["the", "medium"], ["trust", "hero"], ["behind each one.", "medium"]]
+    ],
+    "s5": [
+      [["Because", "medium"], ["every learner", "heavy"], ["who chooses", "medium"], ["JAIN Online", "heavy"]],
+      [["brings us", "medium"], ["one step closer", "heavy"], ["to building", "medium"]],
+      [["a more skilled,", "medium"], ["future-ready", "heavy"], ["India.", "hero"]]
+    ],
+    "s6": { "logo_reads": "Deekshaarambh", "year": "2026",
+            "tagline": [[["Your", "medium"], ["ambition.", "heavy"]], [["Our", "medium"], ["commitment.", "heavy"]]] }
+  }
+}
