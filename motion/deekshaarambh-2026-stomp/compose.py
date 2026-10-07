@@ -4,28 +4,39 @@
 Usage: motion/deekshaarambh-2026-stomp/compose.py --project motion/deekshaarambh-2026-stomp/project
        (run faces_prep.py, prep_assets.py and make_score.py into the same project first)
 
+Two zones, so the eye always knows where to look:
+
+  visual zone  y 220-1080: the learners' posts (eye-locked so the eyes never
+               move), the number made of faces, "2026." with the scroll
+               recording inside it, the wall of posts
+  text zone    one left-aligned block, cap tops from y 1150, one type size,
+               ending above y 1500 (Instagram's caption area). Words appear in
+               place on the stomps and claps (a short fade and a 16 px rise),
+               nothing slides, slams or shakes, and every phrase holds for
+               about a second
+
 Cut to beatmap.py (112.5 BPM, a beat every 16 frames, stomp-stomp-clap):
 
-  intro   one learner's face, eyes locked to a viewfinder, changes on every
-          stomp and clap with a shutter click, then bursts
-  a       the drop: the camera pulls back 34x and that face is one tile of
-          "11, / 000" built from hundreds of face tiles; the plus lands teal;
-          learners / chose / JAIN Online.
-  b       Welcome / to the / Batch of flip colours on stomp, stomp, clap; a
-          shutter burst; "20 / 26." stamped out of navy with the scroll
-          recording playing inside the letters, then stepped zooms into the 0
-  c       a full-bleed eye-locked window; We are / proud / to nurture; the faces
-          burst faster and faster while the counter races to 11,000+;
-          ambitions / this year.; the window splits into a wall of 28 faces
-  d       the wall slows down under the breakdown; "trust" is filled with faces;
-          the wall stops and the camera finds one face for "each one."
-  e       the peak: every hit a new screen; face bricks stack up for
-          "to building"; "India." filled with faces
+  intro   one post, eyes locked in a viewfinder, changes on every stomp and
+          clap with a shutter click, then bursts
+  a       the camera pulls back and that face is one tile of "11,000+": crisp
+          letterforms with the faces packed inside them; learners chose /
+          JAIN Online.
+  b       Welcome to the / Batch of; a shutter burst; "20 / 26." with the
+          scroll recording playing inside the letters; a teal flash on the clap
+  c       We are proud / to nurture; the shutter speeds up to every frame while
+          the counter races to 11,000+; ambitions / this year.; the window
+          becomes a wall of 16 posts
+  d       the wall slows down under the breakdown; the trust (filled with
+          faces); behind / each one. as the camera finds one post
+  e       the peak: phrase cards on the beat over a burst, a drifting mosaic
+          and posts stacking like bricks; India. filled with faces
   f       the authentic artwork revealed by one clean mask; 2026; the tagline;
           JAIN Online; nothing moves after 30.0 s
 
+Behind everything a slow navy aurora drifts with a faint field of the posts.
 Every displayed string is checked against the locked script before writing.
-The tile number and the "2026." stencil are rasterized here with ffmpeg
+The number's mask and the "2026." masks are rasterized here with ffmpeg
 drawtext from the same font files the page uses.
 """
 import argparse
@@ -54,7 +65,7 @@ for need in ("brand/deekshaarambh.png", "brand/jain-online.png", "footage/scroll
         raise SystemExit(f"missing assets/{need}: run faces_prep.py / prep_assets.py / make_score.py into {project} first")
 FACES = json.loads((HERE / "faces.json").read_text(encoding="utf-8-sig"))
 ORDER = FACES["order"]
-BIG = FACES["big"]                   # cleanest source pixels: the full-size eye-locked windows
+BIG = FACES["big"]                   # cleanest source pixels: the large eye-locked windows
 FO, FE, FEY = 1000, 200, 430         # framed posts (assets/framed): canvas, eye gap, eye line
 NFACE = len(FACES["faces"])
 
@@ -75,6 +86,17 @@ NAVY, WHITE, TEAL, INK = "#071C5B", "#FFFFFF", "#2FE0C8", "#04103A"
 ASC, DESC, CAP = 0.968, 0.251, 0.70
 HOLD_FACE, HERO_LAST = 6, 10         # faces.json indices: the "each one." face, the face the number is born from
 esc = html.escape
+
+# the two zones
+VZ0, VZ1 = 220.0, 1080.0             # visual zone
+VC = (VZ0 + VZ1) / 2                 # 650
+WIN = VZ1 - VZ0                      # 860: eye-locked windows and the wall fill the zone's width
+WIN_L = (FW - WIN) / 2               # 110
+EYE = (540.0, 620.0)                 # where every locked pair of eyes sits
+WIN_T = EYE[1] - WIN * FEY / FO
+TZ0 = 1150.0                         # text zone: first cap top
+TZ_MAX = 1500.0                      # last baseline must stay above this
+TXT_W = 800                          # one weight for the copy
 
 # ---------------------------------------------------------------- font metrics
 _fonts = {}
@@ -176,7 +198,7 @@ big_pool = [k for k in BIG if k not in reserved]
 def assign_big():
     """Every eye-locked window cut gets a face from BIG; the cuts that stay up longest get the
     cleanest faces, 1-frame burst cuts get what is left. Returns {layer: [face per change]}."""
-    ends = {"hero": 64, "win": 416, "flash_b": 192, "flash_e": 656}
+    ends = {"hero": 64, "win": 416, "flash_b": 192, "flash_e": 672}
     layers = {"hero": BM.FACES["hero"][:-1], "win": BM.FACES["win"],
               "flash_b": [f for f in BM.FACES["flash"] if f < 192], "flash_e": [f for f in BM.FACES["flash"] if f >= 640]}
     full = {"hero": BM.FACES["hero"], "win": BM.FACES["win"], "flash_b": layers["flash_b"], "flash_e": layers["flash_e"]}
@@ -198,6 +220,18 @@ def assign_big():
 BIG_IDS = assign_big()
 
 
+def outline(k):
+    """the post's own outline in the framed canvas, as a CSS polygon in %: the 116 px source square
+    pushed through the same eye-to-eye similarity faces_prep.py warped it with (inset 1 px)"""
+    (ex0, ey0), (ex1, ey1) = FACES["faces"][k]["eyes"]
+    e0, e1 = complex(ex0, ey0), complex(ex1, ey1)
+    d0, d1 = complex(FO / 2 - FE / 2, FEY), complex(FO / 2 + FE / 2, FEY)
+    a = (d1 - d0) / (e1 - e0)
+    b = d0 - a * e0
+    pts = [a * complex(x, y) + b for x, y in ((1, 1), (115, 1), (115, 115), (1, 115))]
+    return "polygon(" + ", ".join(f"{z.real / FO * 100:.2f}% {z.imag / FO * 100:.2f}%" for z in pts) + ")"
+
+
 def sheet_pos(k, d):
     return f"{-(k % 10) * d:.2f}px {-(k // 10) * d:.2f}px"
 
@@ -209,9 +243,8 @@ def sheet_bg(d):
 def face_stack(prefix, ids, size, left, top):
     """stacked <img> posts (1000 px framed sources, eyes locked), all hidden; sets reveal one at a time"""
     uniq = list(dict.fromkeys(ids))
-    imgs = "".join(f'<img class="fs" id="{prefix}{k}" src="assets/framed/f{k:03d}.jpg" alt="" '
-                   f'style="left:{left:.2f}px; top:{top:.2f}px; width:{size:.2f}px; height:{size:.2f}px;">' for k in uniq)
-    return imgs
+    return "".join(f'<img class="fs" id="{prefix}{k}" src="assets/framed/f{k:03d}.jpg" alt="" '
+                   f'style="left:{left:.2f}px; top:{top:.2f}px; width:{size:.2f}px; height:{size:.2f}px; clip-path:{outline(k)};">' for k in uniq)
 
 
 J = []          # timeline script lines
@@ -225,6 +258,13 @@ def shuffle(prefix, frames, ids):
         J.append(f'tl.set("#{prefix}{k}", {{opacity: 1}}, {T(f)});')
         prev = k
     return prev
+
+
+def window(id_, f0, f1, track, frames, ids, extra=""):
+    """an eye-locked post window in the visual zone, with the viewfinder"""
+    shuffle(id_, frames, ids)
+    return (f'\n  <div id="{id_}" class="clip full" {clip(f0, f1, track)}>'
+            f'{face_stack(id_, ids, WIN, WIN_L, WIN_T)}<div class="vf"></div>{extra}</div>')
 
 
 # ---------------------------------------------------------------- rasterizing type with ffmpeg
@@ -249,6 +289,17 @@ def raster(items, w, h, k=1):
     return r.stdout
 
 
+def mask_png(buf, w, h, path, color="white"):
+    """gray ink buffer -> PNG of `color` with the ink as alpha (a CSS mask, or coloured letters)"""
+    with tempfile.TemporaryDirectory() as td:
+        mp = pathlib.Path(td) / "m.gray"
+        mp.write_bytes(buf)
+        subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
+                        "-f", "lavfi", "-i", f"color=c={color}:s={w}x{h}",
+                        "-f", "rawvideo", "-pix_fmt", "gray", "-s", f"{w}x{h}", "-i", str(mp),
+                        "-filter_complex", "[0]format=rgba[c];[c][1]alphamerge", "-frames:v", "1", str(path)], check=True)
+
+
 def bbox(buf, w, x0, y0, x1, y1, th=128):
     xs, ys = [], []
     for y in range(int(y0), int(y1)):
@@ -260,56 +311,132 @@ def bbox(buf, w, x0, y0, x1, y1, th=128):
     return (min(xs), min(ys), max(xs) + 1, max(ys) + 1) if xs else None
 
 
-# ================================================================ section A: intro + tile number
+def coverage(buf, w, x, y, s, k):
+    tot = 0
+    for yy in range(int(y * k), int((y + s) * k)):
+        tot += sum(buf[yy * w + int(x * k):yy * w + int((x + s) * k)])
+    return tot / (255 * (s * k) ** 2)
+
+
+# ---------------------------------------------------------------- the text zone
+cards = []            # (id, f0, f1, html)
+TXT_PX = 104.0
+
+
+def card(id_, f0, f1, lines):
+    """lines: [{"px": size or None, "words": [(text, frame, cls)]}]. Words sit in their final
+    places from the start (hidden) and fade up in place; the card fades out over 4 frames."""
+    out, cap = [], TZ0
+    prev_px = None
+    for i, ln in enumerate(lines):
+        px = ln.get("px") or TXT_PX
+        weight = ln.get("weight", TXT_W)
+        text = " ".join(t for t, _, _ in ln["words"])
+        if tw(text, px, weight) > COLW + 0.5:
+            raise SystemExit(f"text zone line too wide: {text!r} at {px:.0f}px = {tw(text, px, weight):.0f}px")
+        if i:
+            cap += 0.42 * min(prev_px, px)
+        spans = []
+        for j, (t, f, cls) in enumerate(ln["words"]):
+            wid = f"{id_}w{i}{j}"
+            spans.append(f'<span class="w {cls}" id="{wid}">{esc(show(t))}</span>')
+            J.append(f'tl.fromTo("#{wid}", {{opacity: 0, y: 16}}, {{immediateRender: false, opacity: 1, y: 0, '
+                     f'duration: {D(7)}, ease: "power2.out"}}, {T(f)});')
+        ls = f" letter-spacing:{TRACK[weight]}em;" if TRACK[weight] else ""
+        out.append(f'<div class="ln" style="top:{top_for_cap(cap, px):.1f}px; font-size:{px:.1f}px; font-weight:{weight};{ls}">'
+                   + " ".join(spans) + "</div>")
+        cap += CAP * px
+        prev_px = px
+    if cap > TZ_MAX:
+        raise SystemExit(f"card {id_} runs to y {cap:.0f}, below the {TZ_MAX:.0f} limit")
+    J.append(f'tl.to("#{id_}_in", {{opacity: 0, duration: {D(4)}, ease: "power1.in"}}, {T(f1 - 4)});')
+    cards.append((id_, f0, f1, f'<div id="{id_}_in" class="full">{"".join(out)}</div>'))
+
+
+def W(text, frame, cls=""):
+    return (text, frame, cls)
+
+
+# every normal line in the piece shares one size: the largest that fits the widest one
+NORMAL_LINES = ["learners chose", "JAIN Online.", "Welcome to the", "Batch of", "We are proud", "to nurture",
+                "ambitions", "this year.", "But even", "more than that,", "we are proud", "to carry", "the",
+                "behind", "each one.", "Because", "every learner", "who chooses", "JAIN Online", "brings us",
+                "one step closer", "to building", "a more skilled,", "future-ready"]
+TXT_PX = min(112.0, min(fit(t, TXT_W, 200) for t in NORMAL_LINES))
+
+# ================================================================ background: a slow aurora + a faint field of posts
+field_jpg = A / "img" / "field.jpg"
+subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(A / "img" / "framed_sheet.jpg"),
+                "-vf", "scale=1800:-1,crop=1080:ih:0:0,gblur=sigma=7,eq=saturation=0.5:brightness=-0.04",
+                "-q:v", "4", str(field_jpg)], check=True)
+FIELD_H = 1800 / 3000 * 300 * ROWS_SHEET
+BLOBS = [  # colour, size, path of (x, y) centre waypoints over 0..30 s
+    ((46, 96, 255, 0.50), 1600, [(-120, 150), (380, 520), (60, 880)]),
+    ((47, 224, 200, 0.16), 1400, [(900, 1450), (620, 1150), (980, 820)]),
+    ((110, 72, 230, 0.30), 1500, [(120, 1750), (520, 1500), (-80, 1300)]),
+    ((22, 64, 200, 0.45), 1300, [(980, 260), (700, 600), (1020, 420)]),
+]
+
+
+def glow(rgba):
+    """a radial falloff with an eased (roughly gaussian) profile, so a blob has no visible rim"""
+    r, g, b, a = rgba
+    stops = [(0, 1.0), (20, 0.82), (40, 0.5), (60, 0.22), (80, 0.06), (100, 0.0)]
+    return "radial-gradient(closest-side, " + ", ".join(f"rgba({r},{g},{b},{a * k:.3f}) {p}%" for p, k in stops) + ")"
+
+
+blob_html = "".join(f'<div class="blob" id="blob{i}" style="width:{s}px; height:{s}px; background:{glow(c)};"></div>'
+                    for i, (c, s, _) in enumerate(BLOBS))
+STILL = BM.STILL_F
+for i, (c, s, path) in enumerate(BLOBS):
+    (x0, y0), (x1, y1), (x2, y2) = path
+    J.append(f'tl.fromTo("#blob{i}", {{x: {x0 - s / 2}, y: {y0 - s / 2}}}, {{x: {x1 - s / 2}, y: {y1 - s / 2}, '
+             f'duration: {D(STILL / 2)}, ease: "sine.inOut"}}, 0);')
+    J.append(f'tl.to("#blob{i}", {{x: {x2 - s / 2}, y: {y2 - s / 2}, duration: {D(STILL / 2)}, ease: "sine.inOut"}}, {D(STILL / 2)});')
+J.append(f'tl.fromTo("#field", {{y: 0}}, {{y: {-(FIELD_H - FH):.0f}, duration: {D(STILL)}, ease: "none"}}, 0);')
+bg_html = f"""
+  <div id="bg" class="clip full" {clip(0, TOTAL_F, 0)}>
+    <div class="full" style="background:linear-gradient(180deg, #051649 0%, {NAVY} 42%, #0A2372 100%);"></div>
+    {blob_html}
+    <img id="field" src="assets/img/field.jpg" alt="" style="position:absolute; left:0; top:0; width:{FW}px; height:{FIELD_H:.0f}px; opacity:0.07;">
+    <div class="full" style="background:radial-gradient(ellipse 760px 1100px at 50% 45%, rgba(0,0,0,0) 55%, rgba(2,8,32,0.55) 100%);"></div>
+  </div>"""
+
+# ================================================================ a: intro + the number made of faces
 NUM_W = 900
-NPX = fit("000+", NUM_W, 340)
+NPX = fit("11,000+", NUM_W, 240)
 NCAP = CAP * NPX
-GAP_N = 0.13 * NPX
-ln1, ln2 = "11,", "000"
-show("11,000+")                       # tiles "11," / "000" and the teal plus
-PLUS_ADV = advances(NUM_W, "+")[0] * NPX
-SUB_PX = 92
-JO_PX = fit("JAIN Online.", 900, 150)
-block_h = NCAP + GAP_N + NCAP + 70 + CAP * SUB_PX + 44 + CAP * JO_PX
-n1_cap = 890 - block_h / 2
-n1_base = n1_cap + NCAP
-n2_cap = n1_base + GAP_N
-n2_base = n2_cap + NCAP
-mask = raster([(ln1, NUM_W, NPX, L, n1_base), (ln2, NUM_W, NPX, L, n2_base)], FW, FH)
-P = 24                                # tile pitch
-TS = 22                               # tile size
-gx0, gy0 = L - 4, n1_cap - 8
-tiles = []
-for gy in range(int((n2_base + 12 - gy0) // P) + 1):
-    for gx in range(int((COLW + 8) // P) + 1):
-        x, y = gx0 + gx * P, gy0 + gy * P
-        tot = 0
-        for yy in range(int(y), int(y + P)):
-            row = mask[yy * FW:(yy + 1) * FW]
-            tot += sum(row[int(x):int(x + P)])
-        cov = tot / (255 * P * P)
-        if cov >= 0.3:
-            tiles.append((x + (P - TS) / 2, y + (P - TS) / 2, cov, 1 if y < n1_base + GAP_N / 2 else 2))
-# the hero tile: full coverage, in the left stroke of the middle 0
-z_adv = advances(NUM_W, "0")[0] * NPX
-hx = L + z_adv + TRACK[NUM_W] * NPX + 0.13 * NPX
-hy = n2_cap + NCAP / 2
-full = [t for t in tiles if t[2] >= 0.97 and t[3] == 2]
-hero_tile = min(full, key=lambda t: (t[0] + TS / 2 - hx) ** 2 + (t[1] + TS / 2 - hy) ** 2)
+n_cap = VC - NCAP / 2
+n_base = n_cap + NCAP
+show("11,000+")
+KM = 2
+nmask = raster([("11,000", NUM_W, NPX, L, n_base)], FW, FH, KM)
+mask_png(nmask, FW * KM, FH * KM, A / "img" / "mask_num.png")
+P, TS = 40, 38                       # lattice pitch and tile: a 2 px seam between faces
+# lattice registered on the hero tile: centred in the left stroke of the middle 0
+hx = L + tw("11,0", NPX, NUM_W) + TRACK[NUM_W] * NPX + 0.135 * NPX
+hy = n_cap + NCAP / 2
+num_w = tw("11,000", NPX, NUM_W)
+gx0 = hx - TS / 2 - P * math.ceil((hx - TS / 2 - (L - 8)) / P)
+gy0 = hy - TS / 2 - P * math.ceil((hy - TS / 2 - (n_cap - 12)) / P)
 rng = random.Random(4)
-# face_cells.jpg: 20 columns of 128 px tight crops, faces.json index order
-tile_cells = []
-for t in tiles:
-    tile_cells.append(HERO_LAST if t is hero_tile else rng.choice(ORDER))
 CELL_ROWS = math.ceil(NFACE / 20)
-tile_html = []
-for (x, y, cov, line), c in zip(tiles, tile_cells):
-    sc = "" if cov >= 0.95 else f" transform:scale({0.45 + 0.55 * cov:.2f});"
-    tile_html.append(f'<i class="tl l{line}" style="left:{x:.1f}px; top:{y:.1f}px; --x:{-(c % 20) * TS}px; --y:{-(c // 20) * TS}px;{sc}"></i>')
-# plus bars after "000"
-p_cx = L + tw("000", NPX, NUM_W) + TRACK[NUM_W] * NPX + PLUS_ADV / 2
-p_cy = n2_base - 0.36 * NPX
-P_ARM, P_TH = 0.5 * NPX, 0.13 * NPX
+tiles, hero_tile = [], None
+y = gy0
+while y < n_base + 0.24 * NPX:
+    x = gx0
+    while x < L + num_w + 8:
+        if coverage(nmask, FW * KM, x, y, TS, KM) > 0.0:
+            is_hero = abs(x + TS / 2 - hx) < 1 and abs(y + TS / 2 - hy) < 1
+            c = HERO_LAST if is_hero else rng.choice(ORDER)
+            tiles.append(f'<i class="tile" style="left:{x:.1f}px; top:{y:.1f}px; --x:{-(c % 20) * TS}px; --y:{-(c // 20) * TS}px;"></i>')
+            if is_hero:
+                hero_tile = (x, y)
+        x += P
+    y += P
+if hero_tile is None:
+    raise SystemExit("the hero tile fell outside the number")
+plus_x = L + num_w + TRACK[NUM_W] * NPX
 # hero post: the tile shows the tight crop (x 62..337, y 65..340 of the 400 px aligned face, eye gap 110);
 # in the framed canvas (eye gap 200, eyes centred on y 430) that square is:
 KF = FE / 110
@@ -319,321 +446,158 @@ hero_l = hero_tile[0] - TS * TIGHT[0] / TIGHT[2]
 hero_t = hero_tile[1] - TS * TIGHT[1] / TIGHT[2]
 eye_x = hero_l + hero_size * 0.5
 eye_y = hero_t + hero_size * FEY / FO
-EYE_SCREEN = (540.0, 880.0)
-Z0 = 1080 / hero_size                  # the hero fills the width at the start
+Z0 = WIN / hero_size                 # the intro window is the hero tile, magnified
 hero_ids = BIG_IDS["hero"]
-learn_cap = n2_base + 70
-jo_cap = learn_cap + CAP * SUB_PX + 44
+shuffle("h", BM.FACES["hero"], hero_ids)
 a_html = f"""
   <div id="A" class="clip full" {clip(0, 160, 2)}>
     <div id="Acam" class="full">
-      <div id="Anum" class="full">
-        <div id="Atl" class="full">{''.join(tile_html)}</div>
-        <div class="pb" id="ph" style="left:{p_cx - P_ARM / 2:.1f}px; top:{p_cy - P_TH / 2:.1f}px; width:{P_ARM:.1f}px; height:{P_TH:.1f}px;"></div>
-        <div class="pb" id="pv" style="left:{p_cx - P_TH / 2:.1f}px; top:{p_cy - P_ARM / 2:.1f}px; width:{P_TH:.1f}px; height:{P_ARM:.1f}px;"></div>
-      </div>
+      <div id="Anum" class="full"><div id="Atl" class="full">{''.join(tiles)}<div id="Atint" class="full"></div></div></div>
+      <div id="aplus" class="t" style="left:{plus_x:.1f}px; top:{top_for_cap(n_cap, NPX):.1f}px; font-size:{NPX:.1f}px;">+</div>
       <div id="hero">{face_stack("h", hero_ids, hero_size, hero_l, hero_t)}</div>
     </div>
     <div class="vf" id="vfA"></div>
-    <div class="t" id="a_learn" style="left:{L}px; top:{top_for_cap(learn_cap, SUB_PX):.1f}px; font-size:{SUB_PX}px; font-weight:500;"><span id="a_l1">{esc(show("learners"))}</span> <span id="a_l2" style="font-weight:900;">{esc(show("chose"))}</span></div>
-    <div class="t" id="a_jo" style="left:{L}px; top:{top_for_cap(jo_cap, JO_PX):.1f}px; font-size:{JO_PX:.1f}px; font-weight:900; letter-spacing:-0.03em; color:{TEAL};">{esc(show("JAIN Online."))}</div>
   </div>"""
-
-shuffle("h", BM.FACES["hero"], hero_ids)
-J.append(f'tl.set("#Acam", {{transformOrigin: "{eye_x:.2f}px {eye_y:.2f}px", x: {EYE_SCREEN[0] - eye_x:.2f}, y: {EYE_SCREEN[1] - eye_y:.2f}, scale: {Z0:.4f}}}, 0);')
-# viewfinder snaps on spaced changes
-for f in BM.FACES["hero"]:
-    if f in (0, 8, 16, 32, 40, 48):
-        J.append(f'tl.fromTo("#vfA", {{scale: 1.08}}, {{immediateRender: false, scale: 1, duration: {D(4)}, ease: "power2.out"}}, {T(f)});')
-# the pull-back: log-scale zoom from Z0 to 1, eye point drifting to its place in the number
+J.append(f'tl.set("#Acam", {{transformOrigin: "{eye_x:.2f}px {eye_y:.2f}px", x: {EYE[0] - eye_x:.2f}, y: {EYE[1] - eye_y:.2f}, scale: {Z0:.4f}}}, 0);')
+# the pull-back: log-scale zoom from Z0 to 1, the eye point drifting to its place in the number
 J.append(f"""const zA = {{p: 0}};
-tl.fromTo(zA, {{p: 0}}, {{immediateRender: false, p: 1, duration: {D(22)}, ease: "power3.inOut", onUpdate: () => {{
+tl.fromTo(zA, {{p: 0}}, {{immediateRender: false, p: 1, duration: {D(24)}, ease: "power3.inOut", onUpdate: () => {{
   const z = Math.pow({Z0:.4f}, 1 - zA.p), w = (z - 1) / ({Z0:.4f} - 1);
-  gsap.set("#Acam", {{scale: z, x: {EYE_SCREEN[0] - eye_x:.2f} * w, y: {EYE_SCREEN[1] - eye_y:.2f} * w}});
-  gsap.set("#hero", {{opacity: Math.max(0, Math.min(1, (z - 5) / 6))}});
+  gsap.set("#Acam", {{scale: z, x: {EYE[0] - eye_x:.2f} * w, y: {EYE[1] - eye_y:.2f} * w}});
+  gsap.set("#hero", {{opacity: Math.max(0, Math.min(1, (z - 2.2) / 3.2))}});
 }}}}, {T(64)});""")
 J.append(f'tl.set("#Atl", {{opacity: 1}}, {T(64)});')
-J.append(f'tl.to("#vfA", {{opacity: 0, scale: 0.6, duration: {D(6)}, ease: "power2.in"}}, {T(64)});')
-J.append(f'tl.set(["#ph", "#pv"], {{opacity: 1}}, {T(80)});')
-J.append(f'tl.fromTo(["#ph", "#pv"], {{scale: 2.2}}, {{immediateRender: false, scale: 1, duration: {D(7)}, ease: "expo.out"}}, {T(80)});')
+J.append(f'tl.to("#vfA", {{opacity: 0, duration: {D(5)}}}, {T(64)});')
+J.append(f'tl.fromTo("#aplus", {{opacity: 0}}, {{immediateRender: false, opacity: 1, duration: {D(6)}, ease: "power2.out"}}, {T(88)});')
 for i, f in enumerate(BM.FACES["tiles"]):
-    J.append(f'tl.set("#Atl", {{"--dx": "{-(3 + 7 * i) % 20 * TS}px", "--dy": "{-((2 + 3 * i) % CELL_ROWS) * TS}px"}}, {T(f)});')
-for f in BM.FACES["tiles"]:
-    J.append(f'tl.fromTo("#Anum", {{scale: 1.035}}, {{immediateRender: false, scale: 1, duration: {D(6)}, ease: "power2.out"}}, {T(f)});')
-J.append(f'tl.set("#a_l1", {{opacity: 1}}, {T(96)});')
-J.append(f'tl.fromTo("#a_l1", {{y: 40}}, {{immediateRender: false, y: 0, duration: {D(5)}, ease: "expo.out"}}, {T(96)});')
-J.append(f'tl.set("#a_l2", {{opacity: 1}}, {T(104)});')
-J.append(f'tl.fromTo("#a_l2", {{y: 40}}, {{immediateRender: false, y: 0, duration: {D(5)}, ease: "expo.out"}}, {T(104)});')
-J.append(f'tl.set("#a_jo", {{opacity: 1}}, {T(112)});')
-J.append(f'tl.fromTo("#a_jo", {{scale: 1.25}}, {{immediateRender: false, scale: 1, duration: {D(7)}, ease: "expo.out"}}, {T(112)});')
-J.append(f'tl.to("#Anum", {{scale: 1.5, opacity: 0, duration: {D(8)}, ease: "power3.in"}}, {T(152)});')
-J.append(f'tl.to(["#a_learn", "#a_jo"], {{x: -260, opacity: 0, duration: {D(7)}, ease: "power3.in"}}, {T(153)});')
+    J.append(f'tl.set("#Atl", {{"--dx": "{-((3 + 7 * i) % 20) * TS}px", "--dy": "{-((2 + 3 * i) % CELL_ROWS) * TS}px"}}, {T(f)});')
+J.append(f'tl.to("#Acam", {{opacity: 0, duration: {D(6)}, ease: "power1.in"}}, {T(154)});')
+card("ta", 96, 160, [{"words": [W("learners", 96), W("chose", 104)]}, {"words": [W("JAIN Online.", 112, "teal")]}])
 
-# ================================================================ text screens (track 1)
-screens = []      # (id, f0, f1, bg, inner_html, anim)
-
-
-def word(id_, text, weight, px, cap_top, color, left=L, extra=""):
-    ls = f" letter-spacing:{TRACK[weight]}em;" if TRACK[weight] else ""
-    return (f'<div class="t" id="{id_}" style="left:{left:.1f}px; top:{top_for_cap(cap_top, px):.1f}px; font-size:{px:.1f}px; '
-            f'font-weight:{weight};{ls} color:{color};{extra}">{esc(show(text))}</div>')
-
-
-def stack(prefix, lines, center=890.0, color=WHITE, gap=0.32):
-    """lines: (text, weight, maxpx); cap tops stacked, block centred on `center`."""
-    sized = [(t, w, fit(t, w, m)) for t, w, m in lines]
-    h = sum(CAP * px for _, _, px in sized) + sum(gap * px for _, _, px in sized[1:])
-    cap = center - h / 2
-    out, geo = [], []
-    for i, (t, w, px) in enumerate(sized):
-        if i:
-            cap += gap * px
-        out.append(word(f"{prefix}{i}", t, w, px, cap, color))
-        geo.append((cap, px))
-        cap += CAP * px
-    return "".join(out), geo
-
-
-def screen(id_, f0, f1, bg, lines, anim="slam", color=WHITE, center=890.0, extra="", gap=0.32):
-    inner, geo = stack(f"{id_}_", lines, center, color, gap)
-    screens.append((id_, f0, f1, bg, inner + extra, anim, len(lines)))
-    return geo
-
-
-def enter(id_, n, f, anim):
-    ids = json.dumps([f"#{id_}_{i}" for i in range(n)])
-    if anim == "slam":
-        J.append(f'tl.fromTo({ids}, {{scale: 1.24, transformOrigin: "0% 60%"}}, {{immediateRender: false, scale: 1, duration: {D(7)}, ease: "expo.out"}}, {T(f)});')
-    elif anim == "punch":
-        J.append(f'tl.fromTo({ids}, {{scale: 0.78, transformOrigin: "0% 60%"}}, {{immediateRender: false, scale: 1, duration: {D(6)}, ease: "expo.out"}}, {T(f)});')
-    elif anim == "slide":
-        J.append(f'tl.fromTo({ids}, {{x: -180}}, {{immediateRender: false, x: 0, duration: {D(6)}, ease: "expo.out", stagger: {D(1)}}}, {T(f)});')
-    elif anim == "rise":
-        J.append(f'tl.fromTo({ids}, {{y: 90, opacity: 0}}, {{immediateRender: false, y: 0, opacity: 1, duration: {D(6)}, ease: "expo.out", stagger: {D(2)}}}, {T(f)});')
-    elif anim == "drop":
-        J.append(f'tl.fromTo({ids}, {{y: -140}}, {{immediateRender: false, y: 0, duration: {D(5)}, ease: "power4.out", stagger: {D(1)}}}, {T(f)});')
-    if anim in ("slam", "punch", "drop"):        # stomp jolt
-        for k, (jx, jy) in enumerate(((10, -7), (-8, 6), (5, -3), (0, 0))):
-            J.append(f'tl.set("#{id_}_j", {{x: {jx}, y: {jy}}}, {T(f + k)});')
-
-
-# ---- b: Welcome / to the / Batch of
-screen("b1", 160, 168, WHITE, [("Welcome", 900, 300)], "slam", NAVY)
-screen("b2", 168, 176, NAVY, [("to the", 900, 300)], "punch", WHITE)
-screen("b3", 176, 184, TEAL, [("Batch of", 900, 300)], "slam", NAVY)
-
-# ---- b: shutter burst (f184-192) on its own track below
-flash_b = BIG_IDS["flash_b"]
-
-# ---- b: 20 / 26. stencil over the scroll recording
-YPX = min(fit("20", 900, 600), fit("26.", 900, 600))
-YCAP = CAP * YPX
-YGAP = 0.12 * YPX
-y1_cap = 890 - (2 * YCAP + YGAP) / 2
+# ================================================================ b: Welcome to the Batch of 2026.
+card("tb", 160, 288, [{"words": [W("Welcome", 160), W("to the", 168)]}, {"words": [W("Batch of", 176)]}])
+fl_b = window("fb", 184, 192, 6, [f for f in BM.FACES["flash"] if f < 192], BIG_IDS["flash_b"])
+YPX = min(fit("20", 900, 600), fit("26.", 900, 600), (VZ1 - VZ0 - 40) / (2 * CAP + 0.12))
+YCAP, YGAP = CAP * YPX, 0.12 * YPX
+y1_cap = VC - (2 * YCAP + YGAP) / 2
 y1_base, y2_base = y1_cap + YCAP, y1_cap + 2 * YCAP + YGAP
-KP = 2                                   # stencil drawn at 2x for the zooms
-ymask = raster([("20", 900, YPX, L, y1_base), ("26.", 900, YPX, L, y2_base)], FW, FH, KP)
 show("2026.")
-period = bbox(ymask, FW * KP, (L + tw("26", YPX, 900)) * KP, (y2_base - 0.4 * YPX) * KP, (L + tw("26.", YPX, 900) + 20) * KP, (y2_base + 10) * KP)
+KP = 2
+m20 = raster([("20", 900, YPX, L, y1_base)], FW, FH, KP)
+m26 = raster([("26.", 900, YPX, L, y2_base)], FW, FH, KP)
+mask_png(m20, FW * KP, FH * KP, A / "img" / "mask20.png")
+mask_png(m26, FW * KP, FH * KP, A / "img" / "mask26.png")
+mask_png(bytes(max(a, b) for a, b in zip(m20, m26)), FW * KP, FH * KP, A / "img" / "teal2026.png", "0x" + TEAL.lstrip("#"))
+period = bbox(m26, FW * KP, (L + tw("26", YPX, 900)) * KP, (y2_base - 0.4 * YPX) * KP, (L + tw("26.", YPX, 900) + 20) * KP, (y2_base + 10) * KP)
 px0, py0, px1, py1 = (v / KP for v in period)
-plate_png = A / "img" / "plate2026.png"
-navy_hex = NAVY.lstrip("#")
-# navy everywhere, alpha cut where the letters are
-with tempfile.TemporaryDirectory() as td:
-    mp = pathlib.Path(td) / "m.gray"
-    mp.write_bytes(ymask)
-    subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-                    "-f", "lavfi", "-i", f"color=c=0x{navy_hex}:s={FW * KP}x{FH * KP}",
-                    "-f", "rawvideo", "-pix_fmt", "gray", "-s", f"{FW * KP}x{FH * KP}", "-i", str(mp),
-                    "-filter_complex", "[1]negate[a];[0]format=rgba[c];[c][a]alphamerge", "-frames:v", "1", str(plate_png)], check=True)
-    subprocess.run(["ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
-                    "-f", "lavfi", "-i", f"color=c=0x{TEAL.lstrip('#')}:s={FW * KP}x{FH * KP}",
-                    "-f", "rawvideo", "-pix_fmt", "gray", "-s", f"{FW * KP}x{FH * KP}", "-i", str(mp),
-                    "-filter_complex", "[0]format=rgba[c];[c][1]alphamerge", "-frames:v", "1", str(A / "img" / "teal2026.png")], check=True)
-b_html = f"""
-  <video id="scroll" class="clip" src="assets/footage/scroll.mp4" muted playsinline {clip(192, 288, 3)}
-         style="position:absolute; left:0; top:-66px; width:1080px; height:2052px;"></video>
-  <div id="B26" class="clip full" {clip(192, 288, 4)}>
-    <div id="plate" class="full" style="transform-origin:{L + tw("26.", YPX, 900) / 2:.1f}px 890px;">
-      <img src="assets/img/plate2026.png" alt="" style="position:absolute; left:0; top:0; width:{FW}px; height:{FH}px;">
-      <img id="teal26" src="assets/img/teal2026.png" alt="" style="position:absolute; left:0; top:0; width:{FW}px; height:{FH}px; opacity:0;">
-      <div id="cover26" style="position:absolute; left:0; top:{y2_base - YCAP - 30:.1f}px; width:{FW}px; height:{YCAP + 60:.1f}px; background:{NAVY};"></div>
-      <div id="dot" style="position:absolute; left:{px0 - 1:.1f}px; top:{py0 - 1:.1f}px; width:{px1 - px0 + 2:.1f}px; height:{py1 - py0 + 2:.1f}px; background:{TEAL}; opacity:0;"></div>
-    </div>
+
+
+def vmask(id_, png, f0):
+    return (f'\n  <div class="vm" id="{id_}" style="-webkit-mask-image:url(\'assets/img/{png}\'); mask-image:url(\'assets/img/{png}\');">'
+            f'<video id="{id_}v" class="clip" src="assets/footage/scroll.mp4" muted playsinline {clip(f0, 288, 3 if id_ == "vm20" else 4)} '
+            f'style="position:absolute; left:0; top:-66px; width:1080px; height:2052px;"></video></div>')
+
+
+b_html = vmask("vm20", "mask20.png", 192) + vmask("vm26", "mask26.png", 200) + f"""
+  <div id="B26" class="clip full" {clip(192, 288, 9)}>
+    <div id="dot" style="position:absolute; left:{px0 - 1:.1f}px; top:{py0 - 1:.1f}px; width:{px1 - px0 + 2:.1f}px; height:{py1 - py0 + 2:.1f}px; background:{TEAL}; opacity:0;"></div>
+    <img id="teal26" src="assets/img/teal2026.png" alt="" style="position:absolute; left:0; top:0; width:{FW}px; height:{FH}px; opacity:0;">
   </div>"""
-J.append(f'tl.fromTo("#plate", {{scale: 1.18}}, {{immediateRender: false, scale: 1, duration: {D(7)}, ease: "expo.out"}}, {T(192)});')
-J.append(f'tl.set("#cover26", {{opacity: 0}}, {T(200)});')
-J.append(f'tl.fromTo("#plate", {{y: -26}}, {{immediateRender: false, y: 0, duration: {D(6)}, ease: "expo.out"}}, {T(200)});')
+J.append(f'tl.fromTo("#vm20", {{opacity: 0}}, {{immediateRender: false, opacity: 1, duration: {D(4)}}}, {T(192)});')
+J.append(f'tl.fromTo("#vm26", {{opacity: 0}}, {{immediateRender: false, opacity: 1, duration: {D(4)}}}, {T(200)});')
 J.append(f'tl.set("#dot", {{opacity: 1}}, {T(208)});')
-J.append(f'tl.fromTo("#dot", {{scale: 2.4}}, {{immediateRender: false, scale: 1, duration: {D(6)}, ease: "expo.out"}}, {T(208)});')
-for f in (224, 232, 240):
-    J.append(f'tl.fromTo("#plate", {{scale: 1.03}}, {{immediateRender: false, scale: 1, duration: {D(5)}, ease: "power2.out"}}, {T(f)});')
-for f, s in ((256, 1.1), (264, 1.22), (272, 1.36), (280, 1.5)):
-    J.append(f'tl.to("#plate", {{scale: {s}, duration: {D(5)}, ease: "expo.out"}}, {T(f)});')
 J.append(f'tl.set("#teal26", {{opacity: 1}}, {T(272)});')
 J.append(f'tl.set("#teal26", {{opacity: 0}}, {T(280)});')
+J.append(f'tl.to(["#vm20", "#vm26", "#dot"], {{opacity: 0, duration: {D(5)}, ease: "power1.in"}}, {T(282)});')
 
-# ================================================================ c: window, counter, wall
-WIN = 1080.0
-WIN_T = 40.0
-c_ids = BIG_IDS["win"]
-eyes_c = WIN_T + WIN * FEY / FO
-band = 1190.0
-CNT_PX = fit("11,000+", 900, 230)
-amb_px, yr_px = fit("ambitions", 900, 120), 96
-c_lines = []
-for i, (t, w, mpx) in enumerate([("We are", 900, 200), ("proud", 900, 220), ("to nurture", 900, 200)]):
-    px = fit(t, w, mpx)
-    c_lines.append(word(f"c_w{i}", t, w, px, band, WHITE, extra=" opacity:0;"))
-cnt_base = band + CAP * CNT_PX
-show("11,000+")
-amb_cap = cnt_base + 78
-yr_cap = amb_cap + CAP * amb_px + 34
-c_html = f"""
-  <div id="C" class="clip full" {clip(288, 416, 6)}>
-    <div class="full" style="background:{NAVY};"></div>
-    {face_stack("c", c_ids, WIN, 0, WIN_T)}
-    <div class="vf" id="vfC" style="top:{eyes_c - 150:.1f}px;"></div>
-    <div class="shade" style="top:{WIN_T + WIN - 260:.1f}px; height:260px; background:linear-gradient(180deg, rgba(7,28,91,0) 0%, {NAVY} 100%);"></div>
-    {''.join(c_lines)}
-    <div class="t" id="c_cnt" style="left:{L}px; top:{top_for_cap(band, CNT_PX):.1f}px; font-size:{CNT_PX:.1f}px; font-weight:900; letter-spacing:-0.03em; opacity:0;"><span id="c_num">0</span><span id="c_plus" style="color:{TEAL}; opacity:0;">+</span></div>
-    {word("c_amb", "ambitions", 900, amb_px, amb_cap, WHITE, extra=" opacity:0;")}
-    {word("c_yr", "this year.", 500, yr_px, yr_cap, WHITE, extra=" opacity:0;")}
-  </div>"""
-shuffle("c", BM.FACES["win"], c_ids)
+# ================================================================ c: the window, the counter, the wall
+c_html = window("cw", 288, 416, 6, BM.FACES["win"], BIG_IDS["win"])
 for f in BM.FACES["win"]:
     if f < 320 or f >= 384:
-        J.append(f'tl.fromTo("#vfC", {{scale: 1.08}}, {{immediateRender: false, scale: 1, duration: {D(4)}, ease: "power2.out"}}, {T(f)});')
-for i, (f0, f1) in enumerate(((288, 296), (296, 304), (304, 320))):
-    J.append(f'tl.set("#c_w{i}", {{opacity: 1}}, {T(f0)});')
-    J.append(f'tl.fromTo("#c_w{i}", {{scale: 1.2, transformOrigin: "0% 60%"}}, {{immediateRender: false, scale: 1, duration: {D(6)}, ease: "expo.out"}}, {T(f0)});')
-    J.append(f'tl.set("#c_w{i}", {{opacity: 0}}, {T(f1)});')
+        J.append(f'tl.fromTo("#cw .vf", {{scale: 1.06}}, {{immediateRender: false, scale: 1, duration: {D(4)}, ease: "power2.out"}}, {T(f)});')
+card("tc1", 288, 320, [{"words": [W("We", 288), W("are", 296), W("proud", 304)]}, {"words": [W("to nurture", 312)]}])
+CNT_PX = 150.0
 c0, c1 = BM.COUNTER
-J.append(f'tl.set("#c_cnt", {{opacity: 1}}, {T(c0)});')
+card("tc2", 320, 448, [{"px": CNT_PX, "weight": 900, "words": [W("11,000+", c0, "cnt")]},
+                       {"words": [W("ambitions", 392)]}, {"words": [W("this year.", 400)]}])
+# the counter: the span shows a running count, then its own text (11,000+) at the lock
 J.append(f"""const cA = {{p: 0}};
 tl.fromTo(cA, {{p: 0}}, {{immediateRender: false, p: 1, duration: {D(c1 - c0)}, ease: "power2.in", onUpdate: () => {{
-  document.getElementById("c_num").textContent = Math.round(11000 * cA.p).toLocaleString("en-US");
+  const el = document.getElementById("tc2w00");
+  el.innerHTML = cA.p < 1 ? Math.round(11000 * cA.p).toLocaleString("en-US") : '11,000<span class="teal">+</span>';
 }}}}, {T(c0)});""")
-J.append(f'tl.set("#c_plus", {{opacity: 1}}, {T(c1)});')
-J.append(f'tl.fromTo("#c_cnt", {{scale: 1.14, transformOrigin: "0% 60%"}}, {{immediateRender: false, scale: 1, duration: {D(7)}, ease: "expo.out"}}, {T(c1)});')
-J.append(f'tl.set("#c_amb", {{opacity: 1}}, {T(392)});')
-J.append(f'tl.fromTo("#c_amb", {{x: -160}}, {{immediateRender: false, x: 0, duration: {D(6)}, ease: "expo.out"}}, {T(392)});')
-J.append(f'tl.set("#c_yr", {{opacity: 1}}, {T(400)});')
-J.append(f'tl.fromTo("#c_yr", {{y: 60}}, {{immediateRender: false, y: 0, duration: {D(6)}, ease: "expo.out"}}, {T(400)});')
 
-# ---- the wall of 28 (c end, d)
-GD = 270.0
-GCOLS, GROWS = 4, 7
-G_T = (FH - GROWS * GD) / 2
-TARGET = (1, 3)                          # col, row of the cell that becomes "each one."
+# ---- the wall of 16 (c end, d), in the visual zone
+GD = WIN / 4
+TARGET = (1, 1)                          # col, row of the post that becomes "each one."
 cells = []
-for r in range(GROWS):
-    for c in range(GCOLS):
-        cells.append(f'<div class="gc" id="g{r * GCOLS + c}" style="left:{c * GD:.0f}px; top:{G_T + r * GD:.1f}px; width:{GD:.0f}px; height:{GD:.0f}px; {sheet_bg(GD)}"></div>')
-NG = GCOLS * GROWS
-tgt = TARGET[1] * GCOLS + TARGET[0]
+for r in range(4):
+    for c in range(4):
+        cells.append(f'<div class="gc" id="g{r * 4 + c}" style="left:{WIN_L + c * GD:.1f}px; top:{VZ0 + r * GD:.1f}px; '
+                     f'width:{GD:.1f}px; height:{GD:.1f}px; {sheet_bg(GD)}"></div>')
+NG = 16
+tgt = TARGET[1] * 4 + TARGET[0]
 gframes = BM.FACES["grid"]
 for n, f in enumerate(gframes):
     seq = [pool[(n * NG + j) % len(pool)] for j in range(NG)]
     if n == len(gframes) - 1:
-        seq[tgt] = HOLD_FACE
+        seq[tgt] = HOLD_FACE                # pool never holds HOLD_FACE, so it appears once
     for j in range(NG):
-        J.append(f'tl.set("#g{j}", {{backgroundPosition: "{sheet_pos(seq[j], GD)}"}}, {T(f)});')
-tcx, tcy = TARGET[0] * GD + GD / 2, G_T + TARGET[1] * GD + GD / 2
-ZG = 3.0
-d_html_grid = f"""
+        J.append(f'tl.set("#g{j}", {{backgroundPosition: "{sheet_pos(seq[j], GD)}", clipPath: "{outline(seq[j])}"}}, {T(f)});')
+tcx, tcy = WIN_L + TARGET[0] * GD + GD / 2, VZ0 + TARGET[1] * GD + GD / 2
+ZG = WIN / GD
+g_html = f"""
   <div id="G" class="clip full" {clip(416, 640, 5)}>
     <div id="Gcam" class="full" style="transform-origin:{tcx:.1f}px {tcy:.1f}px;">{''.join(cells)}
-      <img id="hold" src="assets/framed/f{HOLD_FACE:03d}.jpg" alt="" style="position:absolute; left:{TARGET[0] * GD:.0f}px; top:{G_T + TARGET[1] * GD:.1f}px; width:{GD:.0f}px; height:{GD:.0f}px; opacity:0;"></div>
-    <div id="Gdim" class="full" style="background:{INK}; opacity:0;"></div>
-    <div class="shade" id="Gshade" style="top:1120px; height:800px; opacity:0;"></div>
+      <img id="hold" src="assets/framed/f{HOLD_FACE:03d}.jpg" alt="" style="position:absolute; left:{WIN_L + TARGET[0] * GD:.1f}px; top:{VZ0 + TARGET[1] * GD:.1f}px; width:{GD:.1f}px; height:{GD:.1f}px; clip-path:{outline(HOLD_FACE)}; opacity:0;"></div>
   </div>"""
-J.append(f'tl.fromTo("#Gcam", {{scale: 0.55}}, {{immediateRender: false, scale: 1, duration: {D(8)}, ease: "expo.out"}}, {T(416)});')
-J.append(f'tl.set("#Gdim", {{opacity: 0.62}}, {T(448)});')
-J.append(f'tl.set("#hold", {{opacity: 1}}, {T(560)});')
-J.append(f'tl.set("#Gdim", {{opacity: 0.55}}, {T(544)});')
-J.append(f'tl.to("#Gdim", {{opacity: 0, duration: {D(10)}, ease: "power2.out"}}, {T(560)});')
+E1 = BM.EACH_ONE
 others = json.dumps([f"#g{j}" for j in range(NG) if j != tgt])
-J.append(f'tl.to({others}, {{opacity: 0.16, duration: {D(12)}, ease: "power2.inOut"}}, {T(560)});')
-J.append(f'tl.to("#Gcam", {{scale: {ZG}, x: {540 - tcx:.1f}, y: {760 - tcy:.1f}, duration: {D(16)}, ease: "expo.inOut"}}, {T(560)});')
-J.append(f'tl.to("#Gcam", {{scale: {ZG * 1.07:.3f}, duration: {D(48)}, ease: "none"}}, {T(576)});')
-J.append(f'tl.to("#Gshade", {{opacity: 1, duration: {D(10)}}}, {T(560)});')
-J.append(f'tl.to("#Gcam", {{opacity: 0, duration: {D(8)}, ease: "power2.in"}}, {T(630)});')
+J.append(f'tl.set("#hold", {{opacity: 1}}, {T(E1)});')
+J.append(f'tl.to({others}, {{opacity: 0, duration: {D(10)}, ease: "power2.inOut"}}, {T(E1)});')
+J.append(f'tl.to("#Gcam", {{scale: {ZG:.3f}, x: {540 - tcx:.1f}, y: {VC - tcy:.1f}, duration: {D(18)}, ease: "expo.inOut"}}, {T(E1)});')
+J.append(f'tl.to("#Gcam", {{opacity: 0, duration: {D(6)}, ease: "power1.in"}}, {T(630)});')
 
-# ---- d copy
-screen("d1", 448, 464, None, [("But even", 900, 230)], "rise")
-screen("d2", 464, 480, None, [("more than that,", 900, 200)], "slide")
-screen("d3", 480, 496, None, [("we are proud", 900, 200)], "rise")
-screen("d4", 496, 512, None, [("to carry", 900, 240)], "slam")
-TR_PX = fit("trust", 900, 380)
-the_px = 96
-tr_cap = 890 - (CAP * the_px + 40 + CAP * TR_PX) / 2 + CAP * the_px + 40
-trust_html = (word("d5_0", "the", 500, the_px, tr_cap - 40 - CAP * the_px, WHITE)
-              + f'<div class="t mos" id="d5_1" style="left:{L}px; top:{top_for_cap(tr_cap, TR_PX):.1f}px; font-size:{TR_PX:.1f}px; '
-                f'font-weight:900; letter-spacing:-0.03em; opacity:0;">{esc(show("trust"))}</div>')
-screens.append(("d5", 512, 544, NAVY, trust_html, "rise1", 1))
-J.append(f'tl.set("#d5_1", {{opacity: 1}}, {T(520)});')
-J.append(f'tl.fromTo("#d5_1", {{scale: 1.3, transformOrigin: "0% 60%"}}, {{immediateRender: false, scale: 1, duration: {D(8)}, ease: "expo.out"}}, {T(520)});')
-J.append(f'tl.fromTo("#d5_1", {{backgroundPosition: "0px 0px"}}, {{immediateRender: false, backgroundPosition: "-160px -60px", duration: {D(24)}, ease: "none"}}, {T(520)});')
-screen("d6", 544, 560, None, [("behind", 900, 240)], "punch")
-screen("d7", 560, 640, None, [("each one.", 900, 170)], "rise", center=1420)
+# ================================================================ d: the breakdown
+card("td1", 448, 488, [{"words": [W("But even", 448)]}, {"words": [W("more than that,", 464)]}])
+card("td2", 488, 528, [{"words": [W("we are proud", 488)]}, {"words": [W("to carry", 500)]}])
+TR_PX = min(fit("trust", 900, 250), (TZ_MAX - TZ0 - CAP * TXT_PX - 0.42 * TXT_PX) / CAP)
+card("td3", 528, 560, [{"words": [W("the", 528)]}, {"px": TR_PX, "weight": 900, "words": [W("trust", 536, "mos")]}])
+J.append(f'tl.fromTo("#td3w10", {{backgroundPosition: "0px 0px"}}, {{immediateRender: false, backgroundPosition: "-120px -40px", duration: {D(24)}, ease: "none"}}, {T(536)});')
+card("td4", 560, 640, [{"words": [W("behind", 560)]}, {"words": [W("each one.", E1, "teal")]}])
 
 # ================================================================ e: the peak
-screen("e1", 640, 648, WHITE, [("Because", 900, 300)], "slam", NAVY)
-flash_e = BIG_IDS["flash_e"]
-screen("e2", 648, 656, None, [("every learner", 900, 200)], "punch", center=1470)
-screen("e3", 656, 672, TEAL, [("who chooses", 900, 220)], "slam", NAVY)
-mos_bg = (f'<div class="full" id="e4_m" style="background:url(\'assets/img/face_mosaic.jpg\') 0px 0px / auto 1920px repeat-x;"></div>'
-          f'<div class="full" style="background:{INK}; opacity:0.58;"></div>')
-screens.append(("e4m", 672, 688, NAVY, mos_bg, None, 0))
-J.append(f'tl.fromTo("#e4_m", {{backgroundPosition: "0px 0px"}}, {{immediateRender: false, backgroundPosition: "-420px 0px", duration: {D(16)}, ease: "none"}}, {T(672)});')
-screen("e4", 672, 688, None, [("JAIN Online", 900, 220)], "slam")
-screen("e5", 688, 704, WHITE, [("brings us", 900, 240)], "punch", NAVY)
-screen("e6", 704, 712, None, [("one step", 900, 220)], "drop", center=470)
-screen("e7", 712, 720, None, [("closer", 900, 260)], "drop", center=470)
-screen("e8", 720, 736, None, [("to building", 900, 220)], "slam", center=470)
-screen("e9", 736, 752, None, [("a more skilled,", 900, 200)], "slide", center=470)
-screen("e10", 752, 768, None, [("future-ready", 900, 220)], "slam", center=470)
-IN_PX = fit("India.", 900, 420)
-india_html = (f'<div class="t mos" id="e11_0" style="left:{L}px; top:{top_for_cap(890 - CAP * IN_PX / 2, IN_PX):.1f}px; '
-              f'font-size:{IN_PX:.1f}px; font-weight:900; letter-spacing:-0.03em;">{esc(show("India."))}</div>')
-screens.append(("e11", 768, 832, NAVY, india_html, "india", 1))
-J.append(f'tl.fromTo("#e11_0", {{scale: 1.3, transformOrigin: "0% 60%"}}, {{immediateRender: false, scale: 1, duration: {D(8)}, ease: "expo.out"}}, {T(768)});')
-for i, f in enumerate(BM.FACES["mosaic"]):
-    J.append(f'tl.set("#e11_0", {{backgroundPosition: "{-48 * (3 + 5 * i)}px {-48 * (1 + 2 * i)}px"}}, {T(f)});')
-    J.append(f'tl.fromTo("#e11_0", {{scale: 1.05}}, {{immediateRender: false, scale: 1, duration: {D(6)}, ease: "power2.out"}}, {T(f)});')
-J.append(f'tl.to("#e11_0", {{scale: 1.6, opacity: 0, duration: {D(8)}, ease: "power3.in"}}, {T(824)});')
-
-# ---- bricks: one step closer to building
-BK = 270.0
+fl_e = window("fe", 640, 672, 6, [f for f in BM.FACES["flash"] if f >= 640], BIG_IDS["flash_e"])
+card("te1", 640, 672, [{"words": [W("Because", 640)]}, {"words": [W("every learner", 648)]}])
+mp_html = f"""
+  <div id="MP" class="clip full" {clip(672, 704, 7)}>
+    <div id="mpan" style="position:absolute; left:{WIN_L}px; top:{VZ0}px; width:{WIN}px; height:{WIN}px; border-radius:28px;
+      background:url('assets/img/face_mosaic.jpg') 0px 0px / 1344px 784px repeat;"></div>
+  </div>"""
+J.append(f'tl.fromTo("#mpan", {{backgroundPosition: "0px 0px"}}, {{immediateRender: false, backgroundPosition: "-168px -56px", duration: {D(32)}, ease: "none"}}, {T(672)});')
+card("te2", 672, 704, [{"words": [W("who chooses", 672)]}, {"words": [W("JAIN Online", 680, "teal")]}])
+# bricks: one step closer to building
+BK = GD
 bricks = []
 b_ids = faces_for(16, 55)
 for n, f in enumerate(BM.BRICKS):
     r, c = 3 - n // 4, n % 4
-    bricks.append(f'<div class="bk" id="bk{n}" style="left:{c * BK:.0f}px; top:{FH - (4 - r) * BK:.0f}px; width:{BK:.0f}px; height:{BK:.0f}px; '
-                  f'{sheet_bg(BK)} background-position:{sheet_pos(b_ids[n], BK)};"></div>')
+    bricks.append(f'<div class="bk" id="bk{n}" style="left:{WIN_L + c * BK:.1f}px; top:{VZ0 + r * BK:.1f}px; width:{BK:.1f}px; height:{BK:.1f}px; '
+                  f'{sheet_bg(BK)} background-position:{sheet_pos(b_ids[n], BK)}; clip-path:{outline(b_ids[n])};"></div>')
     J.append(f'tl.set("#bk{n}", {{opacity: 1}}, {T(f - 2)});')
-    J.append(f'tl.fromTo("#bk{n}", {{y: -180}}, {{immediateRender: false, y: 0, duration: {D(2)}, ease: "power2.in"}}, {T(f - 2)});')
-J.append(f'tl.to("#Wdim", {{opacity: 0.55, duration: {D(6)}}}, {T(736)});')
+    J.append(f'tl.fromTo("#bk{n}", {{y: -120}}, {{immediateRender: false, y: 0, duration: {D(2)}, ease: "power2.in"}}, {T(f - 2)});')
 w_html = f"""
-  <div id="W" class="clip full" {clip(704, 768, 7)}>
-    <div class="full" style="background:{NAVY};"></div>
-    {''.join(bricks)}
-    <div id="Wdim" class="full" style="background:{INK}; opacity:0;"></div>
+  <div id="Wl" class="clip full" {clip(704, 832, 7)}>
+    <div id="Wcam" class="full" style="transform-origin:540px {VC:.0f}px;">{''.join(bricks)}</div>
   </div>"""
-
-# ---- shutter bursts (b and e) on track 6 with C
-fl_html = ""
-for nm, (f0, f1), ids in (("fb", (184, 192), flash_b), ("fe", (648, 656), flash_e)):
-    frs = [f for f in BM.FACES["flash"] if f0 <= f < f1]
-    fl_html += f"""
-  <div id="{nm}" class="clip full" {clip(f0, f1, 6)}>
-    <div class="full" style="background:{NAVY};"></div>
-    {face_stack(nm, ids, 1080, 0, EYE_SCREEN[1] - 1080 * FEY / FO)}
-    <div class="vf" style="top:{EYE_SCREEN[1] - 150:.0f}px;"></div>
-    <div class="shade" style="top:1180px; height:740px;"></div>
-  </div>"""
-    shuffle(nm, frs, ids)
+J.append(f'tl.to("#Wcam", {{scale: 0.92, opacity: 0.6, duration: {D(56)}, ease: "sine.inOut"}}, {T(768)});')
+J.append(f'tl.to("#Wcam", {{opacity: 0, duration: {D(6)}, ease: "power1.in"}}, {T(826)});')
+card("te3", 704, 736, [{"words": [W("brings us", 704)]}, {"words": [W("one step", 712), W("closer", 720)]}])
+card("te4", 736, 768, [{"words": [W("to building", 736)]}, {"words": [W("a more skilled,", 744)]}])
+IN_PX = min(fit("India.", 900, 250), (TZ_MAX - TZ0 - CAP * TXT_PX - 0.42 * TXT_PX) / CAP)
+card("te5", 768, 832, [{"words": [W("future-ready", 768)]}, {"px": IN_PX, "weight": 900, "words": [W("India.", 776, "mos")]}])
+for i, f in enumerate(BM.FACES["mosaic"]):
+    J.append(f'tl.set("#te5w10", {{backgroundPosition: "{-56 * (3 + 5 * i)}px {-56 * (1 + 2 * i)}px"}}, {T(f)});')
 
 # ================================================================ f: identity
 LOGO_W = COLW
@@ -647,48 +611,31 @@ tg1_cap = yr_cap + CAP * YR_PX + 76
 tg2_cap = tg1_cap + CAP * TG_PX + 0.42 * TG_PX
 JO_W, JO_T = 330, 1330
 show("Deekshaarambh")
+show("2026")
 DESC_MASK = "clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 61.6% 100%, 61.6% 68.9%, 0% 68.9%);"
 
 
 def tag(id_, a, b, cap):
     return (f'<div class="t" id="{id_}" style="left:{L}px; top:{top_for_cap(cap, TG_PX):.1f}px; font-size:{TG_PX}px; opacity:0;">'
-            f'<span style="font-weight:500;">{esc(a)}</span> <span style="font-weight:900; letter-spacing:-0.02em;">{esc(b)}</span></div>')
+            f'<span style="font-weight:500;">{esc(show(a))}</span> <span style="font-weight:900; letter-spacing:-0.02em;">{esc(show(b))}</span></div>')
 
 
 f_html = f"""
   <div id="F" class="clip full" {clip(832, TOTAL_F, 8)}>
-    <div class="full" style="background:{NAVY};"></div>
     <div id="logo-mask" style="position:absolute; left:{L}px; top:{LOGO_T}px; width:{LOGO_W:.1f}px; height:{LOGO_H:.2f}px; clip-path: inset(0px {LOGO_W:.1f}px 0px 0px);">
       <img id="logo" src="assets/brand/deekshaarambh.png" alt="" style="position:absolute; left:0; top:0; width:{LOGO_W:.1f}px; height:{LOGO_H:.2f}px; {DESC_MASK}">
     </div>
-    {word("f_yr", "2026", 900, YR_PX, yr_cap, WHITE, extra=" opacity:0;")}
-    {tag("f_t1", show("Your"), show("ambition."), tg1_cap)}
-    {tag("f_t2", show("Our"), show("commitment."), tg2_cap)}
+    <div class="t" id="f_yr" style="left:{L}px; top:{top_for_cap(yr_cap, YR_PX):.1f}px; font-size:{YR_PX}px; font-weight:900; letter-spacing:-0.03em; opacity:0;">2026</div>
+    {tag("f_t1", "Your", "ambition.", tg1_cap)}
+    {tag("f_t2", "Our", "commitment.", tg2_cap)}
     <img id="jo" src="assets/brand/jain-online.png" alt="" style="position:absolute; left:{L}px; top:{JO_T}px; width:{JO_W}px; opacity:0;">
   </div>"""
-J.append(f'tl.to("#logo-mask", {{clipPath: "inset(0px 0px 0px 0px)", duration: {D(12)}, ease: "expo.out"}}, {T(832)});')
-J.append(f'tl.set("#f_yr", {{opacity: 1}}, {T(848)});')
-J.append(f'tl.fromTo("#f_yr", {{y: 50}}, {{immediateRender: false, y: 0, duration: {D(6)}, ease: "expo.out"}}, {T(848)});')
-J.append(f'tl.set("#f_t1", {{opacity: 1}}, {T(864)});')
-J.append(f'tl.fromTo("#f_t1", {{x: -120}}, {{immediateRender: false, x: 0, duration: {D(7)}, ease: "expo.out"}}, {T(864)});')
-J.append(f'tl.set("#f_t2", {{opacity: 1}}, {T(880)});')
-J.append(f'tl.fromTo("#f_t2", {{x: 120}}, {{immediateRender: false, x: 0, duration: {D(7)}, ease: "expo.out"}}, {T(880)});')
-J.append(f'tl.fromTo("#jo", {{opacity: 0, y: 14}}, {{immediateRender: false, opacity: 1, y: 0, duration: {D(4)}, ease: "power2.out"}}, {T(896)});')
+J.append(f'tl.to("#logo-mask", {{clipPath: "inset(0px 0px 0px 0px)", duration: {D(14)}, ease: "expo.out"}}, {T(832)});')
+for el, f in (("#f_yr", 848), ("#f_t1", 864), ("#f_t2", 880)):
+    J.append(f'tl.fromTo("{el}", {{opacity: 0, y: 16}}, {{immediateRender: false, opacity: 1, y: 0, duration: {D(8)}, ease: "power2.out"}}, {T(f)});')
+J.append(f'tl.fromTo("#jo", {{opacity: 0}}, {{immediateRender: false, opacity: 1, duration: {D(4)}, ease: "power2.out"}}, {T(896)});')
 
-# ================================================================ assemble screens
-s_html = []
-last_end = {}
-for id_, f0, f1, bg, inner, anim, n in sorted(screens, key=lambda s: s[1]):
-    track = 1 if bg is not None else 9
-    if last_end.get(track, 0) > f0:
-        track = 10
-    last_end[track] = f1
-    bgdiv = f'<div class="full" style="background:{bg};"></div>' if bg else ""
-    s_html.append(f'\n  <div id="{id_}" class="clip full" {clip(f0, f1, track)}>{bgdiv}<div id="{id_}_j" class="full">{inner}</div></div>')
-    if anim and anim not in ("rise1", "india"):
-        enter(id_, n, f0, anim)
-
-# ---- copy check: shown strings, in order, against the script
+# ================================================================ copy check: shown strings, in order, against the script
 seq_expected = " ".join(SCRIPT).split()
 seq_got = " ".join(SHOWN).split()
 if seq_got != seq_expected:
@@ -696,7 +643,14 @@ if seq_got != seq_expected:
                      + "\n  script: " + " ".join(seq_expected))
 
 # ================================================================ page
-grain_end = BM.STILL_F
+card_html = "".join(f'\n  <div id="{id_}" class="clip full" {clip(f0, f1, 1)}>{inner}</div>'
+                    for id_, f0, f1, inner in sorted(cards, key=lambda c: c[1]))
+last = 0
+for id_, f0, f1, _ in sorted(cards, key=lambda c: c[1]):
+    if f0 < last:
+        raise SystemExit(f"text cards overlap at {id_}")
+    last = f1
+
 css = f"""
 @font-face {{ font-family: 'Montserrat'; font-weight: 500; src: url('assets/fonts/Montserrat-500.ttf'); }}
 @font-face {{ font-family: 'Montserrat'; font-weight: 800; src: url('assets/fonts/Montserrat-800.ttf'); }}
@@ -705,48 +659,56 @@ css = f"""
   font-family: 'Montserrat', sans-serif; color: {WHITE}; }}
 .full {{ position: absolute; left: 0; top: 0; width: {FW}px; height: {FH}px; }}
 .t {{ position: absolute; white-space: nowrap; line-height: 1; }}
-#A {{ background: {NAVY}; }}
+.blob {{ position: absolute; left: 0; top: 0; border-radius: 50%; }}
+.ln {{ position: absolute; left: {L}px; white-space: nowrap; line-height: 1; }}
+.w {{ display: inline-block; opacity: 0; }}
+.teal {{ color: {TEAL}; }}
+.cnt {{ font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }}
+.mos {{ color: transparent; background: linear-gradient(rgba(255,255,255,0.16), rgba(255,255,255,0.16)),
+  url('assets/img/face_mosaic.jpg') 0px 0px / 1344px 784px repeat;
+  -webkit-background-clip: text; background-clip: text; }}
+#Anum {{ -webkit-mask-image: url('assets/img/mask_num.png'); mask-image: url('assets/img/mask_num.png');
+  -webkit-mask-size: {FW}px {FH}px; mask-size: {FW}px {FH}px; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }}
 #Atl {{ --dx: 0px; --dy: 0px; opacity: 0; }}
-.tl {{ position: absolute; width: {TS}px; height: {TS}px; border-radius: 3px;
+#Atint {{ background: {WHITE}; opacity: 0.10; }}
+.tile {{ position: absolute; width: {TS}px; height: {TS}px;
   background-image: url('assets/img/face_cells.jpg'); background-size: {20 * TS}px {CELL_ROWS * TS}px; background-repeat: repeat;
   background-position: calc(var(--x) + var(--dx)) calc(var(--y) + var(--dy)); }}
-.pb {{ position: absolute; background: {TEAL}; opacity: 0; }}
+#aplus {{ color: {TEAL}; font-weight: 900; opacity: 0; }}
 .fs {{ position: absolute; opacity: 0; }}
-#a_l1, #a_l2, #a_jo {{ opacity: 0; }}
-.vf {{ position: absolute; left: 240px; width: 600px; height: 300px; top: {EYE_SCREEN[1] - 150:.0f}px;
+.vf {{ position: absolute; left: {EYE[0] - 280:.0f}px; top: {EYE[1] - 130:.0f}px; width: 560px; height: 260px;
   background:
-    linear-gradient({WHITE},{WHITE}) left top / 70px 6px no-repeat, linear-gradient({WHITE},{WHITE}) left top / 6px 70px no-repeat,
-    linear-gradient({WHITE},{WHITE}) right top / 70px 6px no-repeat, linear-gradient({WHITE},{WHITE}) right top / 6px 70px no-repeat,
-    linear-gradient({WHITE},{WHITE}) left bottom / 70px 6px no-repeat, linear-gradient({WHITE},{WHITE}) left bottom / 6px 70px no-repeat,
-    linear-gradient({WHITE},{WHITE}) right bottom / 70px 6px no-repeat, linear-gradient({WHITE},{WHITE}) right bottom / 6px 70px no-repeat;
-  opacity: 0.9; }}
-.shade {{ position: absolute; left: 0; width: {FW}px; background: linear-gradient(180deg, rgba(4,16,58,0) 0%, rgba(4,16,58,0.92) 55%, {INK} 100%); }}
+    linear-gradient({WHITE},{WHITE}) left top / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) left top / 5px 64px no-repeat,
+    linear-gradient({WHITE},{WHITE}) right top / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) right top / 5px 64px no-repeat,
+    linear-gradient({WHITE},{WHITE}) left bottom / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) left bottom / 5px 64px no-repeat,
+    linear-gradient({WHITE},{WHITE}) right bottom / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) right bottom / 5px 64px no-repeat;
+  opacity: 0.85; }}
+.vm {{ position: absolute; left: 0; top: 0; width: {FW}px; height: {FH}px; opacity: 0;
+  -webkit-mask-size: {FW}px {FH}px; mask-size: {FW}px {FH}px; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }}
 .gc, .bk {{ position: absolute; background-repeat: no-repeat; }}
-.gc {{ box-shadow: inset 0 0 0 3px {NAVY}; }}
-.bk {{ opacity: 0; box-shadow: inset 0 0 0 4px {NAVY}; }}
-.mos {{ color: transparent; background: url('assets/img/face_mosaic.jpg') 0px 0px / 1008px 588px repeat;
-  -webkit-background-clip: text; background-clip: text; }}
-#grain {{ background-image: url('assets/img/grain.png'); background-size: 256px 256px; mix-blend-mode: overlay; opacity: 0.07; }}
+.bk {{ opacity: 0; }}
+#grain {{ background-image: url('assets/img/grain.png'); background-size: 256px 256px; mix-blend-mode: overlay; opacity: 0.06; }}
 """
 
 js = "\n".join([
     "const tl = gsap.timeline({ paused: true });",
-    f'tl.fromTo("#grain", {{backgroundPosition: "0px 0px"}}, {{backgroundPosition: "{grain_end * 164}px {grain_end * 105}px", duration: {D(grain_end)}, ease: "steps({grain_end // 2})"}}, 0);',
+    f'tl.fromTo("#grain", {{backgroundPosition: "0px 0px"}}, {{backgroundPosition: "{STILL * 164}px {STILL * 105}px", duration: {D(STILL)}, ease: "steps({STILL // 2})"}}, 0);',
 ] + J + [
     f'tl.set({{}}, {{}}, {D(TOTAL_F)});',
     "window.__timelines = window.__timelines || {};",
     "window.__timelines.reel = tl;",
 ])
 
-body = f"""
-  <div id="bg" class="clip full" {clip(0, TOTAL_F, 0)} style="background:{NAVY};"></div>
+body = f"""{bg_html}
 {a_html}
+{fl_b}
 {b_html}
 {c_html}
-{fl_html}
-{d_html_grid}
+{g_html}
+{fl_e}
+{mp_html}
 {w_html}
-{''.join(s_html)}
+{card_html}
 {f_html}
   <div id="grain" class="clip full" {clip(0, TOTAL_F, 11)}></div>
   <audio id="score" class="clip" src="assets/audio/score.wav" {clip(0, TOTAL_F, 12)} data-volume="1"></audio>
@@ -769,5 +731,5 @@ page = f"""<!DOCTYPE html>
 </html>
 """
 (project / "index.html").write_text(page, encoding="utf-8")
-print(f"composed {BM.TOTAL:.0f}s @ {BM.BPM} BPM: {len(tiles)} face tiles (number {NPX:.0f}px), 20/26. at {YPX:.0f}px, "
-      f"{len(BM.clicks())} shutter cuts, {len(J)} timeline entries; script check passed")
+print(f"composed {BM.TOTAL:.0f}s @ {BM.BPM} BPM: number {NPX:.0f}px from {len(tiles)} face tiles, copy {TXT_PX:.0f}px "
+      f"in {len(cards)} cards, 20/26. at {YPX:.0f}px, {len(BM.clicks())} shutter cuts; script check passed")

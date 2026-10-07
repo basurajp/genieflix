@@ -67,19 +67,19 @@ def _run(f0, f1, step):
 FACES = {
     # intro: one face, eyes locked; changes on the stomps, then bursts
     "hero": [0, 8, 16] + _run(24, 32, 2) + [32, 40, 48] + _run(56, 64, 1),
-    # c: the window; eighths, then sixteenths, then a burst racing the counter to 11,000
+    # c: the eye-locked window; eighths, then sixteenths, then a burst racing the counter to 11,000
     "win": _run(288, 320, 8) + _run(320, 352, 4) + _run(352, 368, 2) + _run(368, 384, 1) + [392, 400, 408],
-    # c end / d: the grid of 24; burst, then slowing down to stop on one face at "each one."
+    # c end / d: the wall of 16; burst, then slowing down to stop on one face for "each one."
     "grid": _run(416, 448, 2) + _run(448, 512, 8) + [512, 528, 544, 552],
     # a: every tile in the number changes face at once
     "tiles": [88, 128, 136, 144],
-    # b and e: full-bleed bursts before 2026 and behind "every learner"
-    "flash": _run(184, 192, 2) + _run(648, 656, 2),
+    # b and e: eye-locked bursts before 2026 and for "every learner"
+    "flash": _run(184, 192, 2) + [640] + _run(648, 656, 2),
     # e: the faces inside "India." jump on stomp, stomp, clap
     "mosaic": [800, 808, 816],
 }
 COUNTER = (320, 384)             # the counter races 0 -> 11,000 with the window's burst
-EACH_ONE = 560                   # b35: the grid stops; the camera finds one face
+EACH_ONE = 568                   # b35.5: the grid has stopped; the camera finds one face for "each one."
 BRICKS = [704 + 2 * k for k in range(16)]   # e: face bricks land, two frames apart, b44-b46
 
 
