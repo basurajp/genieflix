@@ -29,8 +29,10 @@ Cut to beatmap.py (112.5 BPM, a beat every 16 frames, stomp-stomp-clap):
           becomes a wall of 16 posts
   d       the wall slows down under the breakdown; the trust (filled with
           faces); behind / each one. as the camera finds one post
-  e       the peak: phrase cards on the beat over a burst, a drifting mosaic
-          and posts stacking like bricks; India. filled with faces
+  e       the peak: phrase cards on the beat over a burst and a drifting
+          mosaic; the map of India fills with the learners' photos band by
+          band, south to north, for "one step closer to building", and its
+          outline lands with India.
   f       the authentic artwork revealed by one clean mask; 2026; the tagline;
           JAIN Online; nothing moves after 30.0 s
 
@@ -406,8 +408,8 @@ bg_html = f"""
 NUM_W = 900
 NPX = fit("11,000+", NUM_W, 240)
 NCAP = CAP * NPX
-n_cap = VC - NCAP / 2
-n_base = n_cap + NCAP
+n_base = TZ0 - 0.36 * NPX            # the number sits on its sentence: baseline to cap top clears the comma
+n_cap = n_base - NCAP
 show("11,000+")
 KM = 2
 nmask = raster([("11,000", NUM_W, NPX, L, n_base)], FW, FH, KM)
@@ -576,28 +578,74 @@ mp_html = f"""
   </div>"""
 J.append(f'tl.fromTo("#mpan", {{backgroundPosition: "0px 0px"}}, {{immediateRender: false, backgroundPosition: "-168px -56px", duration: {D(32)}, ease: "none"}}, {T(672)});')
 card("te2", 672, 704, [{"words": [W("who chooses", 672)]}, {"words": [W("JAIN Online", 680, "teal")]}])
-# bricks: one step closer to building
-BK = GD
-bricks = []
-b_ids = faces_for(16, 55)
-for n, f in enumerate(BM.BRICKS):
-    r, c = 3 - n // 4, n % 4
-    bricks.append(f'<div class="bk" id="bk{n}" style="left:{WIN_L + c * BK:.1f}px; top:{VZ0 + r * BK:.1f}px; width:{BK:.1f}px; height:{BK:.1f}px; '
-                  f'{sheet_bg(BK)} background-position:{sheet_pos(b_ids[n], BK)}; clip-path:{outline(b_ids[n])};"></div>')
-    J.append(f'tl.set("#bk{n}", {{opacity: 1}}, {T(f - 2)});')
-    J.append(f'tl.fromTo("#bk{n}", {{y: -120}}, {{immediateRender: false, y: 0, duration: {D(2)}, ease: "power2.in"}}, {T(f - 2)});')
-w_html = f"""
-  <div id="Wl" class="clip full" {clip(704, 832, 7)}>
-    <div id="Wcam" class="full" style="transform-origin:540px {VC:.0f}px;">{''.join(bricks)}</div>
+# the map of India, filled with faces: one band of photos per sixteenth, south to north
+geo = json.loads((A / "geo" / "india-composite.geojson").read_text(encoding="utf-8-sig"))
+gm = geo["features"][0]["geometry"]
+polys = gm["coordinates"] if gm["type"] == "MultiPolygon" else [gm["coordinates"]]
+KX = math.cos(math.radians(22.0))    # equirectangular, x scaled at the mid latitude
+lons = [pt[0] for pg in polys for ring in pg for pt in ring]
+lats = [pt[1] for pg in polys for ring in pg for pt in ring]
+lon0, lon1, lat0, lat1 = min(lons), max(lons), min(lats), max(lats)
+MS = min(WIN / ((lon1 - lon0) * KX), (VZ1 - VZ0) / (lat1 - lat0))
+MW, MH = (lon1 - lon0) * KX * MS, (lat1 - lat0) * MS
+MX0, MY0 = 540 - MW / 2, VZ0 + (VZ1 - VZ0 - MH) / 2
+rings = []
+for pg in polys:
+    for ring in pg:
+        pts, last = [], None
+        for lon, lat in ring:
+            x, y = MX0 + (lon - lon0) * KX * MS, MY0 + (lat1 - lat) * MS
+            if last is None or math.hypot(x - last[0], y - last[1]) >= 1.2:
+                pts.append((x, y))
+                last = (x, y)
+        if len(pts) >= 3:
+            rings.append(pts)
+map_d = " ".join("M" + " L".join(f"{x:.1f},{y:.1f}" for x, y in r) + " Z" for r in rings)
+(A / "img" / "india.svg").write_text(
+    f'<svg xmlns="http://www.w3.org/2000/svg" width="{FW}" height="{FH}" viewBox="0 0 {FW} {FH}">'
+    f'<path d="{map_d}" fill="#fff" fill-rule="evenodd"/></svg>', encoding="utf-8")
+edges = [(r[k], r[(k + 1) % len(r)]) for r in rings for k in range(len(r))]
+
+
+def spans(y):
+    xs = sorted(x1 + (y - y1) * (x2 - x1) / (y2 - y1) for (x1, y1), (x2, y2) in edges if (y1 <= y < y2) or (y2 <= y < y1))
+    return list(zip(xs[0::2], xs[1::2]))
+
+
+MP_P, MP_T = 24, 22
+NB = len(BM.FACES["map"])
+band_tiles = [[] for _ in range(NB)]
+rngm = random.Random(26)
+ty = MY0 - 6
+while ty < MY0 + MH:
+    rows = [spans(ty + d) for d in (2, MP_T / 2, MP_T - 2)]
+    tx = MX0 - 6
+    while tx < MX0 + MW:
+        if any(a < tx + MP_T and b > tx for row in rows for a, b in row):
+            band = min(NB - 1, max(0, int((MY0 + MH - (ty + MP_T)) / (MH / NB))))
+            c = rngm.choice(ORDER)
+            band_tiles[band].append(f'<i class="mt" style="left:{tx:.1f}px; top:{ty:.1f}px; --x:{-(c % 20) * MP_T}px; --y:{-(c // 20) * MP_T}px;"></i>')
+        tx += MP_P
+    ty += MP_P
+n_map_tiles = sum(len(b) for b in band_tiles)
+map_html = f"""
+  <div id="MAP" class="clip full" {clip(704, 832, 7)}>
+    <div id="MAPcam" class="full" style="transform-origin:540px {MY0 + MH / 2:.0f}px;">
+      <div id="MAPm" class="full"><div id="MAPt" class="full">{''.join(f'<div class="mb" id="mb{k}">{"".join(b)}</div>' for k, b in enumerate(band_tiles))}
+        <div class="full" style="background:{WHITE}; opacity:0.08;"></div></div></div>
+      <svg id="mapline" class="full" viewBox="0 0 {FW} {FH}" style="opacity:0;"><path d="{map_d}" fill="none" stroke="{WHITE}" stroke-width="2.2" stroke-linejoin="round"/></svg>
+    </div>
   </div>"""
-J.append(f'tl.to("#Wcam", {{scale: 0.92, opacity: 0.6, duration: {D(56)}, ease: "sine.inOut"}}, {T(768)});')
-J.append(f'tl.to("#Wcam", {{opacity: 0, duration: {D(6)}, ease: "power1.in"}}, {T(826)});')
+for k, f in enumerate(BM.FACES["map"]):
+    J.append(f'tl.fromTo("#mb{k}", {{opacity: 0}}, {{immediateRender: false, opacity: 1, duration: {D(3)}, ease: "power1.out"}}, {T(f)});')
+J.append(f'tl.fromTo("#mapline", {{opacity: 0}}, {{immediateRender: false, opacity: 0.85, duration: {D(8)}, ease: "power1.out"}}, {T(768)});')
+J.append(f'tl.to("#MAPcam", {{scale: 1.035, duration: {D(54)}, ease: "sine.inOut"}}, {T(770)});')
+for i, f in enumerate(BM.FACES["mosaic"]):     # the faces in the map change on stomp, stomp, clap
+    J.append(f'tl.set("#MAPt", {{"--dx": "{-((5 + 7 * i) % 20) * MP_T}px", "--dy": "{-((3 + 3 * i) % CELL_ROWS) * MP_T}px"}}, {T(f)});')
+J.append(f'tl.to("#MAPcam", {{opacity: 0, duration: {D(6)}, ease: "power1.in"}}, {T(826)});')
 card("te3", 704, 736, [{"words": [W("brings us", 704)]}, {"words": [W("one step", 712), W("closer", 720)]}])
 card("te4", 736, 768, [{"words": [W("to building", 736)]}, {"words": [W("a more skilled,", 744)]}])
-IN_PX = min(fit("India.", 900, 250), (TZ_MAX - TZ0 - CAP * TXT_PX - 0.42 * TXT_PX) / CAP)
-card("te5", 768, 832, [{"words": [W("future-ready", 768)]}, {"px": IN_PX, "weight": 900, "words": [W("India.", 776, "mos")]}])
-for i, f in enumerate(BM.FACES["mosaic"]):
-    J.append(f'tl.set("#te5w10", {{backgroundPosition: "{-56 * (3 + 5 * i)}px {-56 * (1 + 2 * i)}px"}}, {T(f)});')
+card("te5", 768, 832, [{"words": [W("future-ready", 768)]}, {"words": [W("India.", 776, "teal")]}])
 
 # ================================================================ f: identity
 LOGO_W = COLW
@@ -685,8 +733,14 @@ css = f"""
   opacity: 0.85; }}
 .vm {{ position: absolute; left: 0; top: 0; width: {FW}px; height: {FH}px; opacity: 0;
   -webkit-mask-size: {FW}px {FH}px; mask-size: {FW}px {FH}px; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }}
-.gc, .bk {{ position: absolute; background-repeat: no-repeat; }}
-.bk {{ opacity: 0; }}
+.gc {{ position: absolute; background-repeat: no-repeat; }}
+#MAPm {{ -webkit-mask-image: url('assets/img/india.svg'); mask-image: url('assets/img/india.svg');
+  -webkit-mask-size: {FW}px {FH}px; mask-size: {FW}px {FH}px; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }}
+#MAPt {{ --dx: 0px; --dy: 0px; }}
+.mb {{ position: absolute; left: 0; top: 0; width: {FW}px; height: {FH}px; opacity: 0; }}
+.mt {{ position: absolute; width: {MP_T}px; height: {MP_T}px;
+  background-image: url('assets/img/face_cells.jpg'); background-size: {20 * MP_T}px {CELL_ROWS * MP_T}px; background-repeat: repeat;
+  background-position: calc(var(--x) + var(--dx)) calc(var(--y) + var(--dy)); }}
 #grain {{ background-image: url('assets/img/grain.png'); background-size: 256px 256px; mix-blend-mode: overlay; opacity: 0.06; }}
 """
 
@@ -707,7 +761,7 @@ body = f"""{bg_html}
 {g_html}
 {fl_e}
 {mp_html}
-{w_html}
+{map_html}
 {card_html}
 {f_html}
   <div id="grain" class="clip full" {clip(0, TOTAL_F, 11)}></div>
@@ -731,5 +785,5 @@ page = f"""<!DOCTYPE html>
 </html>
 """
 (project / "index.html").write_text(page, encoding="utf-8")
-print(f"composed {BM.TOTAL:.0f}s @ {BM.BPM} BPM: number {NPX:.0f}px from {len(tiles)} face tiles, copy {TXT_PX:.0f}px "
+print(f"composed {BM.TOTAL:.0f}s @ {BM.BPM} BPM: number {NPX:.0f}px from {len(tiles)} face tiles, India from {n_map_tiles}, copy {TXT_PX:.0f}px "
       f"in {len(cards)} cards, 20/26. at {YPX:.0f}px, {len(BM.clicks())} shutter cuts; script check passed")

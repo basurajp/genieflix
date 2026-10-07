@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Synthesize the stomp piece's score: 32 s, 112.5 BPM, D major, stomp-stomp-clap.
+"""Synthesize the stomp piece's score: 32 s, 112.5 BPM, D major, celebratory.
 
 Usage: motion/deekshaarambh-2026-stomp/make_score.py --out <dir>/score.wav
 
 Everything is placed from beatmap.py, the same clock compose.py cuts to:
-  - a stage stomp (three layered feet) and a crowd clap on every stomp-stomp-clap
-  - a camera shutter on every face change: a two-curtain click when changes are
-    spaced, a short motor-drive click inside a burst, a soft one in the breakdown
-  - a piano hook on a 3-3-2-2-2-4 figure over D, A, Bm, G, doubled by a pluck an
-    octave up; piano stabs on the claps; a sub bass ducked by the stomps; a pad
-  - risers into the drops, impacts on the section hits, bells on 2026 and the logo
+  - a stage stomp (three layered feet) and a crowd clap on every stomp-stomp-clap,
+    over a dhol bhangra chaal (dha on the bass skin, ta on the treble)
+  - a brass section: the hook as full chords on a 3-3-2-2-2-4 figure over
+    D, A, Bm, G, brass stabs on the claps, a low horn line in the breakdown, a
+    held D major chord under the identity
+  - a camera shutter on every face change (two curtains when spaced, a motor
+    drive click inside a burst, a soft one in the breakdown and the map)
+  - a sub bass ducked by the stomps, a string pad, tom fills into the drops,
+    crash cymbals, booms and crowd-cheer swells on the big hits, risers
 
-Arc: stomps and shutters alone with the hook on solo piano, the drop at 11,000+,
-a lean bar under the counter race, a breakdown on piano for "trust", a rise,
-the peak for the purpose line, and a held D under the identity.
+Arc: stomps, shutters and a low brass swell; the drop at 11,000+ with a cheer;
+a lean bar under the counter race; a breakdown on horn and strings for "trust";
+a rise; the peak for the purpose line; a held D under the identity.
 Stdlib synthesis, mixed and mastered with ffmpeg (convolution hall). Deterministic.
 """
 import argparse
@@ -43,7 +46,7 @@ SIL = (T(BM.SILENCE[0]), T(BM.SILENCE[1]))
 
 VOICING = {"D": (62, 66, 69, 74), "A": (61, 64, 69, 73), "Bm": (62, 66, 71, 74), "G": (62, 67, 71, 74)}
 ROOT = {"D": 38, "A": 45, "Bm": 47, "G": 43}
-HOOK = {  # 16th step -> midi, per chord (a 3-3-2-2-2-4 figure)
+HOOK = {  # 16th step -> midi melody (top voice of the brass), per chord: a 3-3-2-2-2-4 figure
     "D": [(0, 69), (3, 74), (6, 78), (8, 76), (10, 74), (12, 76)],
     "A": [(0, 73), (3, 76), (6, 81), (8, 78), (10, 76), (12, 73)],
     "Bm": [(0, 74), (3, 78), (6, 83), (8, 81), (10, 78), (12, 74)],
@@ -169,64 +172,129 @@ def shutter(kind):
     return out
 
 
-# ---------------------------------------------------------------- tones
-_piano = {}
-
-
-def piano(m, dur=1.3, vel=1.0):
-    key = (m, round(dur, 2), round(vel, 2))
-    if key in _piano:
-        return _piano[key]
-    f = midi(m)
-    n = int(dur * SR)
-    out = array("d", bytes(8 * n))
-    kf = (f / 440) ** 0.35
-    for p in range(1, 11):
-        fp = p * f * math.sqrt(1 + 0.00038 * p * p)
-        if fp > 10000:
-            break
-        amp = vel * p ** -1.25 * (1.0 if p < 3 else 0.6 + 0.4 * vel)
-        d1, d2 = (5.0 + 2.2 * p) * kf, (0.9 + 0.5 * p) * kf
-        for det in (-0.06 * p, 0.06 * p):
-            w = TAU * (fp + det) / SR
-            c, s = math.cos(w), math.sin(w)
-            x, y = 1.0, 0.0
-            for k in range(n):
-                t = k / SR
-                e = 0.55 * math.exp(-t * d1) + 0.45 * math.exp(-t * d2)
-                out[k] += y * amp * e * 0.5
-                x, y = x * c - y * s, x * s + y * c
-    lp = 0.0
-    for k in range(int(0.02 * SR)):       # hammer felt
+# ---------------------------------------------------------------- tones and drums
+def dha():
+    """dhol bass skin: a boomy membrane with a falling pitch and a palm thump"""
+    out, ph, lp = array("d"), 0.0, 0.0
+    for k in range(int(0.5 * SR)):
         t = k / SR
-        lp += 0.2 * ((rng.random() * 2 - 1) - lp)
-        out[k] += lp * 0.5 * vel * math.exp(-t * 220)
+        ph += (64 + 48 * math.exp(-t * 18)) / SR
+        lp += 0.05 * ((rng.random() * 2 - 1) - lp)
+        out.append(math.tanh(1.6 * math.sin(TAU * ph)) * math.exp(-t * 6.5) + lp * 2.2 * math.exp(-t * 40))
+    return out
+
+
+def ta():
+    """dhol treble skin: the cane's crack, band-passed noise with a short ring"""
+    out, low, band = array("d"), 0.0, 0.0
+    f = 2 * math.sin(math.pi * 2300 / SR)
+    for k in range(int(0.12 * SR)):
+        t = k / SR
+        low += f * band
+        high = (rng.random() * 2 - 1) - low - 0.35 * band
+        band += f * high
+        ring = 0.5 * math.sin(TAU * 430 * t) * math.exp(-t * 55) + 0.3 * math.sin(TAU * 960 * t) * math.exp(-t * 70)
+        out.append(band * 0.9 * math.exp(-t * 38) + ring)
+    return out
+
+
+def tom(f0):
+    out, ph = array("d"), 0.0
+    for k in range(int(0.45 * SR)):
+        t = k / SR
+        ph += (f0 * (1 + 0.5 * math.exp(-t * 25))) / SR
+        out.append(math.tanh(1.4 * math.sin(TAU * ph)) * math.exp(-t * 7) + (rng.random() * 2 - 1) * 0.25 * math.exp(-t * 90))
+    return out
+
+
+def crash(dur=2.6):
+    n = int(dur * SR)
+    out, prev = array("d"), 0.0
+    parts = [(f, rng.random() * TAU, rng.uniform(0.5, 1.0)) for f in (3170, 4230, 5390, 6610, 8120, 9480, 11200)]
     for k in range(n):
         t = k / SR
-        out[k] = math.tanh(1.3 * out[k]) * min(1.0, t * 900) * min(1.0, (dur - t) * 25)
-    _piano[key] = out
+        nz = rng.random() * 2 - 1
+        hp = nz - prev
+        prev = nz
+        tone = sum(a * math.sin(TAU * f * t + p) for f, p, a in parts) / 7
+        out.append((0.75 * hp + 0.35 * tone) * math.exp(-t * 2.6) * min(1.0, t * 2000))
     return out
 
 
-def pluck(f, dur=0.9):
-    n = max(2, int(round(SR / f)))
-    line = [rng.uniform(-1, 1) for _ in range(n)]
-    out, i = array("d"), 0
-    for k in range(int(dur * SR)):
-        a, b = line[i], line[(i + 1) % n]
-        line[i] = 0.5 * (a + b) * 0.9972
-        i = (i + 1) % n
-        out.append(a * min(1.0, (dur - k / SR) * 30))
-    return out
-
-
-def bell(f, dur=3.0, idx=1.3):
+def cheer(dur=2.8):
+    """a crowd: two formant-ish noise bands under a flutter of many voices, swelling then falling"""
+    n = int(dur * SR)
     out = array("d")
-    for k in range(int(dur * SR)):
+    bands = []
+    for fc, q in ((900, 0.5), (2400, 0.6)):
+        bands.append([2 * math.sin(math.pi * fc / SR), q, 0.0, 0.0])
+    flut = [(rng.uniform(5, 13), rng.random() * TAU) for _ in range(9)]
+    for k in range(n):
         t = k / SR
-        s = math.sin(TAU * f * t + idx * math.exp(-t * 4) * math.sin(TAU * 3.5 * f * t))
-        out.append(s * math.exp(-t * 1.8) * min(1.0, t * 500))
+        nz = rng.random() * 2 - 1
+        s = 0.0
+        for b in bands:
+            f, q, low, band = b
+            low += f * band
+            high = nz - low - q * band
+            band += f * high
+            b[2], b[3] = low, band
+            s += band
+        am = 0.6 + 0.4 * sum(math.sin(TAU * fr * t + ph) for fr, ph in flut) / 9
+        env = min(1.0, t / 0.35) * math.exp(-max(0.0, t - 0.5) * 1.3)
+        out.append(s * am * env)
     return out
+
+
+_brass = {}
+
+
+def brass_note(m, dur, vel=1.0, dark=False):
+    """synth brass: three detuned saws, a scoop up into pitch, a filter that opens on the attack
+    and settles, vibrato on held notes"""
+    key = (m, round(dur, 3), round(vel, 2), dark)
+    if key in _brass:
+        return _brass[key]
+    f = midi(m)
+    n = int((dur + 0.08) * SR)
+    out = array("d")
+    ph = [rng.random() for _ in range(3)]
+    det = (-0.004, 0.0, 0.0045)
+    l1 = l2 = 0.0
+    for k in range(n):
+        t = k / SR
+        scoop = 2 ** (-0.4 / 12 * math.exp(-t / 0.035))
+        vib = 1 + (0.0045 * math.sin(TAU * 5.6 * t) * min(1.0, max(0.0, (t - 0.25) / 0.2)) if dur > 0.45 else 0.0)
+        s = 0.0
+        for j in range(3):
+            ph[j] = (ph[j] + f * (1 + det[j]) * scoop * vib / SR) % 1.0
+            s += 2 * ph[j] - 1
+        s /= 3
+        fenv = min(1.0, t / 0.025) * (0.45 + 0.55 * math.exp(-t / 0.18))
+        fc = f * ((1.2 + 5.5 * vel * fenv) if not dark else (1.0 + 2.2 * vel * fenv))
+        a = min(0.95, 2 * math.pi * fc / SR)
+        l1 += a * (s - l1)
+        l2 += a * (l1 - l2)
+        amp = min(1.0, t / 0.018) * (0.82 + 0.18 * math.exp(-t / 0.08)) * min(1.0, max(0.0, (dur + 0.06 - t) / 0.06))
+        out.append(math.tanh(1.6 * l2) * amp * vel)
+    _brass[key] = out
+    return out
+
+
+def brass_chord(L, R, t, notes, dur, vel=1.0, gain=1.0, dark=False):
+    for j, m in enumerate(notes):
+        s = brass_note(m, dur, vel, dark)
+        g = gain * (1.0 if j == 0 else 0.62)
+        pan = 0.5 + (0.22 if j % 2 else -0.22) * (j > 0)
+        place(L, s, t + 0.002 * j, g * (1 - pan) * 1.4)
+        place(R, s, t + 0.002 * j + 0.004, g * pan * 1.4)
+
+
+def voicing_under(m, c):
+    """the melody note on top, the two chord tones just under it, the root an octave above the bass"""
+    pcs = {n % 12 for n in VOICING[c]}
+    below = [x for x in range(m - 1, m - 13, -1) if x % 12 in pcs][:2]
+    return [m] + below + [ROOT[c] + 12]
 
 
 def boom(dur=2.4, low=34, hi=80):
@@ -271,7 +339,7 @@ def drums():
         t0 = bar * BAR
         if g in ("full", "peak", "build", "logo"):
             for q in range(16):
-                place(D, H, t0 + q * STEP, 0.11 if q % 2 else 0.07)
+                place(D, H, t0 + q * STEP, 0.07 if q % 2 else 0.045)
         if g == "peak":
             for q in (2, 6, 10, 14):
                 place(D, HO, t0 + q * STEP, 0.12)
@@ -358,45 +426,60 @@ def bass(env):
     return B
 
 
-def keys():
-    """piano hook + stabs, pluck double"""
+def brass():
+    """the hook as brass chords, stabs on the claps, horn in the breakdown, swells and the final chord"""
     L, R = buf(), buf()
-    PL, PR = buf(), buf()
     for bar in range(15):
         g = groove(bar)
         t0 = bar * BAR
         c = chord_at(t0 + 0.01)
-        # hook
-        if g in ("intro", "full", "build", "peak", "soft", "rise"):
-            vel = {"intro": 0.7, "soft": 0.6, "rise": 0.7}.get(g, 0.9)
-            for st in range(16):
+        if g in ("full", "build", "peak"):
+            steps = [st for st in range(16) if dict(HOOK[chord_at(t0 + st * STEP)]).get(st) is not None]
+            for i, st in enumerate(steps):
                 t = t0 + st * STEP
-                m = dict(HOOK[chord_at(t)]).get(st)
-                if m is None:
-                    continue
-                acc = 1.0 if st in (0, 6) else 0.8
-                s = piano(m, 1.1, round(vel * acc, 2))
-                place(L, s, t, 0.5)
-                place(R, s, t + 0.004, 0.5)
-                if g in ("full", "peak", "build"):
-                    pk = pluck(midi(m + 12), 0.6)
-                    place(PL, pk, t, 0.22 if st % 2 else 0.3)
-                    place(PR, pk, t + 0.011, 0.3 if st % 2 else 0.22)
-        # stabs on the claps; held chords in the breakdown and the identity
+                m = dict(HOOK[chord_at(t)])[st]
+                nxt = steps[i + 1] if i + 1 < len(steps) else 16
+                dur = min(0.5, (nxt - st) * STEP * 0.82)
+                vel = 1.0 if st in (0, 6) else 0.85
+                brass_chord(L, R, t, voicing_under(m, chord_at(t)), dur, vel, 0.55 if g != "peak" else 0.62)
         if g in ("full", "peak", "lean", "build", "logo"):
             for beat in (1, 3):
                 t = t0 + beat * BEAT
-                for m in VOICING[chord_at(t)]:
-                    s = piano(m, 0.5, 0.75)
-                    place(L, s, t, 0.3)
-                    place(R, s, t + 0.003, 0.3)
-        if g in ("soft", "rise", "logo", "tail"):
-            for m in VOICING[c] + (ROOT[c] + 12,):
-                s = piano(m - 12, 2.2 if g != "tail" else 3.0, 0.65)
-                gg = 0.2 if g in ("soft", "rise") else 0.32
-                place(L, s, t0, gg)
-                place(R, s, t0 + 0.005, gg)
-    return L, R, PL, PR
+                cc = chord_at(t)
+                brass_chord(L, R, t, [VOICING[cc][-1]] + list(VOICING[cc][:-1]) + [ROOT[cc] + 12], 0.16, 1.0, 0.42)
+        if g == "soft":                       # breakdown: a low horn sings the hook's long notes
+            for st, m in HOOK[c]:
+                if st in (0, 6, 12):
+                    brass_chord(L, R, t0 + st * STEP, [m - 12], 0.75 if st < 12 else 0.6, 0.55, 0.5, dark=True)
+        if g == "rise":                       # swells climbing into the peak
+            for beat in range(4):
+                cc = chord_at(t0 + beat * BEAT)
+                brass_chord(L, R, t0 + beat * BEAT, voicing_under(VOICING[cc][-1] + (beat >= 2) * 2, cc), BEAT * 0.9,
+                            0.55 + 0.12 * beat, 0.32 + 0.08 * beat)
+    # intro: a low swell into the drop
+    brass_chord(L, R, T(BM.fb(1)), [50, 57, 62], T(BM.fb(4)) - T(BM.fb(1)) - 0.05, 0.6, 0.3, dark=True)
+    # the identity: one big held D major chord, then the last clap's stab
+    brass_chord(L, R, T(BM.fb(52)), [78, 74, 69, 66, 62, 50], 3.3, 1.0, 0.52)
+    brass_chord(L, R, T(BM.fb(56)), [81, 78, 74, 69, 62, 50], 3.0, 0.9, 0.42)
+    return L, R
+
+
+def dhol():
+    Dh = buf()
+    DHA, TA = dha(), ta()
+    for bar in range(15):
+        g = groove(bar)
+        if g not in ("full", "peak", "build", "logo", "rise"):
+            continue
+        t0 = bar * BAR
+        for st in (0, 6, 8, 14):
+            place(Dh, DHA, t0 + st * STEP, 0.6 if g != "rise" else 0.4)
+        for st in (3, 4, 10, 11, 12):
+            place(Dh, TA, t0 + st * STEP, (0.34 if st in (4, 12) else 0.22) * (0.7 if g == "rise" else 1.0))
+        if g == "peak":                       # extra ta on the off-sixteenths
+            for st in (7, 15):
+                place(Dh, TA, t0 + st * STEP, 0.16)
+    return Dh
 
 
 def pad(env):
@@ -437,25 +520,26 @@ def fx():
     L, R = buf(), buf()
     for a, b in BM.RISERS:
         r = rise(T(b) - T(a))
-        place(L, r, T(a), 0.5)
-        place(R, r, T(a) + 0.006, 0.5)
+        place(L, r, T(a), 0.42)
+        place(R, r, T(a) + 0.006, 0.42)
+    CR = crash()
     for f in BM.IMPACTS:
         bm = boom()
-        place(L, bm, T(f), 0.85)
-        place(R, bm, T(f), 0.85)
-    for f, notes in ((BM.fb(12), (74, 78, 81)), (BM.fb(32.5), (78, 86)), (BM.fb(52), (74, 78, 81, 86, 90))):
-        for j, m in enumerate(notes):
-            s = bell(midi(m), 3.2)
-            place(L if j % 2 else R, s, T(f) + 0.012 * j, 0.2)
-            place(R if j % 2 else L, s, T(f) + 0.012 * j + 0.01, 0.13)
-    # bricks landing: a dull wooden knock per brick
-    knock = array("d")
-    for k in range(int(0.06 * SR)):
-        t = k / SR
-        knock.append(math.sin(TAU * 240 * t) * math.exp(-t * 70) + 0.4 * (rng.random() * 2 - 1) * math.exp(-t * 300))
-    for i, f in enumerate(BM.BRICKS):
-        place(L, knock, T(f), 0.25 + 0.02 * i)
-        place(R, knock, T(f) + 0.002, 0.25 + 0.02 * i)
+        place(L, bm, T(f), 0.8)
+        place(R, bm, T(f), 0.8)
+        place(L, CR, T(f), 0.3)
+        place(R, CR, T(f) + 0.009, 0.3)
+    CH = cheer()
+    for f, g in ((BM.fb(4), 0.32), (BM.fb(40), 0.36), (BM.fb(52), 0.42)):
+        place(L, CH, T(f) + 0.02, g)
+        place(R, cheer(), T(f) + 0.05, g)
+    # tom fills: the last beat before each drop, high to low
+    for f in (BM.fb(4), BM.fb(24), BM.fb(40), BM.fb(52)):
+        for k, f0 in enumerate((180, 150, 120, 95)):
+            tm = tom(f0)
+            t = T(f) - BEAT + k * BEAT / 4
+            place(L, tm, t, 0.32 if k % 2 else 0.24)
+            place(R, tm, t, 0.24 if k % 2 else 0.32)
     return L, R
 
 
@@ -494,8 +578,8 @@ TARGET_MEAN = -13.6     # dB, volumedetect mean; the repo's gate is -17 to -13
 def arc_expr():
     """mix automation: the breakdown sits ~3 dB under, the rise bar climbs back to full for the peak"""
     b28, b36, b40 = (T(BM.fb(b)) for b in (28, 36, 40))
-    return (f"1-0.3*min(1\\,max(0\\,(t-{b28:.3f})/0.12))"
-            f"+0.3*min(1\\,max(0\\,(t-{b36:.3f})/{b40 - b36:.3f}))")
+    return (f"1-0.18*min(1\\,max(0\\,(t-{b28:.3f})/0.12))"
+            f"+0.18*min(1\\,max(0\\,(t-{b36:.3f})/{b40 - b36:.3f}))")
 
 
 def mean_volume(path):
@@ -510,28 +594,27 @@ def main():
     out = pathlib.Path(ap.parse_args().out).expanduser().resolve()
     out.parent.mkdir(parents=True, exist_ok=True)
     env = duck_env()
-    kl, kr, pl, pr = keys()
-    stems = {"drums": (drums(),), "shutter": shutters(), "bass": (bass(env),), "keys": (kl, kr),
-             "pluck": (pl, pr), "pad": pad(env), "fx": fx()}
+    stems = {"drums": (drums(),), "shutter": shutters(), "bass": (bass(env),), "brass": brass(),
+             "dhol": (dhol(),), "pad": pad(env), "fx": fx()}
     with tempfile.TemporaryDirectory() as td:
         td = pathlib.Path(td)
         for nm, ch in stems.items():
             write(td / f"{nm}.wav", list(ch))
         write(td / "ir.wav", list(hall()))
-        lv = {"drums": 0.9, "shutter": 0.5, "bass": 0.55, "keys": 0.62, "pluck": 0.3, "pad": 0.3, "fx": 0.55}
+        lv = {"drums": 0.9, "shutter": 0.36, "bass": 0.55, "brass": 0.62, "dhol": 0.62, "pad": 0.26, "fx": 0.55}
         fc = (
             "[0]aformat=channel_layouts=stereo,volume={drums},asplit[d][ds];"
             "[1]volume={shutter},asplit[sh][shs];"
             "[2]aformat=channel_layouts=stereo,volume={bass}[b];"
-            "[3]volume={keys},asplit[k][ks];"
-            "[4]volume={pluck},asplit[p][ps];"
+            "[3]volume={brass},asplit[k][ks];"
+            "[4]aformat=channel_layouts=stereo,volume={dhol},asplit[p][ps];"
             "[5]volume={pad},asplit[pa][pas];"
             "[6]volume={fx},asplit[x][xs];"
-            "[ds]volume=0.32[s0];[shs]volume=0.12[s1];[ks]volume=0.4[s2];[ps]volume=0.5[s3];[pas]volume=0.4[s4];[xs]volume=0.35[s5];"
+            "[ds]volume=0.3[s0];[shs]volume=0.1[s1];[ks]volume=0.38[s2];[ps]volume=0.18[s3];[pas]volume=0.4[s4];[xs]volume=0.3[s5];"
             "[s0][s1][s2][s3][s4][s5]amix=inputs=6:normalize=0[send];"
             "[send][7]afir=dry=0:wet=1:length=1:gtype=peak,volume=0.5[rev];"
             "[d][sh][b][k][p][pa][x][rev]amix=inputs=8:normalize=0,"
-            "highpass=f=30,bass=g=-2:f=90,equalizer=f=3000:width_type=o:width=1.5:g=2,"
+            "highpass=f=30,bass=g=-2:f=90,equalizer=f=2200:width_type=o:width=1.5:g=1.5,treble=g=-3:f=7000,"
             "acompressor=threshold=-15dB:ratio=2.2:attack=8:release=140:makeup=2,"
             "alimiter=limit=0.75:attack=2:release=50:level=disabled,aresample=48000,"
             f"atrim=0:{TOTAL:.3f},afade=t=out:st={TOTAL - 0.7:.3f}:d=0.7,"

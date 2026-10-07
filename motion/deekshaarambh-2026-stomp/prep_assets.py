@@ -14,6 +14,10 @@ Usage:
   a keyframe every 30 frames. It plays inside the letters of "2026.".
 - assets/fonts/: Montserrat 500, 800 and 900 (Google Fonts, OFL).
 - assets/img/grain.png: a 256 px noise tile.
+- assets/geo/india-composite.geojson: the land area of India in accordance with
+  the official boundary of India as per the Survey of India (Jammu and Kashmir
+  and Ladakh in full), compiled by the DataMeet community, CC-0
+  (github.com/datameet/maps, Country/). compose.py draws the map from it.
 - assets/gsap.min.js: copied from template/assets.
 
 Faces come from faces_prep.py (needs OpenCV; run it once per recording).
@@ -31,6 +35,7 @@ REPO = HERE.parent.parent
 FF = ["ffmpeg", "-y", "-hide_banner", "-loglevel", "error"]
 FONT_CSS = "https://fonts.googleapis.com/css2?family=Montserrat:wght@500;800;900&display=swap"
 SCROLL_START, SCROLL_SPEED, SCROLL_OUT = 8.0, 2.0, 3.6
+INDIA_GEOJSON = "https://raw.githubusercontent.com/datameet/maps/master/Country/india-composite.geojson"
 # the app's captions under each post (thin white type) are removed with a luma-only morphological opening
 # (4x erosion, 4x dilation, 3x3): strokes that thin vanish, the posts and faces keep their shape
 OPEN = ",".join(["erosion=threshold1=0:threshold2=0"] * 4 + ["dilation=threshold1=0:threshold2=0"] * 4)
@@ -59,7 +64,7 @@ def main():
     ap.add_argument("--jain-online")
     a = ap.parse_args()
     proj = pathlib.Path(a.project).expanduser().resolve()
-    for sub in ("brand", "footage", "img", "fonts", "audio"):
+    for sub in ("brand", "footage", "img", "fonts", "audio", "geo"):
         (proj / "assets" / sub).mkdir(parents=True, exist_ok=True)
 
     brand = proj / "assets" / "brand"
@@ -82,10 +87,13 @@ def main():
               str(proj / "assets" / "footage" / "scroll.mp4")])
 
     fetch_fonts(proj / "assets" / "fonts")
+    geo = proj / "assets" / "geo" / "india-composite.geojson"
+    if not geo.is_file():
+        geo.write_bytes(urllib.request.urlopen(INDIA_GEOJSON, timeout=60).read())
     run(FF + ["-f", "lavfi", "-i", "nullsrc=s=256x256,geq=lum='random(1)*255':cb=128:cr=128",
               "-frames:v", "1", "-pix_fmt", "gray", str(proj / "assets" / "img" / "grain.png")])
     shutil.copyfile(REPO / "template" / "assets" / "gsap.min.js", proj / "assets" / "gsap.min.js")
-    print(f"staged brand, scroll clip ({SCROLL_OUT}s at {SCROLL_SPEED}x from {SCROLL_START}s), fonts, grain, gsap -> {proj}/assets")
+    print(f"staged brand, scroll clip ({SCROLL_OUT}s at {SCROLL_SPEED}x from {SCROLL_START}s), fonts, grain, India boundary, gsap -> {proj}/assets")
 
 
 if __name__ == "__main__":

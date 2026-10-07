@@ -17,11 +17,11 @@ goes still at 30 s.
 | Beats (s) | Text zone | Visual zone |
 | --- | --- | --- |
 | 0–4 (0–2.1) | | one post, eyes locked in a viewfinder, changes on each stomp and clap, then bursts |
-| 4–10 (2.1–5.3) | learners chose / JAIN Online. | the camera pulls back and that face is one tile of "11,000+": crisp letterforms cut from a lattice of 89 faces, teal plus |
+| 4–10 (2.1–5.3) | 11,000+ / learners chose / JAIN Online. | the camera pulls back and that face is one tile of "11,000+": crisp letterforms cut from a lattice of 89 faces, teal plus, sitting directly on its sentence |
 | 10–18 (5.3–9.6) | Welcome to the / Batch of | a shutter burst; "20 / 26." with the scroll recording playing inside the letters; a teal flash on the clap |
 | 18–28 (9.6–14.9) | We are proud / to nurture · 11,000+ / ambitions / this year. | the eye-locked window speeds up to a cut every frame while the counter races to 11,000+; then a wall of 16 posts |
 | 28–40 (14.9–21.3) | But even / more than that, · we are proud / to carry · the / trust · behind / each one. | the wall slows under the breakdown, stops, and the camera finds one post |
-| 40–52 (21.3–27.7) | Because / every learner · who chooses / JAIN Online · brings us / one step closer · to building / a more skilled, · future-ready / India. | a burst, a drifting mosaic of faces, posts stacking like bricks |
+| 40–52 (21.3–27.7) | Because / every learner · who chooses / JAIN Online · brings us / one step closer · to building / a more skilled, · future-ready / India. | a burst, a drifting mosaic of faces, then the map of India filling with the learners' photos band by band from the south; its outline lands with "India." |
 | 52–60 (27.7–32) | (identity) | the authentic artwork revealed by one clean mask; 2026; the tagline; JAIN Online; still from 30.0 s |
 
 `beatmap.py` is the clock both scripts import: the groove, every face change
@@ -70,6 +70,15 @@ files and learner faces.
   so the eyes land on the same line, and clipped to the post's own outline
   so the aurora shows around it. The number and the letter fills use tight
   face crops so the faces read at 38 px.
+- **The map of India** comes from DataMeet's `india-composite.geojson`
+  (github.com/datameet/maps, `Country/`, CC-0): the land area of India in
+  accordance with the official boundary of India as per the Survey of India,
+  Jammu and Kashmir and Ladakh in full, with the islands. `prep_assets.py`
+  downloads it; `compose.py` projects it (equirectangular, x scaled at 22°N),
+  simplifies it to 1.2 px and writes `assets/img/india.svg`, which masks a
+  lattice of 462 face tiles. Keep this source (or another Survey of India
+  conformant one) if the map is ever replaced: a map of India with a different
+  external boundary is a legal problem in India.
 - **The number reads as a number.** "11,000" is a CSS mask rendered from the
   Montserrat Black outlines (ffmpeg drawtext, the same font file the page
   uses) over a gapless lattice of face tiles; the plus is solid teal type.
@@ -84,7 +93,10 @@ files and learner faces.
 - **Flashing:** the face bursts change the picture up to 30 times a second
   for under a second at a time, which is the point of the style. Platforms
   that screen for photosensitive content may flag it.
-- **Sound:** `make_score.py` synthesizes everything (stage stomps, crowd
-  claps, a two-curtain camera shutter, piano hook, pluck, sub, pad, risers,
-  bells), so it is cleared by construction. The master is a static gain to
-  −13.6 dB mean plus a limiter. The breakdown sits about 4 LU under the peak.
+- **Sound:** `make_score.py` synthesizes everything, so it is cleared by
+  construction: stage stomps and crowd claps over a dhol bhangra chaal, a
+  brass section playing the hook as chords with stabs on the claps, a low horn
+  line in the breakdown, a held D major brass chord under the identity, tom
+  fills, crashes and crowd-cheer swells on the big hits, a sub bass, a string
+  pad, risers and the camera shutters. The master is a static gain to
+  −13.6 dB mean plus a limiter; the breakdown sits about 5 LU under the peak.

@@ -77,10 +77,11 @@ FACES = {
     "flash": _run(184, 192, 2) + [640] + _run(648, 656, 2),
     # e: the faces inside "India." jump on stomp, stomp, clap
     "mosaic": [800, 808, 816],
+    # e: the map of India fills with faces, one band of photos per sixteenth, south to north (b44-b48)
+    "map": [704 + 4 * k for k in range(16)],
 }
 COUNTER = (320, 384)             # the counter races 0 -> 11,000 with the window's burst
 EACH_ONE = 568                   # b35.5: the grid has stopped; the camera finds one face for "each one."
-BRICKS = [704 + 2 * k for k in range(16)]   # e: face bricks land, two frames apart, b44-b46
 
 
 def clicks():
@@ -89,7 +90,7 @@ def clicks():
     for layer, fr in FACES.items():
         for i, f in enumerate(fr):
             gap = min([abs(f - g) for g in fr if g != f] or [99])
-            if layer == "grid" and 448 <= f:
+            if (layer == "grid" and 448 <= f) or layer == "map":
                 kind = "soft"
             else:
                 kind = "burst" if gap < 4 else "full"
