@@ -86,8 +86,10 @@ L, RM = 88.0, 140.0
 COLW = FW - L - RM                   # 852
 NAVY, WHITE, TEAL, INK = "#071C5B", "#FFFFFF", "#2FE0C8", "#04103A"
 ASC, DESC, CAP = 0.968, 0.251, 0.70
-HOLD_FACE, HERO_LAST = 6, 10         # faces.json indices: the "each one." face, the face the number is born from
+HOLD_FACE, HERO_LAST = 6, 10         # recording-mode defaults; faces.json "hold" / "hero" override them
 esc = html.escape
+HOLD_FACE = FACES.get("hold", HOLD_FACE)
+HERO_LAST = FACES.get("hero", HERO_LAST)
 
 # the two zones
 VZ0, VZ1 = 220.0, 1080.0             # visual zone
@@ -223,14 +225,17 @@ BIG_IDS = assign_big()
 
 
 def outline(k):
-    """the post's own outline in the framed canvas, as a CSS polygon in %: the 116 px source square
-    pushed through the same eye-to-eye similarity faces_prep.py warped it with (inset 1 px)"""
+    """the post's own outline in the framed canvas, as a CSS polygon in %: the source image (a 116 px
+    tile of the recording, or the original post) pushed through the same eye-to-eye similarity
+    faces_prep.py warped it with, inset by half a percent"""
+    sw, sh = FACES["faces"][k].get("size", [116, 116])
+    ix, iy = sw * 0.005 + 0.5, sh * 0.005 + 0.5
     (ex0, ey0), (ex1, ey1) = FACES["faces"][k]["eyes"]
     e0, e1 = complex(ex0, ey0), complex(ex1, ey1)
     d0, d1 = complex(FO / 2 - FE / 2, FEY), complex(FO / 2 + FE / 2, FEY)
     a = (d1 - d0) / (e1 - e0)
     b = d0 - a * e0
-    pts = [a * complex(x, y) + b for x, y in ((1, 1), (115, 1), (115, 115), (1, 115))]
+    pts = [a * complex(x, y) + b for x, y in ((ix, iy), (sw - ix, iy), (sw - ix, sh - iy), (ix, sh - iy))]
     return "polygon(" + ", ".join(f"{z.real / FO * 100:.2f}% {z.imag / FO * 100:.2f}%" for z in pts) + ")"
 
 

@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
-"""Cut, super-resolve and eye-align student faces from the scroll recording.
+"""Eye-align the learners' faces for the stomp piece, from their original posts or the scroll recording.
 
-NOT stdlib: needs opencv-contrib-python-headless and numpy in a venv, plus two
-model files (YuNet face landmarks, EDSR x4 super-resolution). This is the only
-script in the repo with those needs. It runs once per source recording, and
-the rest of the stomp piece reads its outputs.
+NOT stdlib: needs opencv-contrib-python-headless and numpy in a venv, plus the
+YuNet face-landmark model (and EDSR x4 for the recording). This is the only
+script in the repo with those needs. It runs once per source, and the rest of
+the stomp piece reads its outputs.
 
-Usage:
+Usage (preferred: the original posts, full resolution, frame included):
+  python faces_prep.py --project <dir> --images <folder of JPG/PNG posts> \
+      --yunet face_detection_yunet_2023mar.onnx [--pick-hold <file>] [--pick-hero <file>]
+
+Usage (fallback: faces cut from the scroll recording, super-resolved):
   python faces_prep.py --project <dir> --scroll scroll.mp4 \
       --yunet face_detection_yunet_2023mar.onnx --edsr EDSR_x4.pb \
       [--candidates tiles_all.json] [--count 160]
@@ -21,8 +25,10 @@ Writes:
   <project>/assets/img/face_cells.jpg           tight 128 px face crops, 20-column sprite (mosaic cells)
   <project>/assets/img/face_mosaic.jpg          1152x672 mosaic of tight face crops (fills type)
 
-With --candidates omitted it reuses faces.json (frame/col/top) and only re-renders pixels.
-With --reuse it also skips super-resolution and rebuilds the sprites from assets/faces/.
+In --images mode faces.json lists each post's file name, pixel size and eye landmarks, plus
+"hold" and "hero" (the faces compose.py holds on "each one." and grows the number from).
+In the recording mode, with --candidates omitted it reuses faces.json (frame/col/top) and only
+re-renders pixels. With --reuse it skips detection and rebuilds the sprites from assets/faces/.
 """
 import argparse
 import json
@@ -63,9 +69,67 @@ def blockiness(frame, r):
     return round(float((bx + by) / 2), 3)
 
 
+def warp_pair(img, eyes):
+    """the two outputs for one face: the 400 px aligned face and the 1000 px framed post.
+    Large sources are first reduced (area filter) so the warp never shrinks by more than 20%."""
+    out = []
+    ed = float(np.hypot(eyes[1][0] - eyes[0][0], eyes[1][1] - eyes[0][1]))
+    for size, gap, ey, border in ((OUT, E, EY, cv2.BORDER_REPLICATE), (FO, FE, FEY, cv2.BORDER_CONSTANT)):
+        pre = min(1.0, 1.25 * gap / ed)
+        src_img = cv2.resize(img, None, fx=pre, fy=pre, interpolation=cv2.INTER_AREA) if pre < 1.0 else img
+        src = np.array([[x * pre, y * pre] for x, y in eyes], np.float32)
+        dst = np.array([[size / 2 - gap / 2, ey], [size / 2 + gap / 2, ey]], np.float32)
+        M, _ = cv2.estimateAffinePartial2D(src, dst)
+        w = cv2.warpAffine(src_img, M, (size, size), flags=cv2.INTER_CUBIC, borderMode=border, borderValue=NAVY_BGR)
+        out.append(cv2.addWeighted(w, 1.15, cv2.GaussianBlur(w, (0, 0), 1.2), -0.15, 0))
+    return out
+
+
+def from_images(a, proj):
+    """detect, align and render every post in a folder; returns (spec, aligned, framed)"""
+    files = sorted(p for p in pathlib.Path(a.images).expanduser().iterdir()
+                   if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"))
+    det = cv2.FaceDetectorYN.create(a.yunet, "", (320, 320), 0.6, 0.3, 5000)
+    faces, aligned, framed = [], [], []
+    for p in files:
+        img = cv2.imread(str(p))
+        if img is None:
+            print(f"skip {p.name}: unreadable")
+            continue
+        h, w = img.shape[:2]
+        sc = min(1.0, 900 / max(w, h))
+        small = cv2.resize(img, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA) if sc < 1.0 else img
+        det.setInputSize((small.shape[1], small.shape[0]))
+        _, found = det.detect(small)
+        if found is None:
+            print(f"skip {p.name}: no face")
+            continue
+        f = max(found, key=lambda f: f[2] * f[3] * f[14])          # the main person: biggest confident face
+        eyes = sorted([(f[4] / sc, f[5] / sc), (f[6] / sc, f[7] / sc)])
+        ed = float(np.hypot(eyes[1][0] - eyes[0][0], eyes[1][1] - eyes[0][1]))
+        ang = float(np.degrees(np.arctan2(eyes[1][1] - eyes[0][1], eyes[1][0] - eyes[0][0])))
+        if f[14] < 0.8 or abs(ang) > 15 or ed < 40:
+            print(f"skip {p.name}: score {f[14]:.2f}, tilt {ang:.0f} deg, eye gap {ed:.0f}px")
+            continue
+        r = {"file": p.name, "size": [w, h], "score": round(float(f[14]), 3),
+             "eyes": [[round(float(x), 1), round(float(y), 1)] for x, y in eyes]}
+        k = len(faces)
+        al, fr = warp_pair(img, r["eyes"])
+        cv2.imwrite(str(proj / "assets" / "faces" / f"f{k:03d}.jpg"), al, [cv2.IMWRITE_JPEG_QUALITY, 93])
+        cv2.imwrite(str(proj / "assets" / "framed" / f"f{k:03d}.jpg"), fr, [cv2.IMWRITE_JPEG_QUALITY, 92])
+        faces.append(r)
+        aligned.append(al)
+        framed.append(fr)
+    print(f"{len(faces)} of {len(files)} posts aligned")
+    return {"source": "images", "out": OUT, "eye_gap": E, "eye_y": EY, "faces": faces}, aligned, framed
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--project", required=True)
+    ap.add_argument("--images", help="a folder of the learners' original posts (preferred source)")
+    ap.add_argument("--pick-hold", help="file name of the post held on 'each one.' (default: the sharpest)")
+    ap.add_argument("--pick-hero", help="file name of the post the number grows from (default: the second sharpest)")
     ap.add_argument("--scroll")
     ap.add_argument("--yunet")
     ap.add_argument("--edsr")
@@ -73,12 +137,19 @@ def main():
     ap.add_argument("--count", type=int, default=160)
     ap.add_argument("--reuse", action="store_true", help="rebuild sprites from existing assets/faces/*.jpg")
     a = ap.parse_args()
-    if not a.reuse and not (a.scroll and a.yunet and a.edsr):
-        ap.error("--scroll, --yunet and --edsr are required unless --reuse")
+    if not a.reuse and not (a.images and a.yunet) and not (a.scroll and a.yunet and a.edsr):
+        ap.error("pass --images and --yunet, or --scroll, --yunet and --edsr, or --reuse")
     proj = pathlib.Path(a.project).expanduser().resolve()
     (proj / "assets" / "faces").mkdir(parents=True, exist_ok=True)
     (proj / "assets" / "framed").mkdir(parents=True, exist_ok=True)
     (proj / "assets" / "img").mkdir(parents=True, exist_ok=True)
+    if a.images:
+        for d in ("faces", "framed"):
+            for old in (proj / "assets" / d).glob("f*.jpg"):
+                old.unlink()
+        spec, aligned, framed = from_images(a, proj)
+        finish(a, proj, spec, aligned, framed)
+        return
     if not a.reuse:
         fr = frames(a.scroll)
         det = cv2.FaceDetectorYN.create(a.yunet, "", (T * 4, T * 4), 0.6, 0.3, 5000)
@@ -110,6 +181,11 @@ def main():
         (HERE / "faces.json").write_text(json.dumps({"out": OUT, "eye_gap": E, "eye_y": EY, "faces": chosen}, indent=0))
     spec = json.loads((HERE / "faces.json").read_text())
     faces = spec["faces"]
+    if spec.get("source") == "images" and a.reuse:
+        n = len(faces)
+        finish(a, proj, spec, [cv2.imread(str(proj / "assets" / "faces" / f"f{k:03d}.jpg")) for k in range(n)],
+               [cv2.imread(str(proj / "assets" / "framed" / f"f{k:03d}.jpg")) for k in range(n)])
+        return
 
     aligned, framed = [], []
     for k, r in enumerate(faces):
@@ -133,6 +209,12 @@ def main():
         framed.append(out[1])
         print(f"face {k + 1}/{len(faces)}", flush=True)
 
+    finish(a, proj, spec, aligned, framed)
+
+
+def finish(a, proj, spec, aligned, framed):
+    """rank, dedupe, pick the hero faces, write faces.json and every sprite"""
+    faces = spec["faces"]
     # rank: sharpness (Laplacian variance of the face, scaled by source eye distance) and
     # drop repeats (the feed shows some learners twice, and the recording scrolls back)
     sharp, small = [], []
@@ -147,8 +229,15 @@ def main():
         if sharp[k] >= 3.0 and all((small[k] * small[j]).mean() < 0.82 for j in order):
             order.append(k)
     spec["order"] = order
-    # big: the distinct faces with the cleanest source pixels (least 8x8 compression blocking), for full-size windows
-    spec["big"] = sorted((k for k in order if faces[k].get("block", 9) < 1.25), key=lambda k: faces[k]["block"])
+    if spec.get("source") == "images":
+        spec["big"] = list(order)            # full-resolution posts: every distinct face is clean enough
+        names = [r["file"] for r in faces]
+        pick = lambda nm, default: names.index(nm) if nm and nm in names else default
+        spec["hold"] = pick(getattr(a, "pick_hold", None), order[0])
+        spec["hero"] = pick(getattr(a, "pick_hero", None), order[1] if order[1] != spec["hold"] else order[2])
+    else:
+        # big: the distinct faces with the cleanest source pixels (least 8x8 compression blocking), for full-size windows
+        spec["big"] = sorted((k for k in order if faces[k].get("block", 9) < 1.25), key=lambda k: faces[k]["block"])
     (HERE / "faces.json").write_text(json.dumps(spec, indent=0))
 
     n = len(aligned)
