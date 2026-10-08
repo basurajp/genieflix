@@ -260,8 +260,13 @@ def finish(a, proj, spec, aligned, framed):
     cc, ccols = 128, 20
     crows = (n + ccols - 1) // ccols
     cs = np.zeros((crows * cc, ccols * cc, 3), np.uint8)
-    for k, t in enumerate(tight):
-        cs[(k // ccols) * cc:(k // ccols + 1) * cc, (k % ccols) * cc:(k % ccols + 1) * cc] = cv2.resize(t, (cc, cc), interpolation=cv2.INTER_AREA)
+    # compose.py shifts whole tile lattices across this sprite on the beat, so every cell must hold a
+    # distinct sharp face: cells outside "order" (repeats, soft faces, the empty tail) borrow one from it
+    keep = set(order)
+    spare = iter(order[(len(order) // 2 + j) % len(order)] for j in range(crows * ccols))
+    for k in range(crows * ccols):
+        src = tight[k] if k in keep else tight[next(spare)]
+        cs[(k // ccols) * cc:(k // ccols + 1) * cc, (k % ccols) * cc:(k % ccols + 1) * cc] = cv2.resize(src, (cc, cc), interpolation=cv2.INTER_AREA)
     cv2.imwrite(str(proj / "assets" / "img" / "face_cells.jpg"), cs, [cv2.IMWRITE_JPEG_QUALITY, 90])
     mc, mcols, mrows = 48, 24, 14
     mos = np.zeros((mrows * mc, mcols * mc, 3), np.uint8)
