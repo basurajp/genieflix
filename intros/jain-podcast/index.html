@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Jain Podcast intro</title>
+<title>JAIN Podcast intro</title>
 <style>
   /* JAIN PODCAST intro: 1920x1080 @ 60fps, exactly 12 s.
      Concept: SIGNAL -> CONVERSATION -> IDENTITY. One cyan line becomes a
@@ -43,7 +43,7 @@
   }
   #scene { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; display: block; }
 
-  /* Title pairing: "Jain" in Inter Medium, "Podcast" in Playfair Display italic. */
+  /* Title pairing: "JAIN" in Inter Medium, "Podcast" in Playfair Display italic. */
   .word-sans {
     font-family: "Inter", sans-serif;
     font-weight: 500;
@@ -118,7 +118,7 @@
     <g id="titleLayer" opacity="0">
       <path id="titleLine" fill="none" stroke-width="3" stroke-linecap="round" filter="url(#glow)"/>
       <g filter="url(#blurText)">
-        <g clip-path="url(#bandJ)"><text id="wJ" class="word-sans" x="0" y="0">Jain</text></g>
+        <g clip-path="url(#bandJ)"><text id="wJ" class="word-sans" x="0" y="0">JAIN</text></g>
         <g clip-path="url(#bandP)"><text id="wP" class="word-serif" x="0" y="0" filter="url(#softGlow)">Podcast</text></g>
       </g>
     </g>
@@ -427,7 +427,7 @@
   }
 
   // Each word: enters oversized from the left (inheriting the sweep), recedes in
-  // depth while stacked (Jain above, Podcast below, so they never collide), then
+  // depth while stacked (JAIN above, Podcast below, so they never collide), then
   // drops vertically into its band-mask slot on the final line.
   const WORDS = {
     J: { from: [-1480, -330], s0: 5.0, t0: 5.25, t1: 7.75, ys: [7.5, 8.2], side: -1 },
