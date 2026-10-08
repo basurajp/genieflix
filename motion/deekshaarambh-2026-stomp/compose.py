@@ -6,8 +6,9 @@ Usage: motion/deekshaarambh-2026-stomp/compose.py --project motion/deekshaarambh
 
 Two zones, so the eye always knows where to look:
 
-  visual zone  y 220-1080: the learners' posts (eye-locked so the eyes never
-               move), the number made of faces, "2026." with the scroll
+  visual zone  y 220-1080: the Deekshaarambh post frame, standing still while
+               the learners' photos change inside it (eyes kept on one
+               point), the number made of faces, "2026." with the scroll
                recording inside it, the wall of posts
   text zone    one left-aligned block, cap tops from y 1150, one type size,
                ending above y 1500 (Instagram's caption area). Words appear in
@@ -17,7 +18,7 @@ Two zones, so the eye always knows where to look:
 
 Cut to beatmap.py (112.5 BPM, a beat every 16 frames, stomp-stomp-clap):
 
-  intro   one post, eyes locked in a viewfinder, changes on every stomp and
+  intro   the post frame; the photo inside it changes on every stomp and
           clap with a shutter click, then bursts
   a       the camera pulls back and that face is one tile of "11,000+": crisp
           letterforms with the faces packed inside them; learners chose /
@@ -60,15 +61,19 @@ ap = argparse.ArgumentParser(description="Compose the Deekshaarambh 2026 stomp p
 ap.add_argument("--project", required=True)
 project = pathlib.Path(ap.parse_args().project).expanduser().resolve()
 A = project / "assets"
-for need in ("brand/deekshaarambh.png", "brand/jain-online.png", "footage/scroll.mp4", "img/framed_sheet.jpg",
+for need in ("brand/deekshaarambh.png", "brand/jain-online.png", "footage/scroll.mp4", "img/framed_sheet.jpg", "img/frame.png",
              "img/face_cells.jpg", "img/face_mosaic.jpg", "img/grain.png", "fonts/Montserrat-500.ttf",
              "fonts/Montserrat-800.ttf", "fonts/Montserrat-900.ttf", "audio/score.wav", "gsap.min.js"):
     if not (A / need).is_file():
         raise SystemExit(f"missing assets/{need}: run faces_prep.py / prep_assets.py / make_score.py into {project} first")
 FACES = json.loads((HERE / "faces.json").read_text(encoding="utf-8-sig"))
+if "post_frame" not in FACES:
+    raise SystemExit("faces.json has no post frame: run faces_prep.py --images on the learners' posts")
 ORDER = FACES["order"]
-BIG = FACES["big"]                   # cleanest source pixels: the large eye-locked windows
-FO, FE, FEY = 1000, 200, 430         # framed posts (assets/framed): canvas, eye gap, eye line
+BIG = FACES["big"]                   # the best-placed faces first: the large windows
+PF = FACES["post_frame"]
+FO = PF["canvas"]                    # rebuilt posts (assets/framed) and the frame are FO px squares
+WB = PF["window"]                    # the frame's photo window; assets/inner/ holds each photo cut to it
 NFACE = len(FACES["faces"])
 
 SCRIPT = [
@@ -86,18 +91,17 @@ L, RM = 88.0, 140.0
 COLW = FW - L - RM                   # 852
 NAVY, WHITE, TEAL, INK = "#071C5B", "#FFFFFF", "#2FE0C8", "#04103A"
 ASC, DESC, CAP = 0.968, 0.251, 0.70
-HOLD_FACE, HERO_LAST = 6, 10         # recording-mode defaults; faces.json "hold" / "hero" override them
 esc = html.escape
-HOLD_FACE = FACES.get("hold", HOLD_FACE)
-HERO_LAST = FACES.get("hero", HERO_LAST)
+HOLD_FACE, HERO_LAST = FACES["hold"], FACES["hero"]
 
 # the two zones
 VZ0, VZ1 = 220.0, 1080.0             # visual zone
 VC = (VZ0 + VZ1) / 2                 # 650
-WIN = VZ1 - VZ0                      # 860: eye-locked windows and the wall fill the zone's width
+WIN = VZ1 - VZ0                      # 860: the post frame and the wall fill the zone
 WIN_L = (FW - WIN) / 2               # 110
-EYE = (540.0, 620.0)                 # where every locked pair of eyes sits
-WIN_T = EYE[1] - WIN * FEY / FO
+WIN_T = VZ0
+EYE = (WIN_L + PF["eye"][0] * WIN / FO, WIN_T + PF["eye"][1] * WIN / FO)   # where the photos' eyes sit
+EGAP = PF["gap"] * WIN / FO
 TZ0 = 1150.0                         # text zone: first cap top
 TZ_MAX = 1500.0                      # last baseline must stay above this
 TXT_W = 800                          # one weight for the copy
@@ -200,8 +204,8 @@ big_pool = [k for k in BIG if k not in reserved]
 
 
 def assign_big():
-    """Every eye-locked window cut gets a face from BIG; the cuts that stay up longest get the
-    cleanest faces, 1-frame burst cuts get what is left. Returns {layer: [face per change]}."""
+    """Every photo change in the post frame gets a face from BIG; the cuts that stay up longest get the
+    best-placed faces, 1-frame burst cuts get what is left. Returns {layer: [face per change]}."""
     ends = {"hero": 64, "win": 416, "flash_b": 192, "flash_e": 672}
     layers = {"hero": BM.FACES["hero"][:-1], "win": BM.FACES["win"],
               "flash_b": [f for f in BM.FACES["flash"] if f < 192], "flash_e": [f for f in BM.FACES["flash"] if f >= 640]}
@@ -224,21 +228,6 @@ def assign_big():
 BIG_IDS = assign_big()
 
 
-def outline(k):
-    """the post's own outline in the framed canvas, as a CSS polygon in %: the source image (a 116 px
-    tile of the recording, or the original post) pushed through the same eye-to-eye similarity
-    faces_prep.py warped it with, inset by half a percent"""
-    sw, sh = FACES["faces"][k].get("size", [116, 116])
-    ix, iy = sw * 0.005 + 0.5, sh * 0.005 + 0.5
-    (ex0, ey0), (ex1, ey1) = FACES["faces"][k]["eyes"]
-    e0, e1 = complex(ex0, ey0), complex(ex1, ey1)
-    d0, d1 = complex(FO / 2 - FE / 2, FEY), complex(FO / 2 + FE / 2, FEY)
-    a = (d1 - d0) / (e1 - e0)
-    b = d0 - a * e0
-    pts = [a * complex(x, y) + b for x, y in ((ix, iy), (sw - ix, iy), (sw - ix, sh - iy), (ix, sh - iy))]
-    return "polygon(" + ", ".join(f"{z.real / FO * 100:.2f}% {z.imag / FO * 100:.2f}%" for z in pts) + ")"
-
-
 def sheet_pos(k, d):
     return f"{-(k % 10) * d:.2f}px {-(k // 10) * d:.2f}px"
 
@@ -248,10 +237,14 @@ def sheet_bg(d):
 
 
 def face_stack(prefix, ids, size, left, top):
-    """stacked <img> posts (1000 px framed sources, eyes locked), all hidden; sets reveal one at a time"""
+    """one post frame standing still over stacked photos cut to its window (all hidden; sets reveal
+    one at a time), the frame a size px square at left, top"""
+    q = size / FO
     uniq = list(dict.fromkeys(ids))
-    return "".join(f'<img class="fs" id="{prefix}{k}" src="assets/framed/f{k:03d}.jpg" alt="" '
-                   f'style="left:{left:.2f}px; top:{top:.2f}px; width:{size:.2f}px; height:{size:.2f}px; clip-path:{outline(k)};">' for k in uniq)
+    return "".join(f'<img class="fs" id="{prefix}{k}" src="assets/inner/f{k:03d}.jpg" alt="" '
+                   f'style="left:{left + WB[0] * q:.2f}px; top:{top + WB[1] * q:.2f}px; '
+                   f'width:{(WB[2] - WB[0]) * q:.2f}px; height:{(WB[3] - WB[1]) * q:.2f}px;">' for k in uniq) + \
+        f'<img class="pf" src="assets/img/frame.png" alt="" style="left:{left:.2f}px; top:{top:.2f}px; width:{size:.2f}px; height:{size:.2f}px;">'
 
 
 J = []          # timeline script lines
@@ -268,7 +261,7 @@ def shuffle(prefix, frames, ids):
 
 
 def window(id_, f0, f1, track, frames, ids, extra=""):
-    """an eye-locked post window in the visual zone, with the viewfinder"""
+    """the post frame in the visual zone, the photos changing inside it, with the viewfinder"""
     shuffle(id_, frames, ids)
     return (f'\n  <div id="{id_}" class="clip full" {clip(f0, f1, track)}>'
             f'{face_stack(id_, ids, WIN, WIN_L, WIN_T)}<div class="vf"></div>{extra}</div>')
@@ -445,15 +438,17 @@ if hero_tile is None:
     raise SystemExit("the hero tile fell outside the number")
 plus_x = L + num_w + TRACK[NUM_W] * NPX
 # hero post: the tile shows the tight crop (x 62..337, y 65..340 of the 400 px aligned face, eye gap 110);
-# in the framed canvas (eye gap 200, eyes centred on y 430) that square is:
-KF = FE / 110
-TIGHT = (FO / 2 + (62 - 200) * KF, FEY + (65 - 170) * KF, 275 * KF)
+# in the post canvas, where faces_prep.py put the hero's eyes (centre hmx, hmy, gap hg), that square is:
+hmx, hmy, hg = FACES["faces"][HERO_LAST]["post"]
+KF = hg / 110
+TIGHT = (hmx + (62 - 200) * KF, hmy + (65 - 170) * KF, 275 * KF)
 hero_size = TS * FO / TIGHT[2]
 hero_l = hero_tile[0] - TS * TIGHT[0] / TIGHT[2]
 hero_t = hero_tile[1] - TS * TIGHT[1] / TIGHT[2]
-eye_x = hero_l + hero_size * 0.5
-eye_y = hero_t + hero_size * FEY / FO
-Z0 = WIN / hero_size                 # the intro window is the hero tile, magnified
+eye_x = hero_l + hero_size * hmx / FO
+eye_y = hero_t + hero_size * hmy / FO
+EYE_H = (WIN_L + hmx * WIN / FO, WIN_T + hmy * WIN / FO)    # where those eyes are when the frame is in place
+Z0 = WIN / hero_size                 # the intro frame is the hero tile, magnified
 hero_ids = BIG_IDS["hero"]
 shuffle("h", BM.FACES["hero"], hero_ids)
 a_html = f"""
@@ -465,12 +460,12 @@ a_html = f"""
     </div>
     <div class="vf" id="vfA"></div>
   </div>"""
-J.append(f'tl.set("#Acam", {{transformOrigin: "{eye_x:.2f}px {eye_y:.2f}px", x: {EYE[0] - eye_x:.2f}, y: {EYE[1] - eye_y:.2f}, scale: {Z0:.4f}}}, 0);')
+J.append(f'tl.set("#Acam", {{transformOrigin: "{eye_x:.2f}px {eye_y:.2f}px", x: {EYE_H[0] - eye_x:.2f}, y: {EYE_H[1] - eye_y:.2f}, scale: {Z0:.4f}}}, 0);')
 # the pull-back: log-scale zoom from Z0 to 1, the eye point drifting to its place in the number
 J.append(f"""const zA = {{p: 0}};
 tl.fromTo(zA, {{p: 0}}, {{immediateRender: false, p: 1, duration: {D(24)}, ease: "power3.inOut", onUpdate: () => {{
   const z = Math.pow({Z0:.4f}, 1 - zA.p), w = (z - 1) / ({Z0:.4f} - 1);
-  gsap.set("#Acam", {{scale: z, x: {EYE[0] - eye_x:.2f} * w, y: {EYE[1] - eye_y:.2f} * w}});
+  gsap.set("#Acam", {{scale: z, x: {EYE_H[0] - eye_x:.2f} * w, y: {EYE_H[1] - eye_y:.2f} * w}});
   gsap.set("#hero", {{opacity: Math.max(0, Math.min(1, (z - 2.2) / 3.2))}});
 }}}}, {T(64)});""")
 J.append(f'tl.set("#Atl", {{opacity: 1}}, {T(64)});')
@@ -550,13 +545,13 @@ for n, f in enumerate(gframes):
     if n == len(gframes) - 1:
         seq[tgt] = HOLD_FACE                # pool never holds HOLD_FACE, so it appears once
     for j in range(NG):
-        J.append(f'tl.set("#g{j}", {{backgroundPosition: "{sheet_pos(seq[j], GD)}", clipPath: "{outline(seq[j])}"}}, {T(f)});')
+        J.append(f'tl.set("#g{j}", {{backgroundPosition: "{sheet_pos(seq[j], GD)}"}}, {T(f)});')
 tcx, tcy = WIN_L + TARGET[0] * GD + GD / 2, VZ0 + TARGET[1] * GD + GD / 2
 ZG = WIN / GD
 g_html = f"""
   <div id="G" class="clip full" {clip(416, 640, 5)}>
     <div id="Gcam" class="full" style="transform-origin:{tcx:.1f}px {tcy:.1f}px;">{''.join(cells)}
-      <img id="hold" src="assets/framed/f{HOLD_FACE:03d}.jpg" alt="" style="position:absolute; left:{WIN_L + TARGET[0] * GD:.1f}px; top:{VZ0 + TARGET[1] * GD:.1f}px; width:{GD:.1f}px; height:{GD:.1f}px; clip-path:{outline(HOLD_FACE)}; opacity:0;"></div>
+      <img id="hold" src="assets/framed/f{HOLD_FACE:03d}.jpg" alt="" style="position:absolute; left:{WIN_L + TARGET[0] * GD:.1f}px; top:{VZ0 + TARGET[1] * GD:.1f}px; width:{GD:.1f}px; height:{GD:.1f}px; opacity:0;"></div>
   </div>"""
 E1 = BM.EACH_ONE
 others = json.dumps([f"#g{j}" for j in range(NG) if j != tgt])
@@ -704,6 +699,7 @@ for id_, f0, f1, _ in sorted(cards, key=lambda c: c[1]):
         raise SystemExit(f"text cards overlap at {id_}")
     last = f1
 
+VF_W, VF_H, VF_A = 3.25 * EGAP, 1.5 * EGAP, round(0.37 * EGAP)   # the viewfinder around the eyes
 css = f"""
 @font-face {{ font-family: 'Montserrat'; font-weight: 500; src: url('assets/fonts/Montserrat-500.ttf'); }}
 @font-face {{ font-family: 'Montserrat'; font-weight: 800; src: url('assets/fonts/Montserrat-800.ttf'); }}
@@ -729,12 +725,13 @@ css = f"""
   background-position: calc(var(--x) + var(--dx)) calc(var(--y) + var(--dy)); }}
 #aplus {{ color: {TEAL}; font-weight: 900; opacity: 0; }}
 .fs {{ position: absolute; opacity: 0; }}
-.vf {{ position: absolute; left: {EYE[0] - 280:.0f}px; top: {EYE[1] - 130:.0f}px; width: 560px; height: 260px;
+.pf {{ position: absolute; }}
+.vf {{ position: absolute; left: {EYE[0] - VF_W / 2:.0f}px; top: {EYE[1] - VF_H / 2:.0f}px; width: {VF_W:.0f}px; height: {VF_H:.0f}px;
   background:
-    linear-gradient({WHITE},{WHITE}) left top / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) left top / 5px 64px no-repeat,
-    linear-gradient({WHITE},{WHITE}) right top / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) right top / 5px 64px no-repeat,
-    linear-gradient({WHITE},{WHITE}) left bottom / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) left bottom / 5px 64px no-repeat,
-    linear-gradient({WHITE},{WHITE}) right bottom / 64px 5px no-repeat, linear-gradient({WHITE},{WHITE}) right bottom / 5px 64px no-repeat;
+    linear-gradient({WHITE},{WHITE}) left top / {VF_A}px 4px no-repeat, linear-gradient({WHITE},{WHITE}) left top / 4px {VF_A}px no-repeat,
+    linear-gradient({WHITE},{WHITE}) right top / {VF_A}px 4px no-repeat, linear-gradient({WHITE},{WHITE}) right top / 4px {VF_A}px no-repeat,
+    linear-gradient({WHITE},{WHITE}) left bottom / {VF_A}px 4px no-repeat, linear-gradient({WHITE},{WHITE}) left bottom / 4px {VF_A}px no-repeat,
+    linear-gradient({WHITE},{WHITE}) right bottom / {VF_A}px 4px no-repeat, linear-gradient({WHITE},{WHITE}) right bottom / 4px {VF_A}px no-repeat;
   opacity: 0.85; }}
 .vm {{ position: absolute; left: 0; top: 0; width: {FW}px; height: {FH}px; opacity: 0;
   -webkit-mask-size: {FW}px {FH}px; mask-size: {FW}px {FH}px; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }}

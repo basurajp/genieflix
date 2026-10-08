@@ -1,222 +1,244 @@
 #!/usr/bin/env python3
-"""Eye-align the learners' faces for the stomp piece, from their original posts or the scroll recording.
+"""Turn the learners' original posts into the stomp piece's photos and its one steady post frame.
 
 NOT stdlib: needs opencv-contrib-python-headless and numpy in a venv, plus the
-YuNet face-landmark model (and EDSR x4 for the recording). This is the only
-script in the repo with those needs. It runs once per source, and the rest of
-the stomp piece reads its outputs.
+YuNet face-landmark model (face_detection_yunet_2023mar.onnx, opencv_zoo). This
+is the only script in the repo with those needs. It runs once per set of posts,
+and the rest of the stomp piece reads its outputs.
 
-Usage (preferred: the original posts, full resolution, frame included):
-  python faces_prep.py --project <dir> --images <folder of JPG/PNG posts> \
+Usage:
+  python faces_prep.py --project <dir> --images <folder of the posts> \
       --yunet face_detection_yunet_2023mar.onnx [--pick-hold <file>] [--pick-hero <file>]
+  python faces_prep.py --project <dir> --reuse      # rebuild the sprites from assets/faces and assets/framed
 
-Usage (fallback: faces cut from the scroll recording, super-resolved):
-  python faces_prep.py --project <dir> --scroll scroll.mp4 \
-      --yunet face_detection_yunet_2023mar.onnx --edsr EDSR_x4.pb \
-      [--candidates tiles_all.json] [--count 160]
+Every post is the same Deekshaarambh frame with the learner's photo in its
+window. The frame is rebuilt from the posts themselves: the per-pixel median of
+every post 1254 px or larger is the frame wherever the posts agree, and the
+window is where they disagree (the sparks, the scroll and the paper plane that
+overlap the window stay part of the frame). Each learner's photo is then cut
+from their own post's window only, scaled and moved so the eyes land on one
+point with one spacing as nearly as the photo allows: the window is always
+filled, and no photo pixel is shown larger than 1.25 screen pixels. A file that
+is a plain photo (no frame) is cropped the same way from the whole image.
 
 Writes:
-  motion/deekshaarambh-2026-stomp/faces.json   chosen faces + landmarks, and "order": distinct faces, sharpest
-                                                first (committed: numbers only, no pixels)
-  <project>/assets/faces/fNNN.jpg               400x400, every face's eyes at (145,170) and (255,170)
-  <project>/assets/framed/fNNN.jpg              1000x1000, the whole post (frame and face), eyes at (400,430) and (600,430)
-  <project>/assets/img/framed_sheet.jpg         the framed posts as a 10-column sprite of 300 px cells
-  <project>/assets/img/faces_sheet.jpg          the aligned faces as a 10-column sprite of 400 px cells
-  <project>/assets/img/face_cells.jpg           tight 128 px face crops, 20-column sprite (mosaic cells)
-  <project>/assets/img/face_mosaic.jpg          1152x672 mosaic of tight face crops (fills type)
-
-In --images mode faces.json lists each post's file name, pixel size and eye landmarks, plus
-"hold" and "hero" (the faces compose.py holds on "each one." and grows the number from).
-In the recording mode, with --candidates omitted it reuses faces.json (frame/col/top) and only
-re-renders pixels. With --reuse it skips detection and rebuilds the sprites from assets/faces/.
+  motion/deekshaarambh-2026-stomp/faces.json  file names, sizes, eye landmarks, where the eyes land in the
+                                               post, "order" (distinct faces, sharpest first), "hold", "hero",
+                                               and "post_frame" (the window and the eye target). Numbers only.
+  <project>/assets/img/frame.png           the frame, 1000x1000, the window transparent
+  <project>/assets/inner/fNNN.jpg          the photo layer, cut to the window's bounding box
+  <project>/assets/framed/fNNN.jpg         the whole post rebuilt (frame over that photo), 1000x1000
+  <project>/assets/faces/fNNN.jpg          400x400 tight face, eyes at (145,170) and (255,170)
+  <project>/assets/img/framed_sheet.jpg    the rebuilt posts as a 10-column sprite of 300 px cells
+  <project>/assets/img/faces_sheet.jpg     the tight faces as a 10-column sprite of 400 px cells
+  <project>/assets/img/face_cells.jpg      tight 128 px face crops, 20-column sprite (number, map tiles)
+  <project>/assets/img/face_mosaic.jpg     1152x672 mosaic of tight face crops (fills type)
 """
 import argparse
 import json
+import math
 import pathlib
-import subprocess
 
 import cv2
 import numpy as np
 
 HERE = pathlib.Path(__file__).resolve().parent
-W, H = 624, 1186
-COLS = [28, 180, 331, 484]
-T = 116
-OUT, E, EY = 400, 110, 170
-FO, FE, FEY = 1000, 200, 430          # framed: the whole post around the face, eyes locked, navy beyond it
-NAVY_BGR = (91, 28, 7)
+OUT, E, EY = 400, 110, 170            # tight faces: canvas, eye gap, eye line
+FO = 1000                             # the post canvas
+FRAME_MIN = 1254                      # posts at least this big build the frame
+DISAGREE = 40                         # a post disagrees with the median where a channel is off by more than this
+DISPLAY = 0.86                        # the windows show the 1000 px post at 860 px
+MAX_UP = 1.25                         # most screen pixels per photo pixel
+PLAIN_DIFF = 20.0                     # mean difference from the frame above which a file is a plain photo
 
 
-def frames(src):
-    raw = subprocess.run(["ffmpeg", "-hide_banner", "-loglevel", "error", "-i", src, "-f", "rawvideo",
-                          "-pix_fmt", "bgr24", "-"], capture_output=True, check=True).stdout
-    return np.frombuffer(raw, np.uint8).reshape(-1, H, W, 3)
+def detect(det, img):
+    """the main person's eyes (left, right) in image pixels, with the detector score and the tilt"""
+    h, w = img.shape[:2]
+    sc = min(1.0, 900 / max(w, h))
+    small = cv2.resize(img, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA) if sc < 1.0 else img
+    det.setInputSize((small.shape[1], small.shape[0]))
+    _, found = det.detect(small)
+    if found is None:
+        return None
+    f = max(found, key=lambda f: f[2] * f[3] * f[14])          # the main person: biggest confident face
+    eyes = sorted([(f[4] / sc, f[5] / sc), (f[6] / sc, f[7] / sc)])
+    ang = float(np.degrees(np.arctan2(eyes[1][1] - eyes[0][1], eyes[1][0] - eyes[0][0])))
+    return eyes, float(f[14]), ang
 
 
-def blockiness(frame, r):
-    """8x8 compression blocking around the face in the source frame: edge energy on block
-    boundaries over edge energy elsewhere (about 1.0 is clean, above 1.3 is visibly blocky)."""
-    g = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY).astype(float)
-    (ex0, ey0), (ex1, ey1) = r["eyes"]
-    ed = float(np.hypot(ex1 - ex0, ey1 - ey0))
-    cx, cy = COLS[r["col"]] + (ex0 + ex1) / 2, r["top"] + (ey0 + ey1) / 2 + 0.5 * ed
-    x0, x1, y0, y1 = int(cx - 1.1 * ed), int(cx + 1.1 * ed), int(cy - 1.3 * ed), int(cy + 1.1 * ed)
-    dx = np.abs(np.diff(g[y0:y1, x0 - 1:x1 + 1], axis=1))
-    dy = np.abs(np.diff(g[y0 - 1:y1 + 1, x0:x1], axis=0))
-    xs, ys = np.arange(x0 - 1, x1), np.arange(y0 - 1, y1)
-    bx = dx[:, xs % 8 == 7].mean() / (dx[:, xs % 8 != 7].mean() + 1e-6)
-    by = dy[ys % 8 == 7, :].mean() / (dy[ys % 8 != 7, :].mean() + 1e-6)
-    return round(float((bx + by) / 2), 3)
-
-
-def warp_pair(img, eyes):
-    """the two outputs for one face: the 400 px aligned face and the 1000 px framed post.
-    Large sources are first reduced (area filter) so the warp never shrinks by more than 20%."""
-    out = []
+def align_face(img, eyes):
+    """the 400 px tight face, eyes level at (145,170) and (255,170). Large sources are first reduced
+    (area filter) so the warp never shrinks by more than 20%."""
     ed = float(np.hypot(eyes[1][0] - eyes[0][0], eyes[1][1] - eyes[0][1]))
-    for size, gap, ey, border in ((OUT, E, EY, cv2.BORDER_REPLICATE), (FO, FE, FEY, cv2.BORDER_CONSTANT)):
-        pre = min(1.0, 1.25 * gap / ed)
-        src_img = cv2.resize(img, None, fx=pre, fy=pre, interpolation=cv2.INTER_AREA) if pre < 1.0 else img
-        src = np.array([[x * pre, y * pre] for x, y in eyes], np.float32)
-        dst = np.array([[size / 2 - gap / 2, ey], [size / 2 + gap / 2, ey]], np.float32)
-        M, _ = cv2.estimateAffinePartial2D(src, dst)
-        w = cv2.warpAffine(src_img, M, (size, size), flags=cv2.INTER_CUBIC, borderMode=border, borderValue=NAVY_BGR)
-        out.append(cv2.addWeighted(w, 1.15, cv2.GaussianBlur(w, (0, 0), 1.2), -0.15, 0))
-    return out
+    pre = min(1.0, 1.25 * E / ed)
+    src_img = cv2.resize(img, None, fx=pre, fy=pre, interpolation=cv2.INTER_AREA) if pre < 1.0 else img
+    src = np.array([[x * pre, y * pre] for x, y in eyes], np.float32)
+    dst = np.array([[OUT / 2 - E / 2, EY], [OUT / 2 + E / 2, EY]], np.float32)
+    M, _ = cv2.estimateAffinePartial2D(src, dst)
+    w = cv2.warpAffine(src_img, M, (OUT, OUT), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    return cv2.addWeighted(w, 1.15, cv2.GaussianBlur(w, (0, 0), 1.2), -0.15, 0)
+
+
+def build_frame(stack):
+    """median of the posts -> (frame RGBA, window mask, window box [x0, y0, x1, y1], corner radius)"""
+    med = np.empty((FO, FO, 3), np.uint8)
+    frac = np.empty((FO, FO), np.float32)
+    for r0 in range(0, FO, 100):
+        part = np.stack([s[r0:r0 + 100] for s in stack])
+        m = np.round(np.median(part, axis=0))
+        med[r0:r0 + 100] = m.astype(np.uint8)
+        frac[r0:r0 + 100] = (np.abs(part.astype(np.int16) - m.astype(np.int16)[None]).max(axis=3) > DISAGREE).mean(axis=0)
+    win = cv2.morphologyEx((frac > 0.12).astype(np.uint8), cv2.MORPH_OPEN, np.ones((5, 5), np.uint8))
+    _, lab, st, _ = cv2.connectedComponentsWithStats(win)
+    win = (lab == 1 + int(np.argmax(st[1:, cv2.CC_STAT_AREA]))).astype(np.uint8)
+    ff = win.copy()
+    cv2.floodFill(ff, np.zeros((FO + 2, FO + 2), np.uint8), (0, 0), 1)
+    win |= 1 - ff                                                  # photo areas that happened to agree
+    ys, xs = np.nonzero(win)
+    box = [int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1]
+    # the corners' missing area gives the radius (overlapping artwork only makes it larger, which is safe)
+    r = math.ceil(math.sqrt(max(0, (box[2] - box[0]) * (box[3] - box[1]) - int(win.sum())) / (4 - math.pi)))
+    alpha = 255.0 - cv2.GaussianBlur(win.astype(np.float32) * 255.0, (0, 0), 0.8)
+    return np.dstack([med, np.clip(alpha, 0, 255).astype(np.uint8)]), win, box, r
+
+
+def place(eyes, U, T, target, gap):
+    """scale s and offset (tx, ty), canvas = s * source + t, putting the eyes on target with the given gap
+    as nearly as the photo allows: T (canvas) stays inside the usable source rect U, and no photo pixel
+    is shown larger than MAX_UP screen pixels"""
+    (ax, ay), (bx, by) = eyes
+    g, mx, my = math.hypot(bx - ax, by - ay), (ax + bx) / 2, (ay + by) / 2
+    cover = max((T[2] - T[0]) / (U[2] - U[0]), (T[3] - T[1]) / (U[3] - U[1]))
+    s = max(cover, min(gap / g, MAX_UP / DISPLAY))
+    tx = min(max(target[0] - s * mx, T[2] - s * U[2]), T[0] - s * U[0])
+    ty = min(max(target[1] - s * my, T[3] - s * U[3]), T[1] - s * U[1])
+    return s, tx, ty
+
+
+def render_photo(img, s, tx, ty):
+    pre = min(1.0, 1.25 * s)
+    src = cv2.resize(img, None, fx=pre, fy=pre, interpolation=cv2.INTER_AREA) if pre < 1.0 else img
+    kx, ky = src.shape[1] / img.shape[1], src.shape[0] / img.shape[0]
+    M = np.float32([[s / kx, 0, tx], [0, s / ky, ty]])
+    w = cv2.warpAffine(src, M, (FO, FO), flags=cv2.INTER_CUBIC, borderMode=cv2.BORDER_REPLICATE)
+    return cv2.addWeighted(w, 1.15, cv2.GaussianBlur(w, (0, 0), 1.2), -0.15, 0)
 
 
 def from_images(a, proj):
-    """detect, align and render every post in a folder; returns (spec, aligned, framed)"""
     files = sorted(p for p in pathlib.Path(a.images).expanduser().iterdir()
                    if p.suffix.lower() in (".jpg", ".jpeg", ".png", ".webp"))
     det = cv2.FaceDetectorYN.create(a.yunet, "", (320, 320), 0.6, 0.3, 5000)
-    faces, aligned, framed = [], [], []
-    for p in files:
+    faces, aligned, stack, small_posts = [], [], [], []
+    for p in files:                       # pass 1: faces, and the big posts for the frame
         img = cv2.imread(str(p))
         if img is None:
             print(f"skip {p.name}: unreadable")
             continue
         h, w = img.shape[:2]
-        sc = min(1.0, 900 / max(w, h))
-        small = cv2.resize(img, None, fx=sc, fy=sc, interpolation=cv2.INTER_AREA) if sc < 1.0 else img
-        det.setInputSize((small.shape[1], small.shape[0]))
-        _, found = det.detect(small)
-        if found is None:
+        d = detect(det, img)
+        if d is None:
             print(f"skip {p.name}: no face")
             continue
-        f = max(found, key=lambda f: f[2] * f[3] * f[14])          # the main person: biggest confident face
-        eyes = sorted([(f[4] / sc, f[5] / sc), (f[6] / sc, f[7] / sc)])
+        eyes, score, ang = d
         ed = float(np.hypot(eyes[1][0] - eyes[0][0], eyes[1][1] - eyes[0][1]))
-        ang = float(np.degrees(np.arctan2(eyes[1][1] - eyes[0][1], eyes[1][0] - eyes[0][0])))
-        if f[14] < 0.8 or abs(ang) > 15 or ed < 40:
-            print(f"skip {p.name}: score {f[14]:.2f}, tilt {ang:.0f} deg, eye gap {ed:.0f}px")
+        if score < 0.8 or abs(ang) > 25 or ed < 40:
+            print(f"skip {p.name}: score {score:.2f}, tilt {ang:.0f} deg, eye gap {ed:.0f}px")
             continue
-        r = {"file": p.name, "size": [w, h], "score": round(float(f[14]), 3),
-             "eyes": [[round(float(x), 1), round(float(y), 1)] for x, y in eyes]}
-        k = len(faces)
-        al, fr = warp_pair(img, r["eyes"])
-        cv2.imwrite(str(proj / "assets" / "faces" / f"f{k:03d}.jpg"), al, [cv2.IMWRITE_JPEG_QUALITY, 93])
-        cv2.imwrite(str(proj / "assets" / "framed" / f"f{k:03d}.jpg"), fr, [cv2.IMWRITE_JPEG_QUALITY, 92])
-        faces.append(r)
-        aligned.append(al)
-        framed.append(fr)
-    print(f"{len(faces)} of {len(files)} posts aligned")
-    return {"source": "images", "out": OUT, "eye_gap": E, "eye_y": EY, "faces": faces}, aligned, framed
+        faces.append({"file": p.name, "size": [w, h], "score": round(score, 3),
+                      "eyes": [[round(float(x), 1), round(float(y), 1)] for x, y in eyes]})
+        aligned.append(align_face(img, eyes))
+        if w == h:
+            (stack if w >= FRAME_MIN else small_posts).append(cv2.resize(img, (FO, FO), interpolation=cv2.INTER_AREA))
+    if len(stack) < 12:
+        stack += small_posts
+    small_posts.clear()
+    frame, win, box, r = build_frame(stack)
+    stack.clear()
+    cv2.imwrite(str(proj / "assets" / "img" / "frame.png"), frame)
+    outside = cv2.dilate(win, np.ones((15, 15), np.uint8)) == 0
+    fr_rgb, fr_a = frame[..., :3].astype(np.float32), frame[..., 3:].astype(np.float32) / 255.0
+
+    def native(rec):                     # a framed post's eyes in canvas pixels, as posted
+        n = FO / rec["size"][0]
+        (ax, ay), (bx, by) = rec["eyes"]
+        return (ax + bx) / 2 * n, (ay + by) / 2 * n, math.hypot(bx - ax, by - ay) * n
+
+    # pass 2: classify each file against the frame, then cut its photo into the window
+    framed, posts = [], []
+    for k, rec in enumerate(faces):
+        img = cv2.imread(str(pathlib.Path(a.images).expanduser() / rec["file"]))
+        w, h = rec["size"]
+        if w == h:
+            c = cv2.resize(img, (FO, FO), interpolation=cv2.INTER_AREA).astype(np.float32)
+            diff = float(np.abs(c - fr_rgb).mean(axis=2)[outside].mean())
+        else:
+            diff = 99.0
+        rec["plain"] = diff > PLAIN_DIFF
+        posts.append(img if rec["plain"] else None)
+    nat = [native(rec) for rec in faces if not rec["plain"]]
+    target = ((box[0] + box[2]) / 2, float(np.median([v[1] for v in nat])) if nat else box[1] + 0.32 * (box[3] - box[1]))
+    gap = float(np.percentile([v[2] for v in nat], 70)) if nat else 0.17 * (box[2] - box[0])
+    inner_t = (box[0] + r - 3, box[1] + r - 3, box[2] - r + 3, box[3] - r + 3)
+    whole_t = (box[0] - 2, box[1] - 2, box[2] + 2, box[3] + 2)
+    for k, rec in enumerate(faces):
+        img = posts[k] if posts[k] is not None else cv2.imread(str(pathlib.Path(a.images).expanduser() / rec["file"]))
+        w, h = rec["size"]
+        if rec["plain"]:
+            U, T = (0, 0, w, h), whole_t
+        else:
+            n = FO / w
+            U, T = ((box[0] + r) / n, (box[1] + r) / n, (box[2] - r) / n, (box[3] - r) / n), inner_t
+        s, tx, ty = place(rec["eyes"], U, T, target, gap)
+        photo = render_photo(img, s, tx, ty)
+        post = (photo.astype(np.float32) * (1 - fr_a) + fr_rgb * fr_a).astype(np.uint8)
+        (ax, ay), (bx, by) = rec["eyes"]
+        rec["post"] = [round(s * (ax + bx) / 2 + tx, 1), round(s * (ay + by) / 2 + ty, 1), round(s * math.hypot(bx - ax, by - ay), 1)]
+        cv2.imwrite(str(proj / "assets" / "inner" / f"f{k:03d}.jpg"), photo[box[1]:box[3], box[0]:box[2]], [cv2.IMWRITE_JPEG_QUALITY, 92])
+        cv2.imwrite(str(proj / "assets" / "framed" / f"f{k:03d}.jpg"), post, [cv2.IMWRITE_JPEG_QUALITY, 92])
+        cv2.imwrite(str(proj / "assets" / "faces" / f"f{k:03d}.jpg"), aligned[k], [cv2.IMWRITE_JPEG_QUALITY, 93])
+        framed.append(post)
+        posts[k] = None
+    print(f"{len(faces)} of {len(files)} files aligned ({sum(r_['plain'] for r_ in faces)} plain photos); "
+          f"window {box}, corner radius {r}, eyes to ({target[0]:.0f}, {target[1]:.0f}) gap {gap:.0f}")
+    spec = {"source": "images", "out": OUT, "eye_gap": E, "eye_y": EY,
+            "post_frame": {"canvas": FO, "window": box, "radius": r, "eye": [round(target[0], 1), round(target[1], 1)], "gap": round(gap, 1)},
+            "faces": faces}
+    return spec, aligned, framed
 
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--project", required=True)
-    ap.add_argument("--images", help="a folder of the learners' original posts (preferred source)")
+    ap.add_argument("--images", help="a folder of the learners' original posts")
+    ap.add_argument("--yunet")
     ap.add_argument("--pick-hold", help="file name of the post held on 'each one.' (default: the sharpest)")
     ap.add_argument("--pick-hero", help="file name of the post the number grows from (default: the second sharpest)")
-    ap.add_argument("--scroll")
-    ap.add_argument("--yunet")
-    ap.add_argument("--edsr")
-    ap.add_argument("--candidates")
-    ap.add_argument("--count", type=int, default=160)
-    ap.add_argument("--reuse", action="store_true", help="rebuild sprites from existing assets/faces/*.jpg")
+    ap.add_argument("--reuse", action="store_true", help="rebuild the sprites from assets/faces and assets/framed")
     a = ap.parse_args()
-    if not a.reuse and not (a.images and a.yunet) and not (a.scroll and a.yunet and a.edsr):
-        ap.error("pass --images and --yunet, or --scroll, --yunet and --edsr, or --reuse")
+    if not a.reuse and not (a.images and a.yunet):
+        ap.error("pass --images and --yunet, or --reuse")
     proj = pathlib.Path(a.project).expanduser().resolve()
-    (proj / "assets" / "faces").mkdir(parents=True, exist_ok=True)
-    (proj / "assets" / "framed").mkdir(parents=True, exist_ok=True)
-    (proj / "assets" / "img").mkdir(parents=True, exist_ok=True)
-    if a.images:
-        for d in ("faces", "framed"):
-            for old in (proj / "assets" / d).glob("f*.jpg"):
-                old.unlink()
-        spec, aligned, framed = from_images(a, proj)
-        finish(a, proj, spec, aligned, framed)
-        return
-    if not a.reuse:
-        fr = frames(a.scroll)
-        det = cv2.FaceDetectorYN.create(a.yunet, "", (T * 4, T * 4), 0.6, 0.3, 5000)
-        sr = cv2.dnn_superres.DnnSuperResImpl_create()
-        sr.readModel(a.edsr)
-        sr.setModel("edsr", 4)
-
-    def tile(i, c, top):
-        return fr[i, top:top + T, COLS[c]:COLS[c] + T].copy()
-
-    if a.candidates:
-        found = []
-        for i, c, top in json.loads(pathlib.Path(a.candidates).read_text()):
-            t = tile(i, c, top)
-            if t.shape[:2] != (T, T):
-                continue
-            _, faces = det.detect(cv2.resize(t, (T * 4, T * 4), interpolation=cv2.INTER_LANCZOS4))
-            if faces is None:
-                continue
-            f = max(faces, key=lambda f: f[14])
-            eyes = sorted([(f[4] / 4, f[5] / 4), (f[6] / 4, f[7] / 4)])
-            ed = float(np.hypot(eyes[1][0] - eyes[0][0], eyes[1][1] - eyes[0][1]))
-            ang = float(np.degrees(np.arctan2(eyes[1][1] - eyes[0][1], eyes[1][0] - eyes[0][0])))
-            if f[14] > 0.85 and abs(ang) < 10 and ed >= 15:
-                found.append({"frame": int(i), "col": int(c), "top": int(top), "score": round(float(f[14]), 3),
-                              "eyes": [[round(float(x), 2), round(float(y), 2)] for x, y in eyes]})
-        found.sort(key=lambda r: -(r["score"] * np.hypot(r["eyes"][1][0] - r["eyes"][0][0], r["eyes"][1][1] - r["eyes"][0][1])))
-        chosen = sorted(found[:a.count], key=lambda r: (r["frame"], r["col"]))
-        (HERE / "faces.json").write_text(json.dumps({"out": OUT, "eye_gap": E, "eye_y": EY, "faces": chosen}, indent=0))
-    spec = json.loads((HERE / "faces.json").read_text())
-    faces = spec["faces"]
-    if spec.get("source") == "images" and a.reuse:
-        n = len(faces)
+    for d in ("faces", "framed", "inner", "img"):
+        (proj / "assets" / d).mkdir(parents=True, exist_ok=True)
+    if a.reuse:
+        spec = json.loads((HERE / "faces.json").read_text(encoding="utf-8-sig"))
+        n = len(spec["faces"])
         finish(a, proj, spec, [cv2.imread(str(proj / "assets" / "faces" / f"f{k:03d}.jpg")) for k in range(n)],
                [cv2.imread(str(proj / "assets" / "framed" / f"f{k:03d}.jpg")) for k in range(n)])
         return
-
-    aligned, framed = [], []
-    for k, r in enumerate(faces):
-        if a.reuse:
-            aligned.append(cv2.imread(str(proj / "assets" / "faces" / f"f{k:03d}.jpg")))
-            framed.append(cv2.imread(str(proj / "assets" / "framed" / f"f{k:03d}.jpg")))
-            continue
-        t = tile(r["frame"], r["col"], r["top"])
-        r["block"] = blockiness(fr[r["frame"]], r)
-        big = sr.upsample(t)
-        src = np.array([[x * 4, y * 4] for x, y in r["eyes"]], np.float32)
-        out = []
-        for size, gap, ey, border in ((OUT, E, EY, cv2.BORDER_REPLICATE), (FO, FE, FEY, cv2.BORDER_CONSTANT)):
-            dst = np.array([[size / 2 - gap / 2, ey], [size / 2 + gap / 2, ey]], np.float32)
-            M, _ = cv2.estimateAffinePartial2D(src, dst)
-            img = cv2.warpAffine(big, M, (size, size), flags=cv2.INTER_CUBIC, borderMode=border, borderValue=NAVY_BGR)
-            out.append(cv2.addWeighted(img, 1.35, cv2.GaussianBlur(img, (0, 0), 2.0), -0.35, 0))  # gentle unsharp
-        cv2.imwrite(str(proj / "assets" / "faces" / f"f{k:03d}.jpg"), out[0], [cv2.IMWRITE_JPEG_QUALITY, 92])
-        cv2.imwrite(str(proj / "assets" / "framed" / f"f{k:03d}.jpg"), out[1], [cv2.IMWRITE_JPEG_QUALITY, 90])
-        aligned.append(out[0])
-        framed.append(out[1])
-        print(f"face {k + 1}/{len(faces)}", flush=True)
-
+    for d in ("faces", "framed", "inner"):
+        for old in (proj / "assets" / d).glob("f*.jpg"):
+            old.unlink()
+    spec, aligned, framed = from_images(a, proj)
     finish(a, proj, spec, aligned, framed)
 
 
 def finish(a, proj, spec, aligned, framed):
     """rank, dedupe, pick the hero faces, write faces.json and every sprite"""
     faces = spec["faces"]
-    # rank: sharpness (Laplacian variance of the face, scaled by source eye distance) and
-    # drop repeats (the feed shows some learners twice, and the recording scrolls back)
+    # rank: sharpness (Laplacian variance of the face, scaled by source eye distance), and drop
+    # repeats (some learners posted twice)
     sharp, small = [], []
     for img in aligned:
         g = cv2.cvtColor(img[70:330, 90:310], cv2.COLOR_BGR2GRAY)
@@ -229,15 +251,18 @@ def finish(a, proj, spec, aligned, framed):
         if sharp[k] >= 3.0 and all((small[k] * small[j]).mean() < 0.82 for j in order):
             order.append(k)
     spec["order"] = order
-    if spec.get("source") == "images":
-        spec["big"] = list(order)            # full-resolution posts: every distinct face is clean enough
-        names = [r["file"] for r in faces]
-        pick = lambda nm, default: names.index(nm) if nm and nm in names else default
-        spec["hold"] = pick(getattr(a, "pick_hold", None), order[0])
-        spec["hero"] = pick(getattr(a, "pick_hero", None), order[1] if order[1] != spec["hold"] else order[2])
-    else:
-        # big: the distinct faces with the cleanest source pixels (least 8x8 compression blocking), for full-size windows
-        spec["big"] = sorted((k for k in order if faces[k].get("block", 9) < 1.25), key=lambda k: faces[k]["block"])
+    # big: the faces for the eye-locked windows, the ones whose eyes landed closest to the target first
+    # (a photo cut only from its own window cannot always reach it), sharpest first within each group
+    pf = spec["post_frame"]
+
+    def lock_err(k):
+        mx, my, g = faces[k]["post"]
+        return math.hypot(mx - pf["eye"][0], my - pf["eye"][1]) / pf["gap"] + abs(math.log(g / pf["gap"]))
+    spec["big"] = [k for k in order if lock_err(k) <= 0.5] + [k for k in order if lock_err(k) > 0.5]
+    names = [r["file"] for r in faces]
+    pick = lambda nm, default: names.index(nm) if nm and nm in names else default
+    spec["hold"] = pick(a.pick_hold, order[0])
+    spec["hero"] = pick(a.pick_hero, order[1] if order[1] != spec["hold"] else order[2])
     (HERE / "faces.json").write_text(json.dumps(spec, indent=0))
 
     n = len(aligned)
@@ -271,9 +296,9 @@ def finish(a, proj, spec, aligned, framed):
     mc, mcols, mrows = 48, 24, 14
     mos = np.zeros((mrows * mc, mcols * mc, 3), np.uint8)
     rng = np.random.default_rng(14)
-    pick = [order[i % len(order)] for i in rng.permutation(mrows * mcols)]
+    pick_m = [order[i % len(order)] for i in rng.permutation(mrows * mcols)]
     for k in range(mrows * mcols):
-        mos[(k // mcols) * mc:(k // mcols + 1) * mc, (k % mcols) * mc:(k % mcols + 1) * mc] = cv2.resize(tight[pick[k]], (mc, mc), interpolation=cv2.INTER_AREA)
+        mos[(k // mcols) * mc:(k // mcols + 1) * mc, (k % mcols) * mc:(k % mcols + 1) * mc] = cv2.resize(tight[pick_m[k]], (mc, mc), interpolation=cv2.INTER_AREA)
     cv2.imwrite(str(proj / "assets" / "img" / "face_mosaic.jpg"), mos, [cv2.IMWRITE_JPEG_QUALITY, 90])
     print(f"aligned {n} faces, {len(order)} distinct and sharp; sprites written")
 

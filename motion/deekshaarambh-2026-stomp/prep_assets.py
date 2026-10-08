@@ -20,7 +20,7 @@ Usage:
   (github.com/datameet/maps, Country/). compose.py draws the map from it.
 - assets/gsap.min.js: copied from template/assets.
 
-Faces come from faces_prep.py (needs OpenCV; run it once per recording).
+The frame and the faces come from faces_prep.py (needs OpenCV; run it once per set of posts).
 """
 import argparse
 import pathlib
