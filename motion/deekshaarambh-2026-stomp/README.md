@@ -2,9 +2,10 @@
 
 A 32 s, 1080×1920, 30 fps stomp-style piece on the brand film's locked
 script. The cuts land on a stomp, stomp, clap at 112.5 BPM, where a beat is
-exactly 16 frames. The picture is built from the learners' own posts. Each post
-is detected, super-resolved and turned so the eyes sit on one line. Every face
-change is a camera shutter in the score.
+exactly 16 frames. The picture is built from the learners' own posts, the
+original full-resolution files. Each post is detected and turned so the eyes
+sit on one line. Every face change is a camera shutter in the score. The
+scroll recording of the posts plays only inside "2026.".
 
 **Two zones keep the eye still.** The visual zone (y 220–1080) holds the posts,
 the number, "2026." and the wall. The text zone is one left-aligned block at one
@@ -25,7 +26,7 @@ goes still at 30 s.
 | 52–60 (27.7–32) | (identity) | the authentic artwork revealed by one clean mask; 2026; the tagline; JAIN Online; still from 30.0 s |
 
 `beatmap.py` is the clock both scripts import: the groove, every face change
-(and so every shutter click), the counter, the bricks, the impacts and risers.
+(and so every shutter click), the counter, the map, the impacts and risers.
 To move a cut, change it there and rerun both `compose.py` and `make_score.py`.
 
 ## Build
@@ -33,14 +34,16 @@ To move a cut, change it there and rerun both `compose.py` and `make_score.py`.
 ```bash
 D=motion/deekshaarambh-2026-stomp
 SCROLL=learner-posts-scroll.mp4
+POSTS=learner-posts/          # the original post images, one learner per file
 
-# 1. faces (once per recording). Needs OpenCV, unlike the rest of the repo:
-#    a venv with opencv-contrib-python-headless and numpy, plus two models:
-#    YuNet face_detection_yunet_2023mar.onnx (opencv_zoo) and EDSR_x4.pb (Saafke/EDSR_Tensorflow).
-#    --candidates is a JSON list of [frame, column, top] squares to try (the
-#    cinematic piece's tile finder makes one); omit it to reuse faces.json.
-venv/bin/python $D/faces_prep.py --project $D/project --scroll $SCROLL \
-  --yunet face_detection_yunet_2023mar.onnx --edsr EDSR_x4.pb [--candidates tiles.json --count 160]
+# 1. faces (once per set of posts). Needs OpenCV, unlike the rest of the repo:
+#    a venv with opencv-contrib-python-headless and numpy, plus the YuNet model
+#    face_detection_yunet_2023mar.onnx (opencv_zoo). --pick-hold / --pick-hero take
+#    a file name to choose the post held on "each one." and the one the number grows from.
+venv/bin/python $D/faces_prep.py --project $D/project --images $POSTS \
+  --yunet face_detection_yunet_2023mar.onnx [--pick-hold <file>] [--pick-hero <file>]
+#    (fallback without the originals: faces cut from the recording and
+#    super-resolved with EDSR_x4.pb, see the script's usage)
 
 # 2. brand, the scroll clip, fonts, grain, gsap (stdlib + ffmpeg)
 python3 $D/prep_assets.py --project $D/project --scroll $SCROLL \
@@ -57,11 +60,10 @@ ffmpeg -i $D/project/renders/stomp.mp4 -i $D/project/assets/audio/score.wav -map
   -c:v copy -c:a aac -b:a 256k -t 32 -movflags +faststart $D/project/renders/deekshaarambh-2026-stomp.mp4
 ```
 
-`faces.json` is committed (numbers only: which squares of the recording hold
-a face, the landmarks, a blockiness score, and two lists: `order`, the
-distinct sharp faces, and `big`, the ones with the cleanest source pixels for
-the full-width windows). `project/` is gitignored because it holds brand
-files and learner faces.
+`faces.json` is committed (numbers only: each post's file name, pixel size,
+detection score and eye landmarks, `order`, the distinct sharp faces, and
+`hold` and `hero`). `project/` is gitignored because it holds brand files and
+learner faces; the posts themselves stay out of the repo too.
 
 ## Notes
 
@@ -86,10 +88,12 @@ files and learner faces.
   under every post. It is spelled differently from the event name, so
   `prep_assets.py` removes it with a luma-only morphological opening before
   the clip plays inside "2026.". The posts and faces keep their shape.
-- **Source resolution** is the limit: faces in the recording are about 116 px
-  posts with eyes 20–35 px apart. EDSR ×4 plus the alignment holds up at the
-  sizes used here. The fastest shuffles use the softer faces, and the holds
-  use the cleanest ones.
+- **Source resolution.** The original posts are 800–1600 px squares with the
+  eyes 100–200 px apart, so even the 860 px windows are a reduction. Posts
+  are kept when the face detector is confident (0.8 or more), the head is
+  within 15° of level and the eyes are at least 40 px apart; near-duplicates
+  (the same learner posted twice) are dropped. Plain photos without the
+  branded frame are used as they are, square.
 - **Flashing:** the face bursts change the picture up to 30 times a second
   for under a second at a time, which is the point of the style. Platforms
   that screen for photosensitive content may flag it.
