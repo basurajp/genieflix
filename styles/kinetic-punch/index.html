@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>reel — kinetic punch</title>
+<style>
+  /* KINETIC PUNCH — the creator edit: word-by-word pop captions in a heavy
+     all-caps sans with a thick outline, the spoken word lit, money numbers in
+     green, punch-in zoom cuts every caption group, flash + zoom transitions,
+     a progress bar, a sticker CTA. Built for talking heads and B-roll.
+     Generated per project by pipeline/build_index.py (style "kinetic-punch"). */
+  @font-face { font-family: "Montserrat"; font-style: normal; font-weight: 800;
+    src: url("assets/style/fonts/montserrat-latin-800-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Montserrat"; font-style: normal; font-weight: 800;
+    src: url("assets/style/fonts/montserrat-latin-ext-800-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family: "Montserrat"; font-style: normal; font-weight: 900;
+    src: url("assets/style/fonts/montserrat-latin-900-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Montserrat"; font-style: normal; font-weight: 900;
+    src: url("assets/style/fonts/montserrat-latin-ext-900-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  <!--HF:FONT_FACES-->
+
+  :root {
+    --hot: #ffe11a;      /* the spoken word */
+    --money: #2bea6b;    /* digits and currency */
+    --ink: #000;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: #000; }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden; background: #000; color: #fff;
+    font-family: "Montserrat", "Noto Sans Devanagari", "Arial Black", Arial, sans-serif;
+  }
+
+  .scene { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; z-index: 1; transform-origin: 50% 38%; }
+  #shade { position: absolute; inset: 0; z-index: 2;
+    background: linear-gradient(0deg, rgba(0,0,0,.45) 0px, rgba(0,0,0,.2) 700px, rgba(0,0,0,0) 1000px),
+                linear-gradient(180deg, rgba(0,0,0,.35) 0px, rgba(0,0,0,0) 520px); }
+  .flash { position: absolute; inset: 0; background: #fff; z-index: 6; }
+
+  #progress { position: absolute; left: 0; top: 222px; width: 1080px; height: 10px; z-index: 9; background: rgba(0,0,0,.35); }
+  #progress i { display: block; height: 100%; background: var(--hot); transform-origin: 0 50%; }
+
+  /* outlined type: the stroke paints under the fill so letters keep their weight */
+  .out { -webkit-text-stroke: 14px var(--ink); paint-order: stroke fill; text-shadow: 0 10px 0 rgba(0,0,0,.35); }
+
+  /* captions: centred on y=1250, never below the 1380 band's floor */
+  .cap { position: absolute; left: 72px; width: 828px; top: 1240px; transform: translateY(-50%); z-index: 8;
+    text-align: center; font-weight: 900; font-size: 94px; line-height: 1.02; text-transform: uppercase; letter-spacing: -.01em;
+    word-spacing: .12em; }
+  .cap .w { display: inline-block; margin: 0 .06em; transform-origin: 50% 70%; }
+
+  /* hook sticker */
+  #hook { position: absolute; left: 72px; width: 828px; top: 300px; z-index: 8; text-align: center; }
+  #hook .pill { display: inline-block; background: var(--hot); color: #000; font-weight: 900; font-size: 30px; letter-spacing: .06em;
+    text-transform: uppercase; padding: 10px 22px; border-radius: 999px; transform: rotate(-2deg); }
+  #hook .sticker { display: inline-block; margin-top: 22px; background: #fff; color: #000; font-weight: 900; line-height: 1.02;
+    text-transform: uppercase; letter-spacing: -.015em; padding: 22px 34px 26px; border-radius: 26px; box-shadow: 0 16px 0 rgba(0,0,0,.35); }
+  #hook .sticker .money { color: #0aa84a; }
+
+  /* CTA sticker stack */
+  #cta { position: absolute; left: 72px; width: 828px; top: 420px; z-index: 8; text-align: center; }
+  #cta .lab { display: inline-block; background: #000; color: #fff; font-weight: 900; font-size: 44px; text-transform: uppercase;
+    padding: 14px 28px; border-radius: 18px; transform: rotate(2deg); }
+  #cta .kw { display: inline-block; margin-top: 20px; background: var(--hot); color: #000; font-weight: 900; font-size: 190px; line-height: .95;
+    text-transform: uppercase; padding: 18px 40px 26px; border-radius: 30px; border: 10px solid #000; box-shadow: 0 18px 0 #000; }
+  #arrow { position: absolute; left: 690px; top: 830px; width: 250px; height: 280px; z-index: 8; overflow: visible; }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="reel" data-start="0" data-width="1080" data-height="1920" data-fps="30" data-duration="<!--HF:DURATION-->">
+
+  <!--HF:SLIDES-->
+
+  <!--HF:AUDIO-->
+
+  <script type="application/json" id="hf-data"><!--HF:DATA--></script>
+  <script src="assets/gsap.min.js"></script>
+  <script src="assets/style/reel.js"></script>
+  <script>
+  (function () {
+    const R = window.REEL, D = R.D, P = R.params;
+    if (P.hot) R.stage.style.setProperty("--hot", P.hot);
+    if (P.money) R.stage.style.setProperty("--money", P.money);
+    const tl = gsap.timeline({ paused: true });
+    const rnd = R.rng(7);
+    const PUNCH = P.punch_scale || 1.14;
+    const HOT = P.hot || "#ffe11a", MONEY = P.money || "#2bea6b";
+
+    R.clip({ id: "shade", start: 0, dur: R.total, track: 2 });
+    R.clip({ id: "progress", start: 0, dur: R.total, track: 2, html: "<i></i>" });
+    tl.fromTo("#progress i", { scaleX: 0 }, { scaleX: 1, duration: R.total, ease: "none" }, 0);
+
+    R.scenes.forEach((s, i) => {
+      const end = R.sceneEnd(s);
+      const caps = R.captionsFor(s);
+      const media = "#" + s.id;
+
+      // punch-in jump cuts: alternate wide / tight on every caption group,
+      // with a slow drift inside each group so nothing ever sits still
+      let t = s.start;
+      let entry = 0;
+      if (i > 0) {
+        // zoom transition in, under a white flash that hides the cut
+        tl.fromTo(media, { scale: 1.32 }, { scale: 1.0, duration: 0.42, ease: "expo.out" }, s.start);
+        const f = R.clip({ cls: "flash", start: s.start, dur: 0.2, track: 2 });
+        tl.fromTo(f, { opacity: 0.9 }, { opacity: 0, duration: 0.2, ease: "power2.out" }, s.start);
+        R.fadeOutAt(tl, f, s.start + 0.2, 0.01);
+        entry = 0.42;
+      }
+      const marks = caps.length ? caps.map((c) => c.start) : [s.start];
+      marks.forEach((m, k) => {
+        const from = Math.max(s.start + entry, k === 0 ? s.start + entry : m);
+        const to = k + 1 < marks.length ? marks[k + 1] : end + 0.3;
+        if (to - from <= 0.05) return;
+        const base = k % 2 === 0 ? 1.0 : PUNCH;
+        tl.fromTo(media, { scale: base }, { scale: base + 0.03, duration: to - from, ease: "none", immediateRender: false }, from);
+      });
+
+      // captions: each word pops on its own syllable, the live word lit
+      caps.forEach((cap) => {
+        const html = cap.words.map((w) => `<span class="w out">${R.esc(w.text)}</span>`).join(" ");
+        const el = R.clip({ cls: "cap", start: cap.start, dur: cap.end - cap.start, track: 3, html });
+        const spans = el.querySelectorAll(".w");
+        spans.forEach((sp, j) => {
+          const w = cap.words[j];
+          const next = j + 1 < cap.words.length ? cap.words[j + 1].start : cap.end;
+          const money = R.isEmphasis(w.text);
+          tl.fromTo(sp, { opacity: 0, scale: 0.45, y: 24 },
+            { opacity: 1, scale: 1.12, y: 0, duration: 0.16, ease: "back.out(3)" }, w.start);
+          tl.set(sp, { color: money ? MONEY : HOT }, w.start);
+          tl.to(sp, { scale: 1.0, duration: 0.12, ease: "power2.out" }, Math.max(w.start + 0.16, next - 0.02));
+          if (!money) tl.set(sp, { color: "#fff" }, next);
+          if (money) {
+            // impact: a short deterministic shake on the money word
+            for (let q = 0; q < 4; q++) {
+              tl.to(el, { x: (rnd() - 0.5) * 22, y: (rnd() - 0.5) * 14, duration: 0.04, ease: "none" }, w.start + q * 0.04);
+            }
+            tl.to(el, { x: 0, y: 0, duration: 0.05, ease: "none" }, w.start + 0.16);
+          }
+        });
+      });
+
+      if (i === 0) {
+        const len = D.title.length;
+        const size = len <= 16 ? 104 : len <= 28 ? 86 : 70;
+        const title = R.esc(D.title).split(" ").map((w) => R.isEmphasis(w) ? `<span class="money">${w}</span>` : w).join(" ");
+        R.clip({ id: "hook", start: 0, dur: end, track: 2, html:
+          `<div class="pill">${R.esc(D.kicker)}</div><br><div class="sticker" style="font-size:${size}px">${title}</div>` });
+        tl.fromTo("#hook .pill", { scale: 0, rotation: -12 }, { scale: 1, rotation: -2, duration: 0.3, ease: "back.out(2.4)" }, 0);
+        tl.fromTo("#hook .sticker", { scale: 0.4, rotation: 6, opacity: 0 }, { scale: 1, rotation: -2, opacity: 1, duration: 0.36, ease: "back.out(2)" }, 0.06);
+        tl.to("#hook .sticker", { rotation: 1, duration: 0.6, ease: "sine.inOut", yoyo: true, repeat: Math.max(1, Math.floor((end - 1.2) / 0.6)) }, 0.5);
+        tl.to("#hook", { scale: 0.85, opacity: 0, duration: 0.18, ease: "power2.in" }, Math.max(0.6, end - 0.18));
+        tl.set("#hook", { opacity: 0 }, end);
+      }
+
+      if (s === R.last) {
+        R.clip({ id: "cta", start: s.start, dur: end - s.start, track: 2, html:
+          `<div class="lab">${R.esc(P.cta_label || "Comment this word")}</div><br><div class="kw">${R.esc(D.cta_keyword)}</div>` });
+        R.clip({ tag: "div", start: s.start, dur: end - s.start, track: 2, html:
+          `<svg id="arrow" viewBox="0 0 250 280"><path id="arrow-line" d="M30 14 C 40 130, 110 210, 210 246" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round"
+             style="filter: drop-shadow(0 6px 0 rgba(0,0,0,.5))"/><path id="arrow-head" d="M150 258 L 216 248 L 190 188" fill="none" stroke="#fff" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/></svg>` });
+        tl.fromTo("#cta .lab", { scale: 0, rotation: -10 }, { scale: 1, rotation: 2, duration: 0.3, ease: "back.out(2.5)" }, s.start + 0.1);
+        tl.fromTo("#cta .kw", { scale: 0.3, rotation: 10 }, { scale: 1, rotation: -3, duration: 0.42, ease: "back.out(2.2)" }, s.start + 0.2);
+        // sticker wiggle in hard steps, like a cut-out being nudged by hand
+        const span = end - (s.start + 1.0);
+        if (span >= 1.0) tl.to("#cta .kw", { rotation: 3, duration: 0.5, ease: "steps(2)", yoyo: true, repeat: Math.max(0, Math.floor(span / 0.5) - 1) }, s.start + 1.0);
+        tl.fromTo("#arrow-line", { attr: { "stroke-dasharray": "340", "stroke-dashoffset": 340 } },
+          { attr: { "stroke-dashoffset": 0 }, duration: 0.5, ease: "power2.out" }, s.start + 0.6);
+        tl.fromTo("#arrow-head", { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "none" }, s.start + 1.05);
+      }
+    });
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines.reel = tl;
+  })();
+  </script>
+</div>
+</body>
+</html>

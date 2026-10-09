@@ -1,0 +1,29 @@
+{
+  "name": "Cine Doc",
+  "summary": "Cinematic documentary: letterbox matte, tracking-in serif title, roman-numeral chapter cards, cross-dissolves, Ken Burns drift, cinema subtitles, dip to black into an end title.",
+  "lexicon": [
+    "letterbox matte (scope feel on a vertical frame)",
+    "tracking-in title (letter-spacing closes up)",
+    "lower-third chapter card",
+    "cross-dissolve",
+    "dip to black",
+    "Ken Burns effect",
+    "teal & orange split tone, film grain, vignette"
+  ],
+  "best_for": "stories, founder journeys, places, before/after, anything that should feel considered rather than shouted",
+  "footage": "full-bleed; only the middle 1080x1200 shows between the bars, so keep subjects centred; slow, steady shots",
+  "grade": "teal-orange",
+  "grade_variants": ["warm-film", "bleach-bypass", "film-fade", "day-for-night", "cinestill-night"],
+  "music": "ambient / neo-classical / cinematic pads, 70-100 BPM, a swell into the end title",
+  "sfx": "one low boom or riser into the dip to black; nothing on the dissolves",
+  "scene_overlap": 0.6,
+  "params": {
+    "dissolve": 0.6,
+    "slug": "",
+    "slug_right": "",
+    "labels": [],
+    "subtitle_chars": 42,
+    "cta_label": "Comment the word",
+    "cta_note": "and I'll send it to you"
+  }
+}

@@ -40,6 +40,13 @@ factory/failed/*
 factory/output/*
 factory/ready-to-post/*
 
+# --- reference reels and their decode sheets (reports are committed, media isn't) ---
+decode/inbox/*
+decode/refs/**/*.jpg
+decode/refs/**/*.png
+footage.bak/
+grades/
+
 # --- keeps (order matters: negations after the broad ignores) ---
 # gsap.min.js is vendored on purpose — the pipeline must render offline
 !template/assets/gsap.min.js

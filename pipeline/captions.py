@@ -3,6 +3,9 @@
 
 Usage: pipeline/captions.py --project <dir>
 
+Each group also carries its line index and per-word start/end times
+("words"), which the kinetic style templates use for word-by-word highlights.
+
 English projects group the real Whisper word timestamps from words.json —
 breaking at punctuation, pauses longer than 0.28 s, or 4 words — and offset each
 group by its line's start on the timeline. Non-English projects (and any line
@@ -46,7 +49,7 @@ def group_timed_words(words):
     return groups
 
 
-def timed_captions(words, line_start):
+def timed_captions(words, line_start, line_index):
     captions = []
     for group in group_timed_words(words):
         start = line_start + group[0]["start"]
@@ -58,6 +61,15 @@ def timed_captions(words, line_start):
                 "text": " ".join(w["word"] for w in group),
                 "start": round(start, 3),
                 "end": round(end, 3),
+                "line": line_index,
+                "words": [
+                    {
+                        "text": w["word"],
+                        "start": round(line_start + w["start"], 3),
+                        "end": round(line_start + max(w["end"], w["start"] + 0.02), 3),
+                    }
+                    for w in group
+                ],
             }
         )
     return captions
@@ -76,7 +88,20 @@ def split_text(text):
     return groups
 
 
-def proportional_captions(text, line_start, duration):
+def proportional_words(group, start, duration):
+    """Per-word timing inside a group's slice, again by character share."""
+    tokens = group.split()
+    weights = [max(1, len(t)) for t in tokens]
+    total = float(sum(weights))
+    words, cursor = [], start
+    for token, weight in zip(tokens, weights):
+        span = duration * weight / total
+        words.append({"text": token, "start": round(cursor, 3), "end": round(cursor + span, 3)})
+        cursor += span
+    return words
+
+
+def proportional_captions(text, line_start, duration, line_index):
     """Give each written group a slice of the line's audio time proportional to
     its character length. No ASR involved — spelling comes from the text."""
     groups = split_text(text)
@@ -88,7 +113,13 @@ def proportional_captions(text, line_start, duration):
     for group, weight in zip(groups, weights):
         slice_dur = duration * weight / total
         captions.append(
-            {"text": group, "start": round(cursor, 3), "end": round(cursor + slice_dur, 3)}
+            {
+                "text": group,
+                "start": round(cursor, 3),
+                "end": round(cursor + slice_dur, 3),
+                "line": line_index,
+                "words": proportional_words(group, cursor, slice_dur),
+            }
         )
         cursor += slice_dur
     return captions
@@ -131,12 +162,12 @@ def main():
             raise SystemExit(f"audio_meta.json line {index} has no duration — run audio_chain.py first")
         line_words = words_by_line.get(index) or []
         if lang == "en" and line_words:
-            captions.extend(timed_captions(line_words, float(start)))
+            captions.extend(timed_captions(line_words, float(start), index))
         else:
             if lang == "en":
                 print(f"line {index:02d}: no ASR words — using proportional timing")
             captions.extend(
-                proportional_captions(entry.get("text", ""), float(start), float(duration))
+                proportional_captions(entry.get("text", ""), float(start), float(duration), index)
             )
 
     captions.sort(key=lambda c: (c["start"], c["end"]))

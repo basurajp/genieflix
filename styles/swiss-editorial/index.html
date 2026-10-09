@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>reel — swiss editorial</title>
+<style>
+  /* SWISS EDITORIAL — International Typographic Style for a 9:16 reel.
+     Grid: 72 px left margin, content to x=936 (clear of the right 120 px UI
+     strip), flush-left / ragged-right, one grotesk family, one accent.
+     Footage full-bleed under a scrim; type does the art direction.
+     Generated per project by pipeline/build_index.py (style "swiss-editorial");
+     the choreography lives in the script at the bottom, driven by #hf-data. */
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 400;
+    src: url("assets/style/fonts/inter-tight-latin-400-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 400;
+    src: url("assets/style/fonts/inter-tight-latin-ext-400-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 600;
+    src: url("assets/style/fonts/inter-tight-latin-600-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 600;
+    src: url("assets/style/fonts/inter-tight-latin-ext-600-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 800;
+    src: url("assets/style/fonts/inter-tight-latin-800-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 800;
+    src: url("assets/style/fonts/inter-tight-latin-ext-800-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 900;
+    src: url("assets/style/fonts/inter-tight-latin-900-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 900;
+    src: url("assets/style/fonts/inter-tight-latin-ext-900-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500;
+    src: url("assets/style/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500;
+    src: url("assets/style/fonts/ibm-plex-mono-latin-ext-500-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  <!--HF:FONT_FACES-->
+
+  :root {
+    --accent: #ff3b1f;
+    --paper: #f2f0eb;
+    --ink: #0b0b0b;
+    --m: 72px;           /* left margin */
+    --w: 864px;          /* content width: 72 .. 936 */
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--ink); }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: var(--ink); color: #fff;
+    font-family: "Inter Tight", "Noto Sans Devanagari", "Helvetica Neue", Arial, sans-serif;
+    font-feature-settings: "ss01", "tnum";
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; }
+
+  /* track 1 — scene media, full bleed */
+  .scene { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; z-index: 1; transform-origin: 50% 45%; }
+
+  /* scrims keep type legible on any footage */
+  #scrim { position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    background:
+      linear-gradient(180deg, rgba(0,0,0,.62) 0px, rgba(0,0,0,.18) 640px, rgba(0,0,0,0) 900px),
+      linear-gradient(0deg, rgba(0,0,0,.78) 0px, rgba(0,0,0,.55) 520px, rgba(0,0,0,0) 860px);
+  }
+
+  /* header: rule + mono labels, under the 220 px status zone */
+  #header { position: absolute; left: var(--m); top: 228px; width: var(--w); z-index: 5; }
+  #header .rule { height: 2px; background: #fff; transform-origin: 0 50%; }
+  #header .labels { display: flex; justify-content: space-between; margin-top: 14px;
+    font-size: 24px; letter-spacing: .08em; text-transform: uppercase; }
+  #progress { position: absolute; left: 0; top: 0; height: 2px; width: 100%; background: var(--accent); transform-origin: 0 50%; }
+  .counter { position: absolute; left: calc(var(--m) + var(--w) - 160px); top: 244px; width: 160px; height: 30px;
+    text-align: right; font-size: 24px; letter-spacing: .08em; overflow: hidden; z-index: 6; }
+  .counter span { display: inline-block; }
+
+  /* mask reveal: words rise from behind their own baseline */
+  .m { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .02em .1em; margin-bottom: -.1em; }
+  .mi { display: inline-block; will-change: transform; }
+
+  /* hook headline */
+  #headline { position: absolute; left: var(--m); top: 318px; width: var(--w); z-index: 5; }
+  #headline .h { font-weight: 900; line-height: .9; letter-spacing: -.035em; }
+  #headline .bar { width: 132px; height: 14px; background: var(--accent); margin-top: 34px; transform-origin: 0 50%; }
+
+  /* scene numerals */
+  .numeral { position: absolute; left: calc(var(--m) - 10px); top: 300px; z-index: 5;
+    font-weight: 900; font-size: 330px; line-height: .8; letter-spacing: -.06em; color: var(--accent); }
+  .numeral-tag { position: absolute; left: calc(var(--m) + 4px); top: 590px; z-index: 5; font-size: 24px;
+    letter-spacing: .1em; text-transform: uppercase; }
+  .numeral-tag .tick { display: inline-block; width: 40px; height: 2px; background: #fff; vertical-align: middle; margin-right: 14px; transform-origin: 0 50%; }
+
+  /* the color wipe that hides each cut */
+  .wipe { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; background: var(--accent); z-index: 8; }
+
+  /* captions: flush-left, karaoke reveal — each word rises at its spoken time */
+  #footrule { position: absolute; left: var(--m); top: 1352px; width: var(--w); height: 2px; background: rgba(255,255,255,.5); z-index: 5; transform-origin: 0 50%; }
+  .cap { position: absolute; left: var(--m); top: 1380px; width: var(--w); z-index: 7;
+    font-weight: 800; font-size: 62px; line-height: 1.04; letter-spacing: -.02em; }
+  .cap .mi.em { color: var(--accent); }
+
+  /* CTA: a paper card, ink type */
+  #cta { position: absolute; left: var(--m); top: 330px; width: var(--w); z-index: 9; background: var(--paper); color: var(--ink);
+    padding: 40px 44px 52px; }
+  #cta .lab { font-size: 26px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+  #cta .kw { font-weight: 900; font-size: 190px; line-height: .86; letter-spacing: -.05em; margin-top: 26px; word-break: break-word; }
+  #cta .row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 34px; font-size: 24px; letter-spacing: .08em; text-transform: uppercase; }
+  #cta .arrow { font-family: "Inter Tight", sans-serif; font-weight: 900; font-size: 84px; line-height: .8; color: var(--accent); }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="reel" data-start="0" data-width="1080" data-height="1920" data-fps="30" data-duration="<!--HF:DURATION-->">
+
+  <!-- track 1: scene media (generated) -->
+  <!--HF:SLIDES-->
+
+  <!-- track 4-6: voice / music / sfx (generated) -->
+  <!--HF:AUDIO-->
+
+  <script type="application/json" id="hf-data"><!--HF:DATA--></script>
+  <script src="assets/gsap.min.js"></script>
+  <script src="assets/style/reel.js"></script>
+  <script>
+  (function () {
+    const R = window.REEL, D = R.D, P = R.params;
+    const stage = R.stage;
+    if (P.accent) stage.style.setProperty("--accent", P.accent);
+    if (P.paper) stage.style.setProperty("--paper", P.paper);
+    const tl = gsap.timeline({ paused: true });
+    const IN = "expo.out", OUT = "power3.in";
+    const n = R.scenes.length;
+
+    // full-duration furniture
+    R.clip({ id: "scrim", start: 0, dur: R.total, track: 2 });
+    const header = R.clip({ id: "header", start: 0, dur: R.total, track: 2, html:
+      `<div class="rule"><div id="progress"></div></div>
+       <div class="labels mono"><span>${R.esc(P.handle || D.kicker)}</span><span>&nbsp;</span></div>` });
+    R.clip({ id: "footrule", start: 0, dur: R.total, track: 2 });
+    tl.fromTo("#header .rule", { scaleX: 0 }, { scaleX: 1, duration: 0.7, ease: IN }, 0);
+    tl.fromTo("#header .labels", { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.5, ease: IN }, 0.1);
+    tl.fromTo("#progress", { scaleX: 0 }, { scaleX: 1, duration: R.total, ease: "none" }, 0);
+    tl.fromTo("#footrule", { scaleX: 0 }, { scaleX: 1, duration: 0.8, ease: IN }, 0.15);
+
+    R.scenes.forEach((s, i) => {
+      const end = R.sceneEnd(s);
+      // slow push-in on every scene: motion from frame zero, no static stretch
+      tl.fromTo("#" + s.id, { scale: 1.09 }, { scale: 1.0, duration: s.duration + 0.4, ease: "sine.out" }, s.start);
+
+      // per-scene counter, slides through its own mask
+      const c = R.clip({ cls: "counter mono", start: s.start, dur: s.duration, track: 2,
+        html: `<span>${R.pad2(i + 1)} / ${R.pad2(n)}</span>` });
+      tl.fromTo(c.firstChild, { yPercent: 110 }, { yPercent: 0, duration: 0.5, ease: IN }, s.start);
+
+      // the cut hides under an accent wipe: in from below, holds the frame
+      // solid for two frames across the cut, out through the top
+      if (i > 0) {
+        const w = R.clip({ cls: "wipe", start: s.start - 0.3, dur: 0.62, track: 2 });
+        tl.fromTo(w, { yPercent: 100 }, { yPercent: 0, duration: 0.26, ease: "expo.in" }, s.start - 0.3);
+        tl.to(w, { yPercent: -100, duration: 0.28, ease: "expo.out" }, s.start + 0.034);
+      }
+
+      // captions for this scene: each word rises at its spoken time
+      R.captionsFor(s).forEach((cap, k) => {
+        const html = cap.words.map((w) =>
+          `<span class="m"><span class="mi${R.isEmphasis(w.text) ? " em" : ""}">${R.esc(w.text)}</span></span>`).join(" ");
+        const el = R.clip({ cls: "cap", start: cap.start, dur: cap.end - cap.start, track: 3, html });
+        el.querySelectorAll(".mi").forEach((m, j) => {
+          const w = cap.words[j];
+          tl.fromTo(m, { yPercent: 105 }, { yPercent: 0, duration: 0.32, ease: IN }, Math.max(cap.start, w.start - 0.04));
+        });
+      });
+
+      if (i === 0) {
+        // hook: kicker + title on screen by 0.2 s, mask-revealed word by word
+        const len = D.title.length;
+        const size = len <= 18 ? 150 : len <= 32 ? 118 : len <= 48 ? 96 : 80;
+        const h = R.clip({ id: "headline", start: 0, dur: end, track: 2, html:
+          `<div class="h" style="font-size:${size}px">${R.maskWords(D.title)}</div>
+           <div class="bar"></div>` });
+        tl.fromTo("#headline .mi", { yPercent: 105 }, { yPercent: 0, duration: 0.7, ease: IN, stagger: 0.06 }, 0.05);
+        tl.fromTo("#headline .bar", { scaleX: 0 }, { scaleX: 1, duration: 0.6, ease: IN }, 0.45);
+        tl.to("#headline .mi", { yPercent: -105, duration: 0.3, ease: OUT, stagger: 0.025 }, Math.max(0.8, end - 0.42));
+        tl.to("#headline .bar", { opacity: 0, duration: 0.2, ease: "none" }, Math.max(0.8, end - 0.25));
+        tl.set(h, { opacity: 0 }, end);
+      } else if (s !== R.last) {
+        // middle scenes: a giant numeral, rising through its mask
+        const num = R.clip({ cls: "numeral", start: s.start, dur: s.duration, track: 2,
+          html: `<span class="m"><span class="mi">${R.pad2(i + 1)}</span></span>` });
+        const tag = R.clip({ cls: "numeral-tag mono", start: s.start, dur: s.duration, track: 2,
+          html: `<span class="tick"></span>${R.esc((P.labels || [])[i] || "")}` });
+        tl.fromTo(num.querySelector(".mi"), { yPercent: 105 }, { yPercent: 0, duration: 0.75, ease: IN }, s.start + 0.12);
+        tl.fromTo(tag.querySelector(".tick"), { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: IN }, s.start + 0.3);
+        tl.to(num.querySelector(".mi"), { yPercent: -105, duration: 0.3, ease: OUT }, Math.max(s.start + 1, end - 0.4));
+      } else {
+        // CTA: paper card wipes open from its top edge, keyword lands, arrow nudges
+        const cta = R.clip({ id: "cta", start: s.start, dur: end - s.start, track: 2, html:
+          `<div class="lab mono">${R.esc(P.cta_label || "Comment the word")}</div>
+           <div class="kw">${R.maskWords(D.cta_keyword)}</div>
+           <div class="row mono"><span>${R.esc(P.cta_note || "")}</span><span class="arrow">↘</span></div>` });
+        tl.fromTo(cta, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 0.6, ease: "expo.inOut" }, s.start);
+        tl.fromTo("#cta .mi", { yPercent: 105 }, { yPercent: 0, duration: 0.6, ease: IN, stagger: 0.05 }, s.start + 0.35);
+        tl.fromTo("#cta .arrow", { x: -18, y: -18 }, { x: 0, y: 0, duration: 0.5, ease: "power2.inOut", repeat: Math.max(1, Math.floor((end - s.start - 1) / 0.5)), yoyo: true }, s.start + 0.8);
+      }
+    });
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines.reel = tl;
+  })();
+  </script>
+</div>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "name": "Neo Brutal",
+  "summary": "Neubrutalism collage: paper with a dot grid, footage in thick-bordered cards with zero-blur offset shadows, flat saturated blocks, quirky heavy grotesk + mono tags, cards pushed in and flung out like cut-outs, marker-highlight captions, stepped stop-motion wiggles.",
+  "lexicon": [
+    "neubrutalism / neo-brutalism",
+    "hard (zero-blur) offset shadow, thick black stroke",
+    "collage / cut-out, sticker labels",
+    "push / slide transition with overshoot",
+    "marker highlight swipe captions",
+    "stepped (stop-motion) animation, steps() easing",
+    "black-and-white cut-outs on flat colour (zine)"
+  ],
+  "best_for": "tools, apps, listicles, tips, playful brands — content that should feel handmade and confident, not glossy",
+  "footage": "any; it plays in an 840x940 card (cover crop), so the middle 85% of a 9:16 frame is what shows",
+  "grade": "mono-classic",
+  "grade_variants": ["neutral", "cross-process", "bright-pop"],
+  "music": "indie / lo-fi / quirky percussion, 95-120 BPM",
+  "sfx": "a paper swish when a card is flung, a stamp thud on the CTA",
+  "scene_overlap": 0.45,
+  "params": {
+    "paper": "#f4efe3",
+    "yellow": "#ffd60a",
+    "pink": "#ff6fb5",
+    "blue": "#4d7cff",
+    "lime": "#b8f53a",
+    "push": 0.45,
+    "cta_label": "comment ↓",
+    "cta_note": "I'll DM you the template"
+  }
+}

@@ -108,6 +108,19 @@ are the plan and survive everything. `index.html`, audio, timings, and renders
 are generated and get wiped on regeneration — if you want a custom element to
 survive, put it in the plan (the template), never in the output.
 
+## Styles, footage and decoding references
+
+Four complete art directions ship beside the classic look — `swiss-editorial`,
+`kinetic-punch`, `cine-doc`, `neo-brutal` — each with its own type system,
+motion grammar, transitions, captions and grade. Pick one with
+`node factory/new.mjs <slug> "Title" --style cine-doc`. Raw or generated clips
+are staged with `pipeline/footage.py` (9:16 reframe, trim to the line, a named
+grade from `styles/grades.json` or your own `.cube` LUT), and
+`decode/decode_reel.py` breaks a reference reel down into cuts, transitions,
+pacing, colour and sound so it can be rebuilt. The vocabulary for all of it is
+[`styles/LEXICON.md`](styles/LEXICON.md); the how-to is
+[`styles/README.md`](styles/README.md).
+
 ## Repo map
 
 ```
@@ -116,6 +129,9 @@ package.json, .gitignore      npm aliases (no dependencies); keep media out of g
 setup/                        one-shot setup scripts per OS
 voice-samples/                your voice reference lives here (gitignored)
 pipeline/                     the step scripts above + common.py, config, corrections.json
+styles/                       style templates (swiss-editorial, kinetic-punch, cine-doc,
+                              neo-brutal), the grade library and LEXICON.md
+decode/                       reference-reel decoder: measurements + contact sheets
 template/                     the reference project every new video is copied from
   lines.txt, project.json     the plan: five lines + metadata
   index.html                  composition template (placeholder markers, filled by build_index.py)

@@ -1,0 +1,90 @@
+{
+  "_about": "Named color grades as ffmpeg filter chains, applied by pipeline/footage.py when footage is staged (baked into the clip, so preview and render always agree and no GPU is needed). Names follow styles/LEXICON.md. Each chain runs in RGB on 8-bit video; 'grain' (0..1) and 'vignette' (0..1) are finishing defaults the --grain/--vignette flags override. Compare them on your own frame: python3 pipeline/footage.py --project <dir> --grade-sheet <clip>",
+  "grades": {
+    "none": {
+      "look": "ungraded",
+      "filters": "",
+      "notes": "Reframe/trim/keyframes only."
+    },
+    "neutral": {
+      "look": "clean correction",
+      "filters": "eq=contrast=1.04:saturation=1.04,curves=all='0/0 0.25/0.235 0.75/0.765 1/1'",
+      "notes": "A gentle S-curve and a touch of saturation. Fixes flat phone footage without announcing a look."
+    },
+    "muted-editorial": {
+      "look": "muted / desaturated editorial",
+      "filters": "curves=all='0/0.035 0.25/0.23 0.75/0.77 1/0.965',eq=saturation=0.74,colorbalance=rs=-0.02:bs=0.04:bm=0.01:rh=0.02:bh=-0.01",
+      "grain": 0.15,
+      "notes": "Magazine-photography restraint: saturation pulled to ~75%, faintly lifted blacks, cool shadows. Lets typography carry the colour."
+    },
+    "teal-orange": {
+      "look": "teal & orange split tone (blockbuster)",
+      "filters": "colorbalance=rs=-0.09:gs=0.02:bs=0.11:rm=0.03:bm=-0.03:rh=0.09:gh=0.02:bh=-0.09,eq=contrast=1.08:saturation=1.12,curves=all='0/0.01 0.25/0.21 0.75/0.79 1/0.99'",
+      "grain": 0.2,
+      "vignette": 0.35,
+      "notes": "Cool shadows, warm highlights and skin; complementary separation of subject from background."
+    },
+    "bleach-bypass": {
+      "look": "bleach bypass (skip bleach / silver retention)",
+      "filters": "format=gbrp,split[c][m];[m]colorchannelmixer=rr=0.3:rg=0.59:rb=0.11:gr=0.3:gg=0.59:gb=0.11:br=0.3:bg=0.59:bb=0.11[mono];[c][mono]blend=all_mode=overlay:all_opacity=0.6,eq=saturation=0.6:contrast=1.1:brightness=-0.01",
+      "grain": 0.35,
+      "vignette": 0.3,
+      "notes": "A black-and-white layer overlaid on the colour image, as the retained silver does on film: muted colour, hard blacks, more grain."
+    },
+    "film-fade": {
+      "look": "matte / lifted blacks (faded film)",
+      "filters": "curves=all='0/0.09 0.5/0.5 1/0.92',colorbalance=rs=0.02:bs=-0.01:rh=0.04:bh=-0.03,eq=saturation=0.88",
+      "grain": 0.3,
+      "notes": "Blacks never reach black, highlights roll off below white, warm cast. The 'Instagram film' look."
+    },
+    "warm-film": {
+      "look": "warm negative-film emulation (portrait stock feel)",
+      "filters": "curves=all='0/0.04 0.5/0.52 1/0.96',colorbalance=rs=-0.02:gs=0.02:bs=0.03:rm=0.05:gm=0.01:bm=-0.04:rh=0.04:bh=-0.04,eq=saturation=0.95",
+      "grain": 0.3,
+      "notes": "Soft contrast, warm midtones, slightly cyan-green shadows. Parametric: it suggests a portrait stock, it does not reproduce one. For a real stock, use a scanned .cube with --lut."
+    },
+    "bright-pop": {
+      "look": "bright pop / saturated creator look",
+      "filters": "eq=contrast=1.08:saturation=1.28:brightness=0.02,vibrance=intensity=0.22,unsharp=5:5:0.5",
+      "notes": "Punchy colour and crisp detail for phone screens; pairs with heavy captions."
+    },
+    "mono-classic": {
+      "look": "monochrome (rich black and white)",
+      "filters": "colorchannelmixer=rr=0.3:rg=0.59:rb=0.11:gr=0.3:gg=0.59:gb=0.11:br=0.3:bg=0.59:bb=0.11,curves=all='0/0 0.25/0.19 0.75/0.83 1/1'",
+      "grain": 0.25,
+      "notes": "Luminance-weighted greyscale with a firm S-curve. With one accent colour in the type it reads as Swiss poster photography."
+    },
+    "noir": {
+      "look": "low-key noir (chiaroscuro)",
+      "filters": "colorchannelmixer=rr=0.3:rg=0.59:rb=0.11:gr=0.3:gg=0.59:gb=0.11:br=0.3:bg=0.59:bb=0.11,curves=all='0/0 0.35/0.16 0.7/0.78 1/1',eq=brightness=-0.04",
+      "grain": 0.35,
+      "vignette": 0.6,
+      "notes": "Crushed shadows, bright accents, heavy vignette."
+    },
+    "cross-process": {
+      "look": "cross-processing (slide film in negative chemistry)",
+      "filters": "curves=preset=cross_process,eq=saturation=1.08:contrast=1.04",
+      "grain": 0.25,
+      "notes": "Shifted colours with yellow-green highlights and cyan-blue shadows, high contrast. Lomo / zine energy."
+    },
+    "day-for-night": {
+      "look": "day for night",
+      "filters": "eq=brightness=-0.16:gamma=0.85:saturation=0.55,colorbalance=rs=-0.08:bs=0.12:rm=-0.06:bm=0.1:rh=-0.02:bh=0.04,curves=all='0/0 0.5/0.38 1/0.8'",
+      "vignette": 0.4,
+      "notes": "Underexposed and pushed blue to read as moonlight."
+    },
+    "cinestill-night": {
+      "look": "tungsten night film with halation",
+      "filters": "colorbalance=bs=0.06:bm=0.04:rh=0.03,eq=contrast=1.06:saturation=1.05,format=gbrp,split[base][glow];[glow]colorchannelmixer=rr=0.3:rg=0.59:rb=0.11:gr=0.3:gg=0.59:gb=0.11:br=0.3:bg=0.59:bb=0.11,curves=all='0/0 0.78/0 1/1',gblur=sigma=22,colorchannelmixer=rr=1:rg=0:rb=0:gr=0.3:gg=0:gb=0:br=0.1:bg=0:bb=0[halo];[base][halo]blend=all_mode=screen:all_opacity=0.7",
+      "grain": 0.35,
+      "notes": "Cool tungsten-balanced base with a red glow bleeding around the brightest highlights, as on film without an anti-halation layer. Made for night streets, neon and practical lights; on a bright daylight frame every highlight blooms, so pick it for low-key footage."
+    },
+    "camcorder": {
+      "look": "lo-fi camcorder / VHS",
+      "filters": "eq=saturation=1.22:contrast=0.92:brightness=0.01,chromashift=cbh=4:crh=-4,gblur=sigma=0.7,curves=all='0/0.06 1/0.93'",
+      "grain": 0.55,
+      "vignette": 0.25,
+      "notes": "Bleeding chroma, soft detail, lifted blacks, noise. Reads as found footage; pair with a REC overlay and date stamp."
+    }
+  }
+}

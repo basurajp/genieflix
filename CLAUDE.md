@@ -19,7 +19,7 @@ bash setup/setup-mac.sh            # or setup-linux.sh / setup-windows.ps1 (inst
 npx hyperframes doctor             # verify the toolchain
 
 # Factory (the normal path)
-node factory/new.mjs <slug> "Title"     # template → factory/building/<slug>/
+node factory/new.mjs <slug> "Title" [--style swiss-editorial|kinetic-punch|cine-doc|neo-brutal]
 node factory/enqueue.mjs <slug>         # building → queue
 node factory/runner.mjs                 # runs the queue; dashboard at http://localhost:4300/dashboard.html
 
@@ -34,6 +34,13 @@ npx hyperframes lint <projectDir> --json      # must be 0 errors; qa.py enforces
 npx hyperframes snapshot <projectDir> --at 0.2,7,14
 python3 -m py_compile pipeline/*.py scheduler/*.py   # plus node --check factory/*.mjs
 
+# Footage lane: reframe 9:16, trim to the line, bake a named grade (styles/grades.json)
+python3 pipeline/footage.py --project <dir> --src-dir <clips> [--fit blur] [--grade teal-orange] [--lut x.cube]
+python3 pipeline/footage.py --project <dir> --grade-sheet <clip>    # every grade on one frame
+
+# Decode a reference reel (cuts, transitions, pacing, colour, sound + contact sheets)
+python3 decode/decode_reel.py decode/inbox/<reel>.mp4               # → decode/refs/<name>/REPORT.md
+
 # Cartoon episodes (multi-character; see cartoon/README.md)
 python3 cartoon/cast_voices.py --project <dir>            # needs <dir>/cast.json
 python3 cartoon/episodes/last-laddu/compose.py --project <dir>   # instead of build_index.py
@@ -44,7 +51,9 @@ python3 scheduler/push_schedule.py --manifest manifest.csv        # dry-run; --p
 ```
 
 There is no test suite; verification is the QA loop above plus an end-to-end run on a scratch
-project (stand-in voice WAVs via ffmpeg `sine`, `"lang": "proportional"` to skip Whisper).
+project (stand-in voice WAVs via ffmpeg `sine`, `"lang": "proportional"` to skip Whisper). For a
+style template, also decode its render with `decode/decode_reel.py` and check the boundaries it
+reports are the transitions the template meant to make.
 
 ## Architecture
 
@@ -91,8 +100,20 @@ renders ×3 (`FACTORY_RENDER_CONCURRENCY`). Jobs stuck in `work/` at startup are
 Track map: 0 background, 1 slides/scene, 2 overlays/title, 3 captions, 4 voice, 5 music, 6 sfx.
 `template/index.html` uses `<!--HF:...-->` markers that `build_index.py` string-replaces.
 `build_index.py` swaps a scene's `<img>` for a muted `<video>` when
-`assets/footage/lineNN.mp4` exists (the LTX-2 lane; `integrations/ltx2/stage_footage.py`
-re-encodes clips with dense keyframes and strips audio first).
+`assets/footage/lineNN.mp4` exists (or a graded still `lineNN.jpg`), staged by
+`pipeline/footage.py` or the LTX-2 lane (`integrations/ltx2/stage_footage.py`), both of
+which re-encode with dense keyframes and strip audio.
+
+**Style templates** (`styles/<name>/`, chosen by `project.json` `"style"`; see
+`styles/README.md`): `build_index.py` fills only DURATION / SLIDES / AUDIO / DATA (a JSON
+blob of scenes, caption groups with per-word timings, title, CTA, merged `style_params`);
+the template's script builds every other element at load via `styles/_lib/reel.js`
+(`REEL.clip()` makes real timed clips — JS-created clips render correctly, verified) and
+registers the one paused timeline. `style.json` carries the default grade and
+`scene_overlap` (scene clips run that long past their scene so the next can dissolve or
+push over them). Fonts are vendored OFL woff2 per style, copied to `assets/style/` on every
+build — the classic template's output is unchanged when no style is set. `styles/LEXICON.md`
+is the shared vocabulary for briefs and decode reports.
 
 ## Renderer rules that cost real renders to learn
 
@@ -109,6 +130,18 @@ re-encodes clips with dense keyframes and strips audio first).
   scaled past the SVG viewport is clipped (a scaled-up rig loses its head).
 - Don't tween a `<video>`'s size or clip-path (opacity/transform only); source footage needs
   dense keyframes (`-g 30 -keyint_min 30`) or seeks freeze; no animated GIFs.
+- Never tween `letter-spacing` or other layout properties (lint error
+  `gsap_non_transform_motion`: they snap to whole pixels). Tracking-in = per-letter x
+  transforms (`REEL.charSpans` + `REEL.trackOffsets`). `clip-path`, `-webkit-text-stroke`
+  with `paint-order`, `mix-blend-mode` and hard `box-shadow` all render correctly on divs/text.
+- No `Math.random` in compositions: render workers load the page separately and would
+  disagree frame to frame. Use `REEL.rng(seed)`. A computed GSAP `repeat` must be clamped
+  with `Math.max(0, …)` — `-1` means infinite (lint `gsap_repeat_floor_unclamped`).
+- Any font family in a stack needs an `@font-face` or lint errors; style templates get a
+  `local()` Noto Sans Devanagari face from `<!--HF:FONT_FACES-->` when the project vendors none.
+- HyperFrames' live grading (`data-color-grading`) needs a GPU: on software WebGL it ran at
+  ~18 s/frame. Grades are therefore baked by `pipeline/footage.py` (ffmpeg); `blend` filters
+  in a grade chain need `format=gbrp` first or they blend YUV planes (magenta casts).
 - The preview lies. Verify by extracting frames **from the rendered MP4** (qa.py does this) —
   that is how every composition bug in this repo's history was actually caught.
 - Numbers that are contractual: caption band top 1380px (never lower — Instagram UI covers it),
@@ -130,4 +163,7 @@ re-encodes clips with dense keyframes and strips audio first).
   `cast_voices.py` tries edge, falls back to kokoro); `pitch` is a post-processing multiplier,
   overridable per engine via `edge_pitch`/`kokoro_pitch`.
 - `vercel.json` disables deployments on purpose (repo is not a web app) — leave it.
+- `assets/style/`, `assets/footage.bak/` and `grades/` inside a project are generated.
+  Reference reels go in `decode/inbox/` (gitignored); commit their `REPORT.md`/`decode.json`
+  under `decode/refs/<name>/`, never the sheets or the video.
 - No AI/model attribution in committed files, commit messages, or artifacts.

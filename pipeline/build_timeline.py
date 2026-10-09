@@ -13,6 +13,7 @@ import common
 # Animated GIFs are deliberately excluded: the renderer cannot reproduce
 # them deterministically. Use a static image or a real video clip.
 SLIDE_EXTS = {".png", ".jpg", ".jpeg", ".webp"}
+FOOTAGE_EXTS = SLIDE_EXTS | {".mp4"}
 
 # Extra hold on the final scene so the CTA stamp gets a beat on screen.
 LAST_SCENE_HOLD = 0.6
@@ -24,20 +25,30 @@ def die(msg):
 
 
 def find_slides(project_dir):
-    """Return sorted project-relative slide paths (slide N maps to line N)."""
+    """Return sorted project-relative slide paths (slide N maps to line N).
+
+    A footage-first project may have no slides at all: when assets/slides/ is
+    empty but assets/footage/ holds lineNN clips or stills, those stand in
+    (build_index.py prefers footage for every scene that has it anyway)."""
     slides_dir = project_dir / "assets" / "slides"
-    if not slides_dir.is_dir():
-        die(f"no slides directory at {slides_dir} — add assets/slides/slide01.png (one per line)")
     slides = sorted(
         p.name for p in slides_dir.iterdir()
         if p.is_file() and p.suffix.lower() in SLIDE_EXTS
+    ) if slides_dir.is_dir() else []
+    if slides:
+        return ["assets/slides/" + name for name in slides]
+    footage_dir = project_dir / "assets" / "footage"
+    footage = sorted(
+        p.name for p in footage_dir.iterdir()
+        if p.is_file() and p.stem.startswith("line") and p.suffix.lower() in FOOTAGE_EXTS
+    ) if footage_dir.is_dir() else []
+    if footage:
+        return ["assets/footage/" + name for name in footage]
+    die(
+        f"no slide images in {slides_dir} and no footage in {footage_dir} — add "
+        "slide01.png, slide02.png, ... (one per line; the last repeats if there are "
+        "fewer slides than lines) or stage clips with pipeline/footage.py"
     )
-    if not slides:
-        die(
-            f"no slide images in {slides_dir} — add slide01.png, slide02.png, ... "
-            "(one per line; the last repeats if there are fewer slides than lines)"
-        )
-    return ["assets/slides/" + name for name in slides]
 
 
 def main():

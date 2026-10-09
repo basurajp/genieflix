@@ -1,0 +1,27 @@
+{
+  "name": "Swiss Editorial",
+  "summary": "International Typographic Style on full-bleed footage: grid, flush-left grotesk, one accent, mask-revealed type, a colour wipe hiding every cut.",
+  "lexicon": [
+    "International Typographic Style (Swiss Style)",
+    "grid system, flush-left / ragged-right",
+    "mask reveal (text rises from behind its baseline)",
+    "karaoke reveal captions",
+    "colour wipe transition",
+    "Ken Burns push-in",
+    "muted editorial grade"
+  ],
+  "best_for": "explainers, data and money claims, product truths, founder POV — anything where the words are the hook",
+  "footage": "full-bleed, any; reads best with calm, well-exposed shots and negative space at the top",
+  "grade": "muted-editorial",
+  "grade_variants": ["mono-classic", "film-fade", "neutral"],
+  "music": "minimal electronic or piano, 90-110 BPM, felt not heard",
+  "sfx": "one soft swish on each wipe at most",
+  "scene_overlap": 0.0,
+  "params": {
+    "accent": "#ff3b1f",
+    "paper": "#f2f0eb",
+    "cta_label": "Comment the word",
+    "cta_note": "I'll send it to you",
+    "labels": []
+  }
+}

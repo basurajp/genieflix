@@ -1,0 +1,26 @@
+{
+  "name": "Kinetic Punch",
+  "summary": "The creator edit: word-by-word pop captions (heavy all-caps, thick outline, live word lit, money in green), punch-in jump cuts on every caption group, flash + zoom transitions, progress bar, sticker CTA.",
+  "lexicon": [
+    "word-by-word pop captions (Hormozi-style lineage)",
+    "karaoke highlight on the active word",
+    "punch-in / digital zoom jump cuts",
+    "zoom transition + flash frame",
+    "impact shake",
+    "sticker typography",
+    "bright pop grade"
+  ],
+  "best_for": "talking heads, street demos, reaction and tutorial B-roll — anything spoken fast to a cold audience",
+  "footage": "full-bleed, subject centred in the upper half; punch-ins crop 14%, so shoot or generate at 1080x1920 or larger",
+  "grade": "bright-pop",
+  "grade_variants": ["neutral", "camcorder"],
+  "music": "upbeat trap / phonk / pop instrumental, 120-150 BPM, ducked well under the voice",
+  "sfx": "one whoosh on each zoom transition, one pop on the hook sticker — never on every word",
+  "scene_overlap": 0.0,
+  "params": {
+    "hot": "#ffe11a",
+    "money": "#2bea6b",
+    "punch_scale": 1.14,
+    "cta_label": "Comment this word"
+  }
+}
