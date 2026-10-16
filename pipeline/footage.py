@@ -4,17 +4,21 @@
 Usage:
   footage.py --project <dir> --line 3 --src clip.mov [--start 12.5] [--fit cover|blur]
              [--focus 0.5] [--grade teal-orange] [--lut look.cube] [--grain 0.3] [--vignette 0.4]
-  footage.py --project <dir> --src-dir raw/              # stages every lineNN.* file found
+  footage.py --project <dir> --line 1 --src missile.mp4 --as line01-missile   # an insert
+  footage.py --project <dir> --src-dir raw/              # stages every lineNN[-name].* file found
   footage.py --project <dir> --grade-sheet clip.mov      # every grade on one frame, labelled
   footage.py --list-grades
 
-Writes <project>/assets/footage/lineNN.mp4 for clips (or lineNN.jpg for stills):
+Writes <project>/assets/footage/lineNN.mp4 for clips (or lineNN.jpg for stills);
+--as <stem> (or a lineNN-<name> file in --src-dir) writes <stem>.mp4/.jpg instead,
+for a word-anchored insert that project.json "beats" cuts to inside line NN:
 
   * reframed to 1080x1920 — "cover" crops to fill (--focus picks the crop
     centre, 0 = left edge, 1 = right edge); "blur" fits the whole frame inside a
     blurred, zoomed copy of itself (the usual treatment for landscape footage)
-  * trimmed from --start to the line's duration plus a short handle, and padded
-    by holding the last frame if the clip runs short
+  * trimmed from --start to the scene's length (timeline.json: its pause and any
+    continued lines included) plus a short handle, and padded by holding the
+    last frame if the clip runs short
   * graded with a named grade from styles/grades.json (default: the project
     style's "grade", else none), an optional .cube LUT, grain and vignette —
     baked in with ffmpeg, so the preview, the render and every OS agree
@@ -99,6 +103,12 @@ def grade_chain(name, grades, lut=None, grain=None, vignette=None):
 
 
 def line_seconds(project_dir, index):
+    """Seconds a clip for line `index` must cover: the scene's span on the timeline
+    (its pause_before and any lines that continue the shot) plus the handle."""
+    timeline = common.load_json(project_dir / "timeline.json", {}) or {}
+    for sc in timeline.get("scenes", []):
+        if sc.get("index") == index:
+            return float(sc.get("media_duration") or sc["duration"]) + HANDLE
     meta = common.load_json(project_dir / "audio_meta.json", {}) or {}
     gap = float(meta.get("line_gap", 0.35))
     for ln in meta.get("lines", []):
@@ -114,18 +124,19 @@ def backup(out):
         shutil.move(str(out), str(bak / out.name))
 
 
-def stage(project_dir, index, src, start, fit, focus, grade, lut, grain, vignette, grades):
+def stage(project_dir, index, src, start, fit, focus, grade, lut, grain, vignette, grades, name=None):
     src = pathlib.Path(src).expanduser().resolve()
     if not src.is_file():
         raise SystemExit(f"footage: source not found: {src}")
     out_dir = project_dir / "assets" / "footage"
     out_dir.mkdir(parents=True, exist_ok=True)
-    for stale in out_dir.glob(f"line{index:02d}.*"):
+    name = name or f"line{index:02d}"
+    for stale in out_dir.glob(f"{name}.*"):
         backup(stale)
     look = grade_chain(grade, grades, lut, grain, vignette)
 
     if src.suffix.lower() in STILL_EXTS:
-        out = out_dir / f"line{index:02d}.jpg"
+        out = out_dir / f"{name}.jpg"
         chain = reframe_chain(fit, focus, STILL_W, STILL_H) + ("," + look if look else "")
         # noise with allf=t needs a timeline; on a still it is plain grain
         common.run([
@@ -135,7 +146,7 @@ def stage(project_dir, index, src, start, fit, focus, grade, lut, grain, vignett
         print(f"assets/footage/{out.name}  still, grade {grade or 'none'}")
         return out
 
-    out = out_dir / f"line{index:02d}.mp4"
+    out = out_dir / f"{name}.mp4"
     need = line_seconds(project_dir, index)
     src_dur = common.ffprobe_duration(src) - start
     if src_dur <= 0:
@@ -148,14 +159,16 @@ def stage(project_dir, index, src, start, fit, focus, grade, lut, grain, vignett
     if pad > 0:
         chain += f",tpad=stop_mode=clone:stop_duration={pad + 0.1:.2f}"
     chain += ",format=yuv420p"
+    part = out.with_name(out.stem + ".part.mp4")
     common.run([
         "ffmpeg", "-y", "-hide_banner", "-loglevel", "error",
         "-ss", f"{start:.3f}", "-i", str(src), "-t", f"{length:.3f}",
         "-vf", chain, "-an",
         "-c:v", "libx264", "-crf", "18", "-preset", "medium", "-pix_fmt", "yuv420p",
         "-g", "30", "-keyint_min", "30", "-movflags", "+faststart",
-        str(out),
+        str(part),
     ])
+    part.replace(out)   # an interrupted encode never leaves a broken lineNN.mp4 behind
     note = f", held last frame {pad:.2f}s" if pad > 0 else ""
     print(f"assets/footage/{out.name}  {length:.2f}s, {fit}, grade {grade or 'none'}{note}")
     return out
@@ -208,7 +221,9 @@ def main():
     ap.add_argument("--project", help="project directory")
     ap.add_argument("--line", type=int, help="1-based line (scene) this footage plays under")
     ap.add_argument("--src", help="source clip or still")
-    ap.add_argument("--src-dir", help="stage every lineNN.<ext> file in this directory")
+    ap.add_argument("--src-dir", help="stage every lineNN.<ext> (scene) and lineNN-<name>.<ext> (insert) file here")
+    ap.add_argument("--as", dest="as_name", metavar="STEM",
+                    help="output name instead of lineNN, e.g. line01-missile for an insert in line 1")
     ap.add_argument("--start", type=float, default=0.0, help="source in-point in seconds (clips)")
     ap.add_argument("--fit", choices=("cover", "blur"), default="cover",
                     help="cover = crop to fill 9:16; blur = fit inside a blurred copy (landscape footage)")
@@ -245,20 +260,23 @@ def main():
     if args.src_dir:
         src_dir = pathlib.Path(args.src_dir).expanduser().resolve()
         for f in sorted(src_dir.iterdir()):
-            m = re.fullmatch(r"line(\d{2})", f.stem)
+            m = re.fullmatch(r"line(\d{2})(-[a-z0-9-]+)?", f.stem.lower())
             if m and f.suffix.lower() in CLIP_EXTS | STILL_EXTS:
-                jobs.append((int(m.group(1)), f))
+                jobs.append((int(m.group(1)), f, f.stem.lower()))
         if not jobs:
             raise SystemExit(f"footage: no lineNN.<clip|still> files in {src_dir}")
     elif args.src and args.line:
-        jobs.append((args.line, pathlib.Path(args.src)))
+        if args.as_name and not re.fullmatch(r"[a-z0-9][a-z0-9-]*", args.as_name):
+            ap.error("--as takes a plain file stem like line01-missile")
+        jobs.append((args.line, pathlib.Path(args.src), args.as_name))
     else:
         ap.error("give --line with --src, or --src-dir")
 
-    for index, src in jobs:
+    for index, src, name in jobs:
         stage(project_dir, index, src, args.start if args.src else 0.0, args.fit, args.focus,
-              grade, args.lut, args.grain, args.vignette, grades)
-    print(f"staged {len(jobs)} item(s) — rebuild with pipeline/build_index.py, then render")
+              grade, args.lut, args.grain, args.vignette, grades, name)
+    print(f"staged {len(jobs)} item(s) — rebuild with pipeline/build_timeline.py and "
+          "pipeline/build_index.py, then render")
 
 
 if __name__ == "__main__":

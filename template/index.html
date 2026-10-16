@@ -88,6 +88,16 @@
     line-height: 1.15;
   }
 
+  /* track 2 — a line's on-screen text (project.json "beats"), the same chip
+     as the title, in the title's place; generated into the captions block. */
+  .beat-card {
+    position: absolute;
+    left: 0;
+    top: 232px;
+    width: 1080px;
+    text-align: center;
+  }
+
   /* track 2 — CTA stamp, pops in at the last scene and holds to the end.
      The tweened element (#cta-stamp) carries no CSS transform of its own;
      the rotation lives on the inner .stamp so GSAP scale/opacity tweens

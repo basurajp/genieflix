@@ -58,9 +58,10 @@
   /* hook */
   #hook { position: absolute; left: 60px; width: 900px; top: 236px; z-index: 6; }
   #hook .tag { display: inline-block; background: var(--ink); color: var(--paper); font-size: 28px; padding: 8px 16px; transform: rotate(-2deg); }
-  #hook .head { display: inline-block; margin-top: 14px; background: var(--yellow); border: 7px solid var(--ink); box-shadow: 14px 14px 0 var(--ink);
+  .beat-text.nb { position: absolute; left: 60px; width: 900px; top: 236px; z-index: 6; }
+  #hook .head, .beat-text .head { display: inline-block; margin-top: 14px; background: var(--yellow); border: 7px solid var(--ink); box-shadow: 14px 14px 0 var(--ink);
     padding: 14px 26px 20px; line-height: .95; letter-spacing: -.03em; border-radius: 12px; }
-  #hook .head .em { background: var(--pink); padding: 0 .08em; border-radius: 8px; }
+  #hook .head .em, .beat-text .head .em { background: var(--pink); padding: 0 .08em; border-radius: 8px; }
 
   .badge { position: absolute; left: 812px; top: 300px; width: 138px; height: 138px; z-index: 6; border-radius: 50%;
     background: var(--pink); border: 7px solid var(--ink); box-shadow: 8px 8px 0 var(--ink);
@@ -113,26 +114,30 @@
 
     R.scenes.forEach((s, i) => {
       const end = R.sceneEnd(s);
-      const media = document.getElementById(s.id);
+      const media = R.mediaFor(s);   // own clip + inserts ([] when the shot continues)
       const tilt = TILT[i % TILT.length];
-      const frame = R.clip({ cls: "frame", start: s.start, dur: s.duration + (s === R.last ? 0 : PUSH), track: 1 });
-      const card = [media, frame];
+      const span = R.mediaSpan(s), cardEnd = R.r3(s.start + span), lastCard = cardEnd >= R.total - 0.01;
+      const frame = s.continues ? null
+        : R.clip({ cls: "frame", start: s.start, dur: span + (lastCard ? 0 : PUSH), track: 1 });
+      const card = frame ? media.concat([frame]) : [];
 
       // in: pushed on from the right like a cut-out, overshooting into its tilt
-      if (i === 0) {
+      if (!card.length) {
+        // a continued shot stays in its card
+      } else if (i === 0) {
         tl.fromTo(card, { y: 900, rotation: 8 }, { y: 0, rotation: tilt, duration: 0.55, ease: "back.out(1.5)" }, 0);
       } else {
         tl.fromTo(card, { x: 1150, rotation: tilt + 9 }, { x: 0, rotation: tilt, duration: 0.5, ease: "back.out(1.3)" }, s.start);
       }
       // hold: a slow push inside the card
-      tl.fromTo(media, { scale: 1.0 }, { scale: 1.06, duration: s.duration, ease: "none", immediateRender: false }, s.start + 0.3);
+      if (media.length) tl.fromTo(media, { scale: 1.0 }, { scale: 1.06, duration: span, ease: "none", immediateRender: false }, s.start + 0.3);
       // out: flung off to the left as the next card arrives
-      if (s !== R.last) {
-        tl.to(card, { x: -1250, rotation: tilt - 12, duration: 0.45, ease: "power3.in" }, end - 0.05);
+      if (card.length && !lastCard) {
+        tl.to(card, { x: -1250, rotation: tilt - 12, duration: 0.45, ease: "power3.in" }, cardEnd - 0.05);
       }
 
       // scene badge for the middle beats (the hook and CTA carry their own stickers)
-      if (i > 0 && s !== R.last) {
+      if (i > 0 && s !== R.last && !R.beat(s).text) {
         const b = R.clip({ cls: "badge mono c" + (i % 4 + 1), start: s.start, dur: s.duration, track: 2, text: R.pad2(i + 1) });
         tl.fromTo(b, { scale: 0, rotation: -30 }, { scale: 1, rotation: 8, duration: 0.35, ease: "back.out(2.2)" }, s.start + 0.25);
         const span = end - (s.start + 0.8);
@@ -177,6 +182,14 @@
         if (span >= 0.5) tl.to("#cta .kw", { rotation: -3, duration: 0.25, ease: "steps(1)", yoyo: true, repeat: Math.max(0, Math.floor(span / 0.25) - 1) }, s.start + 1.1);
       }
     });
+
+    // a line's on-screen text (project.json beats) as a sticker head, dropped in like the hook
+    R.beatTexts(tl, { cls: "nb", mode: "plain", delay: 0.2, wrap: (h, s) => {
+      const len = s.beat.text.length, sz = len <= 14 ? 104 : len <= 26 ? 84 : 66;
+      const words = R.esc(s.beat.text).split(" ").map((w) => R.isEmphasis(w) ? `<span class="em">${w}</span>` : w).join(" ");
+      return `<div class="head" style="font-size:${sz}px">${words}</div>`;
+    }, enter: (tl, el, t) => tl.fromTo(el, { y: -260, rotation: -9 }, { y: 0, rotation: -3, duration: 0.5, ease: "back.out(1.7)" }, t) });
+    R.insertCuts(tl);   // word-anchored inserts: a hard cut inside the card
 
     window.__timelines = window.__timelines || {};
     window.__timelines.reel = tl;

@@ -8,6 +8,13 @@ chatterbox (voice clone: mlx_audio on macOS, or the chatterbox-tts PyTorch
 package anywhere with cuda/mps/cpu) -> xtts (Coqui voice clone) ->
 edge (edge-tts neural voice) -> kokoro (npx hyperframes tts; runs everywhere).
 
+files: narration made elsewhere (a recorded VO, or a hosted TTS such as
+ElevenLabs through Higgsfield) dropped in <project>/vo/ as lineNN.wav/.mp3/...
+It is picked automatically whenever <project>/vo/ holds such files, or set
+"voice_backend": "files" in project.json. Each file is converted to mono 24 kHz
+and its leading/trailing silence trimmed (config "vo_trim_silence", default on;
+line_gap sets the pacing). pipeline/fetch_vo.py fills vo/ from a URL manifest.
+
 Chatterbox notes (verified against resemble-ai/chatterbox and Blaizzy/mlx-audio):
 the reference clip's first ~10 s carry the voice AND its accent; Hindi and 22
 other languages need a MULTILINGUAL checkpoint (torch: automatic; mlx: set
@@ -27,7 +34,8 @@ import sys
 
 import common
 
-BACKENDS = ("chatterbox", "xtts", "edge", "kokoro")
+BACKENDS = ("chatterbox", "xtts", "edge", "kokoro", "files")
+VO_EXTS = (".wav", ".mp3", ".m4a", ".aac", ".ogg", ".flac", ".webm")
 
 
 def venv_imports(python, module):
@@ -56,8 +64,25 @@ def edge_tts_command(cfg):
     return None
 
 
-def detect_backend(cfg):
-    """Resolve the configured voice backend, auto-detecting when set to "auto"."""
+def vo_file(project_dir, stem):
+    """The supplied narration file for a line (vo/lineNN.<ext>), or None."""
+    for ext in VO_EXTS:
+        path = pathlib.Path(project_dir) / "vo" / f"{stem}{ext}"
+        if path.is_file():
+            return path
+    return None
+
+
+def detect_backend(cfg, project=None, project_dir=None):
+    """Resolve the voice backend: project.json "voice_backend", else supplied
+    files in <project>/vo/, else the config's choice (auto-detected for "auto")."""
+    if project and project.get("voice_backend"):
+        cfg = dict(cfg, voice_backend=project["voice_backend"])
+    elif project_dir and any(
+        p.suffix.lower() in VO_EXTS and p.stem.startswith("line")
+        for p in (pathlib.Path(project_dir) / "vo").glob("line*")
+    ):
+        return "files"
     choice = cfg.get("voice_backend", "auto")
     if choice in BACKENDS:
         return choice
@@ -260,11 +285,31 @@ def generate_kokoro(cfg, project, text, stem, raw_dir):
     )
 
 
+def generate_files(cfg, project, text, stem, raw_dir):
+    """Convert supplied narration (vo/lineNN.*) to raw/lineNN.wav."""
+    src = vo_file(raw_dir.parent, stem)
+    if src is None:
+        raise SystemExit(
+            f"voice backend files: no vo/{stem}.wav (or .mp3/.m4a/...) in {raw_dir.parent} "
+            f"for: {text!r}\nDrop one file per line in vo/, or fill it with pipeline/fetch_vo.py."
+        )
+    chain = "aformat=channel_layouts=mono"
+    if cfg.get("vo_trim_silence", True):
+        # trim each end to its first sound (keeps 50 ms); line_gap does the pacing
+        trim = "silenceremove=start_periods=1:start_threshold=-50dB:start_silence=0.05"
+        chain += f",{trim},areverse,{trim},areverse"
+    common.run([
+        "ffmpeg", "-y", "-hide_banner", "-loglevel", "error", "-i", str(src),
+        "-af", chain, "-ac", "1", "-ar", "24000", str(raw_dir / f"{stem}.wav"),
+    ])
+
+
 GENERATORS = {
     "chatterbox": generate_chatterbox,
     "xtts": generate_xtts,
     "edge": generate_edge,
     "kokoro": generate_kokoro,
+    "files": generate_files,
 }
 
 
@@ -335,7 +380,7 @@ def main():
     if args.line is not None and not 1 <= args.line <= len(lines):
         raise SystemExit(f"--line {args.line} out of range (1..{len(lines)})")
 
-    backend = detect_backend(cfg)
+    backend = detect_backend(cfg, project, project_dir)
     print(f"voice backend: {backend}")
     raw_dir = project_dir / "raw"
     raw_dir.mkdir(parents=True, exist_ok=True)

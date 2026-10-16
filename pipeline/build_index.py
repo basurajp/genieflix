@@ -8,12 +8,29 @@ names a style — "style": "swiss-editorial" — in which case it is
 styles/<style>/index.html. Style templates receive the scene media, the audio
 and a DATA blob (scenes, captions with per-word timing, title, CTA, style
 params); their own script builds the type, overlays and choreography from it.
+
+project.json "beats" (keyed by line number) add per-line direction, resolved
+here against the captions' word timings:
+
+  "text": "MARS"              on-screen text for the line (line 1: replaces the
+                              title as the hook headline); "text_at" times it
+  "inserts": [{"asset": "assets/footage/line01-missile.mp4", "at": "missiles"}]
+                              cut to a second clip or still on a spoken word,
+                              held to "until" (a word) or the end of the shot
+  "transition": "dip"         a named cut into the scene (styles that honour it)
+  "draw": {...} or [...]      drawn props for styles that draw (blueprint)
+
+A word anchor is the spoken word ("missiles", "make-or-buy", "it#2" for the
+second "it") or its 1-based position in the line. Inside "draw" specs, "at"
+resolves to "t", "until" to "t_end", "cues" to "cue_times" and any "<x>_at" to
+"<x>_t", all absolute seconds.
 """
 
 import argparse
 import bisect
 import html
 import json
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -108,51 +125,234 @@ def ensure_assets(project_dir):
                 shutil.copy2(src, dst)
 
 
+def media_kind(src):
+    return "video" if Path(src).suffix.lower() in (".mp4", ".mov", ".webm", ".m4v") else "image"
+
+
 def scene_media(scene, project_dir):
-    """("video" | "image", project-relative src) for a scene: staged footage
-    clip, else a graded/staged still, else the scene's slide."""
+    """("video" | "image" | "none", project-relative src) for a scene.
+
+    timeline.json "media" decides first: "none" (a drawn scene), "continue" (the
+    previous shot plays on, carried by the owning clip), or an explicit path
+    from the beat. Otherwise: the staged footage clip, a graded/staged still,
+    else the scene's slide."""
+    media = scene.get("media")
+    if media in ("none", "continue"):
+        return "none", None
     stem = f'assets/footage/line{scene["index"]:02d}'
+    if media and not media.startswith(("assets/slides/", stem + ".")):
+        return media_kind(media), media     # explicit beat media
     if (project_dir / f"{stem}.mp4").is_file():
         return "video", f"{stem}.mp4"
     for ext in STILL_EXTS:
         if (project_dir / f"{stem}{ext}").is_file():
             return "image", f"{stem}{ext}"
-    return "image", scene["slide"]
+    if not scene.get("slide"):
+        return "none", None
+    return media_kind(scene["slide"]), scene["slide"]
 
 
-def build_slides(scenes, project_dir, cls="slide", overlap=0.0, grading=None, total=None):
-    """One media clip per scene. Style templates may ask for overlap: each clip
-    but the last runs that much past its scene so the next can dissolve over it."""
+def media_tag(el_id, kind, src, cls, start, duration, grading_attr=""):
+    timing = (
+        f'data-start="{fmt(start)}" data-duration="{fmt(duration)}" '
+        f'data-track-index="{TRACK_SLIDES}"'
+    )
+    if kind == "video":
+        # Staged clip (pipeline/footage.py, integrations/ltx2/stage_footage.py):
+        # already muted and re-encoded with dense keyframes; animated with
+        # opacity/transform only — the renderer ignores clip-path and size
+        # tweens on <video>.
+        return (
+            f'<video id="{el_id}" class="clip {cls}" '
+            f'src="{html.escape(src)}" muted playsinline {timing}{grading_attr}></video>'
+        )
+    return (
+        f'<img id="{el_id}" class="clip {cls}" '
+        f'src="{html.escape(src)}" alt="" {timing}{grading_attr}>'
+    )
+
+
+def shot_ends(scenes, overlap, total):
+    """{line index: when that scene's own clip ends} — its continued span plus
+    the style's overlap, except for a clip that already reaches the end."""
+    ends = {}
+    for sc in scenes:
+        end = float(sc["start"]) + float(sc.get("media_duration") or sc["duration"])
+        if overlap and end < total - 0.001:
+            end += overlap
+        ends[sc["index"]] = min(end, total)
+    return ends
+
+
+def build_slides(scenes, project_dir, cls="slide", overlap=0.0, grading=None, total=None,
+                 inserts=None):
+    """One media clip per scene that owns media, each followed by its word-anchored
+    inserts (same stacking order, so the next scene still covers them). Style
+    templates may ask for overlap: each clip but the last runs that much past its
+    scene (or its continued span) so the next can dissolve over it."""
     out = []
     grading_attr = ""
     if grading:
         grading_attr = f' data-color-grading="{html.escape(json.dumps(grading, separators=(",", ":")))}"'
-    for i, scene in enumerate(scenes):
-        duration = float(scene["duration"])
-        if overlap and i < len(scenes) - 1:
-            duration += overlap
-        if total is not None:
-            duration = min(duration, float(total) - float(scene["start"]))
-        timing = (
-            f'data-start="{fmt(scene["start"])}" data-duration="{fmt(duration)}" '
-            f'data-track-index="{TRACK_SLIDES}"'
-        )
+    total = float(total) if total is not None else (
+        float(scenes[-1]["start"]) + float(scenes[-1]["duration"]))
+    ends = shot_ends(scenes, overlap, total)
+    inserts = inserts or {}
+    for scene in scenes:
         kind, src = scene_media(scene, project_dir)
-        if kind == "video":
-            # Staged clip (pipeline/footage.py, integrations/ltx2/stage_footage.py):
-            # already muted and re-encoded with dense keyframes; animated with
-            # opacity/transform only — the renderer ignores clip-path and size
-            # tweens on <video>.
-            out.append(
-                f'<video id="scene-{scene["index"]}" class="clip {cls}" '
-                f'src="{html.escape(src)}" muted playsinline {timing}{grading_attr}></video>'
-            )
-        else:
-            out.append(
-                f'<img id="scene-{scene["index"]}" class="clip {cls}" '
-                f'src="{html.escape(src)}" alt="" {timing}{grading_attr}>'
-            )
+        if kind != "none":
+            out.append(media_tag(f'scene-{scene["index"]}', kind, src, cls, scene["start"],
+                                 ends[scene["index"]] - float(scene["start"]), grading_attr))
+        for ins in inserts.get(scene["index"], []):
+            out.append(media_tag(ins["id"], ins["media"], ins["src"], cls + " insert",
+                                 ins["start"], ins["duration"], grading_attr))
     return "\n  ".join(out)
+
+
+# --- beats: word anchors, inserts, on-screen text ---------------------------
+
+def norm_word(s):
+    return re.sub(r"[^0-9a-zऀ-ॿ]+", "", str(s).lower())
+
+
+def line_words(captions, index):
+    """Every timed word of one line, in order (from captions.json)."""
+    words = []
+    for cap in captions:
+        if cap.get("line") == index:
+            words.extend(cap.get("words") or [])
+    return sorted(words, key=lambda w: float(w["start"]))
+
+
+def find_timed(target, nth, words):
+    """Start time of the nth timed word matching target, or None. A word the ASR
+    split ("make-or-buy" -> make / or / buy) matches across its neighbours."""
+    normed = [norm_word(w["text"]) for w in words]
+    seen = 0
+    for i in range(len(words)):
+        joined = ""
+        for j in range(i, min(len(words), i + 6)):
+            joined += normed[j]
+            if joined == target or (j == i and normed[i].startswith(target)):
+                seen += 1
+                if seen == nth:
+                    return float(words[i]["start"])
+                break
+            if not joined or not target.startswith(joined):
+                break
+    return None
+
+
+def resolve_anchor(anchor, words, scene, line_text):
+    """Absolute time of a word anchor: "word", "word#2", or a 1-based position.
+
+    Matches the timed words first (Whisper, or proportional timing); when
+    nothing matches, falls back to the word's share of the written line and
+    warns."""
+    tokens = line_text.split()
+    if isinstance(anchor, (int, float)) and not isinstance(anchor, bool):
+        n = int(anchor)
+        if words and 1 <= n <= len(words):
+            return float(words[n - 1]["start"])
+        pos = n - 1 if 1 <= n <= len(tokens) else None
+    else:
+        text, nth = str(anchor), 1
+        m = re.fullmatch(r"(.*?)#(\d+)", text)
+        if m:
+            text, nth = m.group(1), int(m.group(2))
+        target = norm_word(text)
+        if not target:
+            raise SystemExit(f"build_index: empty word anchor {anchor!r} on line {scene['index']}")
+        hit = find_timed(target, nth, words)
+        if hit is not None:
+            return hit
+        pos, seen = None, 0
+        for k, tok in enumerate(tokens):
+            if norm_word(tok).startswith(target):
+                seen += 1
+                if seen == nth:
+                    pos = k
+                    break
+    if pos is None:
+        raise SystemExit(
+            f"build_index: word anchor {anchor!r} not found in line {scene['index']}: {line_text!r}"
+        )
+    voice_start = float(scene.get("voice_start", scene["start"]))
+    end = float(words[-1]["end"]) if words else voice_start + 0.35 * len(tokens)
+    chars = [max(1, len(tok)) for tok in tokens]
+    t = voice_start + sum(chars[:pos]) / float(sum(chars)) * (end - voice_start)
+    warn(f"line {scene['index']}: word {anchor!r} has no timing — placed proportionally at {t:.2f}s")
+    return t
+
+
+def resolve_spec(spec, words, scene, line_text):
+    """Copy a draw spec with its word anchors turned into absolute times."""
+    out = dict(spec)
+    for key, value in spec.items():
+        if key == "at":
+            out["t"] = round(resolve_anchor(value, words, scene, line_text), 3)
+        elif key == "until":
+            out["t_end"] = round(resolve_anchor(value, words, scene, line_text), 3)
+        elif key == "cues":
+            out["cue_times"] = [round(resolve_anchor(v, words, scene, line_text), 3) for v in value]
+        elif key.endswith("_at") and isinstance(value, (str, int)):
+            out[key[:-3] + "_t"] = round(resolve_anchor(value, words, scene, line_text), 3)
+    return out
+
+
+def resolve_beats(project, scenes, captions, project_dir, overlap, total):
+    """(beats by line index for the DATA blob, inserts by line index for SLIDES)."""
+    raw = project.get("beats") or {}
+    ends = shot_ends(scenes, overlap, total)
+    beats, inserts = {}, {}
+    for sc in scenes:
+        beat = raw.get(str(sc["index"])) or raw.get(sc["index"])
+        if not beat:
+            continue
+        words = line_words(captions, sc["index"])
+        text = sc.get("text", "")
+        out = {}
+        for key in ("text", "transition", "continue"):
+            if beat.get(key) not in (None, ""):
+                out[key] = beat[key]
+        if beat.get("text_at") is not None:
+            out["text_t"] = round(resolve_anchor(beat["text_at"], words, sc, text), 3)
+        draw = beat.get("draw")
+        if draw:
+            specs = draw if isinstance(draw, list) else [draw]
+            out["draw"] = [resolve_spec(s, words, sc, text) for s in specs]
+            for spec in out["draw"]:
+                # a prop's photo may not be staged yet: draw the fallback instead
+                if spec.get("image") and not (project_dir / spec["image"]).is_file():
+                    warn(f"line {sc['index']}: {spec.get('prop')} image not found, drawing instead: {spec['image']}")
+                    spec["image"] = None
+        # inserts: cut to another clip/still on a word, held to "until" or the shot's end
+        shot_end = ends[sc.get("continues") or sc["index"]]
+        for n, ins in enumerate(beat.get("inserts") or [], 1):
+            src = str(ins.get("asset") or "").strip()
+            if not src or not (project_dir / src).is_file():
+                warn(f"line {sc['index']}: insert asset not found, skipping: {src or ins}")
+                continue
+            # cut a frame early: the eye should land on the new shot with the word
+            start = resolve_anchor(ins.get("at", 1), words, sc, text) + float(ins.get("offset", -0.033))
+            start = max(float(sc["start"]), start)
+            end = shot_end
+            if ins.get("until") is not None:
+                end = resolve_anchor(ins["until"], words, sc, text)
+            if end - start < 0.1:
+                warn(f"line {sc['index']}: insert {src} would last {end - start:.2f}s, skipping")
+                continue
+            inserts.setdefault(sc["index"], []).append({
+                "id": f"insert-{sc['index']:02d}-{n}",
+                "src": src,
+                "media": media_kind(src),
+                "start": round(start, 3),
+                "duration": round(end - start, 3),
+            })
+        if inserts.get(sc["index"]):
+            out["inserts"] = [{k: v for k, v in e.items() if k != "src"} for e in inserts[sc["index"]]]
+        beats[sc["index"]] = out
+    return beats, inserts
 
 
 def resolve_style(project):
@@ -207,12 +407,39 @@ def font_faces(project_dir):
     return "\n  ".join(rules)
 
 
+def scene_data(sc, project_dir, beats):
+    """One scene of the DATA blob. "media_id" is the element on screen during the
+    scene (its own clip, or the clip it continues); "own_media" says whether the
+    scene starts a new shot; "media_span" is how long its own clip runs."""
+    kind = scene_media(sc, project_dir)[0]
+    owner = sc.get("continues")
+    entry = {
+        "index": sc["index"],
+        "id": f'scene-{sc["index"]}',
+        "start": sc["start"],
+        "duration": sc["duration"],
+        "voice_start": sc.get("voice_start", sc["start"]),
+        "text": sc.get("text", ""),
+        "media": kind,
+        "own_media": kind != "none",
+        "media_id": f"scene-{owner}" if owner else (f'scene-{sc["index"]}' if kind != "none" else None),
+        "media_span": sc.get("media_duration") or sc["duration"],
+        "beat": beats.get(sc["index"]) or {},
+    }
+    if owner:
+        entry["continues"] = owner
+    if sc.get("pause_before"):
+        entry["pause_before"] = sc["pause_before"]
+    return entry
+
+
 def style_data(project, scenes, captions, total, cta_start, title, kicker, cta_keyword,
-               project_dir, meta):
+               project_dir, meta, beats=None):
     """The DATA blob a style template choreographs from. JSON, safe to inline
     in a <script type="application/json"> element."""
     params = dict(meta.get("params") or {})
     params.update(project.get("style_params") or {})
+    beats = beats or {}
     data = {
         "total": total,
         "title": title,
@@ -220,17 +447,7 @@ def style_data(project, scenes, captions, total, cta_start, title, kicker, cta_k
         "cta_keyword": cta_keyword,
         "cta_start": cta_start,
         "lang": str(project.get("lang", "en") or "en"),
-        "scenes": [
-            {
-                "index": sc["index"],
-                "id": f'scene-{sc["index"]}',
-                "start": sc["start"],
-                "duration": sc["duration"],
-                "text": sc.get("text", ""),
-                "media": scene_media(sc, project_dir)[0],
-            }
-            for sc in scenes
-        ],
+        "scenes": [scene_data(sc, project_dir, beats) for sc in scenes],
         "captions": [
             {
                 "start": c["start"],
@@ -351,22 +568,52 @@ def pulse_times(start, duration):
     return times
 
 
-def build_timeline_js(scenes, title_end, cta_start):
+def build_beat_cards(scenes, beats):
+    """Classic template: a beat's on-screen text as a title-style chip for its
+    scene (line 1's text replaces the title instead)."""
+    out = []
+    for sc in scenes[1:]:
+        text = (beats.get(sc["index"]) or {}).get("text")
+        if not text:
+            continue
+        start = float((beats[sc["index"]]).get("text_t") or sc["start"])
+        dur = float(sc["start"]) + float(sc["duration"]) - start
+        out.append(
+            f'<div id="beat-{sc["index"]}" class="clip beat-card" data-start="{fmt(start)}" '
+            f'data-duration="{fmt(dur)}" data-track-index="2">'
+            f'<div class="title-chip">{html.escape(text)}</div></div>'
+        )
+    return "\n  ".join(out)
+
+
+def build_timeline_js(scenes, title_end, cta_start, project_dir=None, beats=None):
     """GSAP tween lines for the single paused timeline. Opacity/transform
     only — never a media element's width/height or clip-path (the frame
     renderer ignores those even when the preview honors them)."""
     ind = "    "
     js = []
+    beats = beats or {}
+
+    def media_id(scene):
+        """The element on screen in this scene: its clip, the clip it continues, or none."""
+        if scene.get("continues"):
+            return f'scene-{scene["continues"]}'
+        if project_dir is None or scene_media(scene, project_dir)[0] != "none":
+            return f'scene-{scene["index"]}'
+        return None
 
     first = scenes[0]
     push = min(PUSH_IN_MAX, first["duration"])
-    js.append(f"{ind}// opening push-in: motion from frame zero (scale 1.1 -> 1.0)")
-    js.append(
-        f'{ind}tl.fromTo("#scene-{first["index"]}", {{scale: 1.1}}, '
-        f'{{scale: 1.0, duration: {fmt(push)}, ease: "power1.out"}}, 0);'
-    )
+    if media_id(first):
+        js.append(f"{ind}// opening push-in: motion from frame zero (scale 1.1 -> 1.0)")
+        js.append(
+            f'{ind}tl.fromTo("#{media_id(first)}", {{scale: 1.1}}, '
+            f'{{scale: 1.0, duration: {fmt(push)}, ease: "power1.out"}}, 0);'
+        )
 
     for scene in scenes[1:]:
+        if not media_id(scene) or scene.get("continues"):
+            continue
         js.append(f"{ind}// scene {scene['index']}: entrance synced to its line start")
         js.append(
             f'{ind}tl.fromTo("#scene-{scene["index"]}", {{opacity: 0, y: 40}}, '
@@ -375,17 +622,37 @@ def build_timeline_js(scenes, title_end, cta_start):
         )
 
     for scene in scenes:
+        if not media_id(scene):
+            continue
         for t in pulse_times(scene["start"], scene["duration"]):
             js.append(f"{ind}// scene {scene['index']}: pulse — no static stretch over 3 s")
             js.append(
-                f'{ind}tl.to("#scene-{scene["index"]}", '
+                f'{ind}tl.to("#{media_id(scene)}", '
                 f'{{scale: 1.03, duration: {fmt(PULSE_LEN / 2)}, ease: "sine.inOut"}}, {fmt(t)});'
             )
             js.append(
-                f'{ind}tl.to("#scene-{scene["index"]}", '
+                f'{ind}tl.to("#{media_id(scene)}", '
                 f'{{scale: 1.0, duration: {fmt(PULSE_LEN / 2)}, ease: "sine.inOut"}}, '
                 f'{fmt(t + PULSE_LEN / 2)});'
             )
+
+    for scene in scenes[1:]:
+        beat = beats.get(scene["index"]) or {}
+        if not beat.get("text"):
+            continue
+        start = float(beat.get("text_t") or scene["start"])
+        end = float(scene["start"]) + float(scene["duration"])
+        js.append(f"{ind}// scene {scene['index']}: on-screen text from the beat")
+        js.append(
+            f'{ind}tl.fromTo("#beat-{scene["index"]}", {{opacity: 0, y: 24}}, '
+            f'{{opacity: 1, y: 0, duration: {fmt(ENTRANCE)}, ease: "power2.out"}}, {fmt(start)});'
+        )
+        fade = max(start + ENTRANCE, end - ENTRANCE)
+        js.append(
+            f'{ind}tl.to("#beat-{scene["index"]}", {{opacity: 0, duration: {fmt(end - fade)}, '
+            f'ease: "power1.in"}}, {fmt(fade)});'
+        )
+        js.append(f'{ind}tl.set("#beat-{scene["index"]}", {{opacity: 0}}, {fmt(end)});')
 
     fade_start = max(0.0, title_end - ENTRANCE)
     js.append(f"{ind}// title card fades as scene 1 ends; hard set at the clip")
@@ -452,14 +719,18 @@ def main():
     title = (project.get("title") or project.get("slug") or "reel").strip()
     cta_keyword = (project.get("cta_keyword") or "LINK").strip()
 
+    overlap = float(style_meta.get("scene_overlap", 0.0) or 0.0) if style_dir else 0.0
+    beats, inserts = resolve_beats(project, scenes, captions, project_dir, overlap, total)
+    if (beats.get(scenes[0]["index"]) or {}).get("text"):
+        title = beats[scenes[0]["index"]]["text"]   # line 1's on-screen text is the hook
     if style_dir:
         slides = build_slides(
-            scenes, project_dir, cls="scene",
-            overlap=float(style_meta.get("scene_overlap", 0.0) or 0.0),
-            grading=project.get("hf_grading"), total=total,
+            scenes, project_dir, cls="scene", overlap=overlap,
+            grading=project.get("hf_grading"), total=total, inserts=inserts,
         )
     else:
-        slides = build_slides(scenes, project_dir, grading=project.get("hf_grading"))
+        slides = build_slides(scenes, project_dir, grading=project.get("hf_grading"),
+                              total=total, inserts=inserts)
 
     replacements = {
         "<!--HF:DURATION-->": fmt(total),
@@ -470,15 +741,16 @@ def main():
         "<!--HF:CTA_DURATION-->": fmt(total - cta_start),
         "<!--HF:CTA_KEYWORD-->": html.escape(cta_keyword),
         "<!--HF:SLIDES-->": slides,
-        "<!--HF:CAPTIONS-->": build_captions(captions),
+        "<!--HF:CAPTIONS-->": "\n  ".join(
+            part for part in (build_beat_cards(scenes, beats), build_captions(captions)) if part),
         "<!--HF:AUDIO-->": build_audio(project_dir, project, cfg, meta_lines, scenes, total),
-        "<!--HF:TIMELINE-->": build_timeline_js(scenes, title_end, cta_start),
+        "<!--HF:TIMELINE-->": build_timeline_js(scenes, title_end, cta_start, project_dir, beats),
         "<!--HF:FONT_FACES-->": font_faces(project_dir),
     }
     if style_dir:
         replacements["<!--HF:DATA-->"] = style_data(
             project, scenes, captions, total, cta_start, title, kicker, cta_keyword,
-            project_dir, style_meta,
+            project_dir, style_meta, beats,
         )
 
     out = template

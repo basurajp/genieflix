@@ -8,6 +8,7 @@
   "chatterbox_cfg_weight": 0.5,
   "voice_takes": 1,
   "voice_deesser": true,
+  "vo_trim_silence": true,
   "xtts_model": "tts_models/multilingual/multi-dataset/xtts_v2",
   "edge_voice": "en-US-GuyNeural",
   "kokoro_voice": "am_michael",

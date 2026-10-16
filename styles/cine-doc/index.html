@@ -118,13 +118,13 @@
 
     R.scenes.forEach((s, i) => {
       const end = R.sceneEnd(s);
-      const media = "#" + s.id;
+      const media = R.mediaFor(s);   // own clip + inserts; a continued shot keeps its owner's drift
       // Ken Burns drift: alternate push-in and pull-out, a little lateral travel
       const push = i % 2 === 0;
-      tl.fromTo(media, { scale: push ? 1.0 : 1.08, x: push ? -14 : 14 },
-        { scale: push ? 1.08 : 1.0, x: push ? 14 : -14, duration: s.duration + XF, ease: "sine.inOut" }, s.start);
+      if (media.length) tl.fromTo(media, { scale: push ? 1.0 : 1.08, x: push ? -14 : 14 },
+        { scale: push ? 1.08 : 1.0, x: push ? 14 : -14, duration: R.mediaSpan(s) + XF, ease: "sine.inOut" }, s.start);
 
-      if (i > 0 && s !== R.last) {
+      if (i > 0 && s !== R.last && R.hasCut(s) && media.length) {
         // cross-dissolve: the previous clip runs XF past its scene (scene_overlap)
         tl.fromTo(media, { opacity: 0 }, { opacity: 1, duration: XF, ease: "sine.inOut" }, s.start);
       }
@@ -151,7 +151,7 @@
         tl.fromTo("#title .rule", { scaleX: 0 }, { scaleX: 1, duration: 1.2, ease: "power2.inOut" }, 0.4);
         R.fadeOutAt(tl, t, end, 0.5, "sine.in");
       } else if (s !== R.last) {
-        const label = (P.labels || [])[i] || "";
+        const label = R.beat(s).text || (P.labels || [])[i] || "";   // a beat's on-screen text is the chapter label
         const ch = R.clip({ cls: "chapter", start: s.start, dur: s.duration, track: 2, html:
           `<span class="num serif">${ROMAN[i] || i + 1}</span>` +
           (label ? `<span class="line"></span><span class="lab">${R.esc(label)}</span>` : "") });
@@ -194,6 +194,8 @@
         R.clip({ cls: "sub", start: sb.start, dur: until - sb.start, track: 3, text: sb.text });
       });
     });
+
+    R.insertCuts(tl);   // word-anchored inserts: a plain cut on the word
 
     window.__timelines = window.__timelines || {};
     window.__timelines.reel = tl;

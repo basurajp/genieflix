@@ -57,9 +57,10 @@
   #hook { position: absolute; left: 72px; width: 828px; top: 300px; z-index: 8; text-align: center; }
   #hook .pill { display: inline-block; background: var(--hot); color: #000; font-weight: 900; font-size: 30px; letter-spacing: .06em;
     text-transform: uppercase; padding: 10px 22px; border-radius: 999px; transform: rotate(-2deg); }
-  #hook .sticker { display: inline-block; margin-top: 22px; background: #fff; color: #000; font-weight: 900; line-height: 1.02;
+  .beat-text.kp { position: absolute; left: 72px; width: 828px; top: 300px; z-index: 8; text-align: center; }
+  #hook .sticker, .beat-text .sticker { display: inline-block; margin-top: 22px; background: #fff; color: #000; font-weight: 900; line-height: 1.02;
     text-transform: uppercase; letter-spacing: -.015em; padding: 22px 34px 26px; border-radius: 26px; box-shadow: 0 16px 0 rgba(0,0,0,.35); }
-  #hook .sticker .money { color: #0aa84a; }
+  #hook .sticker .money, .beat-text .sticker .money { color: #0aa84a; }
 
   /* CTA sticker stack */
   #cta { position: absolute; left: 72px; width: 828px; top: 420px; z-index: 8; text-align: center; }
@@ -97,15 +98,15 @@
     R.scenes.forEach((s, i) => {
       const end = R.sceneEnd(s);
       const caps = R.captionsFor(s);
-      const media = "#" + s.id;
+      const media = R.screenMedia(s);   // own clip or the shot it continues, plus inserts
 
       // punch-in jump cuts: alternate wide / tight on every caption group,
       // with a slow drift inside each group so nothing ever sits still
       let t = s.start;
       let entry = 0;
-      if (i > 0) {
+      if (i > 0 && R.hasCut(s)) {
         // zoom transition in, under a white flash that hides the cut
-        tl.fromTo(media, { scale: 1.32 }, { scale: 1.0, duration: 0.42, ease: "expo.out" }, s.start);
+        if (media.length) tl.fromTo(media, { scale: 1.32 }, { scale: 1.0, duration: 0.42, ease: "expo.out" }, s.start);
         const f = R.clip({ cls: "flash", start: s.start, dur: 0.2, track: 2 });
         tl.fromTo(f, { opacity: 0.9 }, { opacity: 0, duration: 0.2, ease: "power2.out" }, s.start);
         R.fadeOutAt(tl, f, s.start + 0.2, 0.01);
@@ -115,7 +116,7 @@
       marks.forEach((m, k) => {
         const from = Math.max(s.start + entry, k === 0 ? s.start + entry : m);
         const to = k + 1 < marks.length ? marks[k + 1] : end + 0.3;
-        if (to - from <= 0.05) return;
+        if (to - from <= 0.05 || !media.length) return;
         const base = k % 2 === 0 ? 1.0 : PUNCH;
         tl.fromTo(media, { scale: base }, { scale: base + 0.03, duration: to - from, ease: "none", immediateRender: false }, from);
       });
@@ -173,6 +174,14 @@
         tl.fromTo("#arrow-head", { opacity: 0 }, { opacity: 1, duration: 0.1, ease: "none" }, s.start + 1.05);
       }
     });
+
+    // a line's on-screen text (project.json beats) as a sticker like the hook's
+    R.beatTexts(tl, { cls: "kp", mode: "plain", delay: 0.1, wrap: (h, s) => {
+      const len = s.beat.text.length, sz = len <= 14 ? 100 : len <= 26 ? 82 : 64;
+      const words = R.esc(s.beat.text).split(" ").map((w) => R.isEmphasis(w) ? `<span class="money">${w}</span>` : w).join(" ");
+      return `<div class="sticker" style="font-size:${sz}px">${words}</div>`;
+    } });
+    R.insertCuts(tl, { flash: 0.12 });   // smash cut on the word, under a flash
 
     window.__timelines = window.__timelines || {};
     window.__timelines.reel = tl;

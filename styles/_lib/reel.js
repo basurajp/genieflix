@@ -105,12 +105,152 @@
     return String(n).padStart(2, "0");
   }
 
+  /* ---- beats (project.json "beats", resolved by build_index.py) ----------
+   * scene.beat: { text, text_t, transition, continue, draw: [...], inserts: [...] }
+   * with every word anchor already turned into absolute seconds. */
+  function beat(s) {
+    return (s && s.beat) || {};
+  }
+
+  function insertsFor(s) {
+    return (beat(s).inserts || []).map((i) => document.getElementById(i.id)).filter(Boolean);
+  }
+
+  /* Media a template should move during scene s: the scene's own clip plus its
+   * inserts. A scene that continues the previous shot gets [] — size the owning
+   * scene's hold move with mediaSpan(s) so it keeps running underneath. */
+  function mediaFor(s) {
+    const own = s.own_media ? document.getElementById(s.id) : null;
+    return (own ? [own] : []).concat(insertsFor(s));
+  }
+
+  /* Whatever is on screen during s, own or continued (for per-beat jolts). */
+  function screenMedia(s) {
+    const el = s.media_id ? document.getElementById(s.media_id) : null;
+    return (el ? [el] : []).concat(insertsFor(s));
+  }
+
+  function mediaSpan(s) {
+    return s.media_span || s.duration;
+  }
+
+  /* False when the scene carries the previous shot on, or its beat says
+   * "transition": "none" — a template's default cut accent should stay away. */
+  function hasCut(s) {
+    return !s.continues && beat(s).transition !== "none";
+  }
+
+  const FULL = { position: "absolute", left: "0px", top: "0px", width: "1080px", height: "1920px" };
+
+  /* On-screen text from each scene's beat, as one timed clip per beat (class
+   * "beat-text" + opts.cls). Line 1 is skipped: its text is already the title,
+   * so the template's hook headline carries it. opts.mode: "mask" (words rise
+   * through their baseline), "chars" (tracking-in letters) or "plain" (pop);
+   * opts.wrap(innerHtml, scene) adds the template's own markup; opts.enter
+   * overrides the entrance. Leaves at the scene end. Returns [{scene, el, start, end}]. */
+  const ENTER = {
+    mask: (tl, el, t) => tl.fromTo(el.querySelectorAll(".mi"), { yPercent: 105 },
+      { yPercent: 0, duration: 0.6, ease: "expo.out", stagger: 0.05 }, t),
+    chars: (tl, el, t) => {
+      const ch = el.querySelectorAll(".ch");
+      tl.fromTo(ch, { opacity: 0, x: trackOffsets(ch, 8) }, { opacity: 1, x: 0, duration: 1.2, ease: "power3.out" }, t);
+    },
+    plain: (tl, el, t) => tl.fromTo(el, { opacity: 0, scale: 0.7 },
+      { opacity: 1, scale: 1, duration: 0.32, ease: "back.out(2)" }, t),
+  };
+  function beatTexts(tl, opts) {
+    opts = opts || {};
+    const mode = opts.mode || "mask";
+    const out = [];
+    scenes.forEach((s, i) => {
+      const b = beat(s);
+      if (!b.text || i === 0 || (opts.skip && opts.skip(s))) return;
+      // a pause_before scene lands its text with the voice, not in the silence
+      const start = r3(b.text_t != null ? b.text_t
+        : s.pause_before ? s.voice_start : s.start + (opts.delay || 0));
+      const end = r3(s.start + s.duration);
+      if (end - start < 0.2) return;
+      const inner = mode === "chars" ? charSpans(b.text, isEmphasis)
+        : mode === "plain" ? esc(b.text) : maskWords(b.text);
+      const el = clip({ cls: ("beat-text " + (opts.cls || "")).trim(), start, dur: end - start,
+        track: opts.track == null ? 2 : opts.track, html: opts.wrap ? opts.wrap(inner, s) : inner });
+      (opts.enter || ENTER[mode])(tl, el, start, s);
+      fadeOutAt(tl, el, end, opts.out || 0.25);
+      out.push({ scene: s, el, start, end });
+    });
+    return out;
+  }
+
+  /* Word-anchored inserts are real media clips that cut in on their own (a
+   * smash cut). This adds the optional accent over each cut: opts.flash
+   * seconds of white (0 = none). Returns [{scene, el, ins}]. */
+  function insertCuts(tl, opts) {
+    opts = opts || {};
+    const out = [];
+    scenes.forEach((s) => (beat(s).inserts || []).forEach((ins) => {
+      const el = document.getElementById(ins.id);
+      if (!el) return;
+      if (opts.flash) {
+        const f = clip({ start: ins.start, dur: opts.flash, track: 2,
+          style: Object.assign({ background: opts.color || "#fff", zIndex: String(opts.z || 8) }, FULL) });
+        tl.fromTo(f, { opacity: 0.9 }, { opacity: 0, duration: opts.flash, ease: "power2.out" }, ins.start);
+        tl.set(f, { opacity: 0 }, r3(ins.start + opts.flash));
+      }
+      out.push({ scene: s, el, ins });
+    }));
+    return out;
+  }
+
+  /* A scene's entrance plus its hold move, as one sequence on opts.targets
+   * (default mediaFor(s)), named by the beat's "transition" (else opts.kind):
+   *   cut | none   nothing over the boundary
+   *   dip          to black and up again (stretches into a pause_before)
+   *   flash        a white frame-burst
+   *   dissolve     targets fade in (needs scene_overlap underneath)
+   *   punch | zoom targets scale down into place, then the hold move continues
+   *   push         targets slide in from the right
+   * The hold move is a scale drift opts.drift [from, to] over opts.span
+   * (default mediaSpan(s)). Transforms and opacity only. Returns the kind. */
+  function cutIn(tl, s, opts) {
+    opts = opts || {};
+    const kind = beat(s).transition || opts.kind || "cut";
+    const targets = opts.targets || mediaFor(s);
+    const t0 = s.start;
+    const span = opts.span || mediaSpan(s);
+    const drift = opts.drift || [1.06, 1.0];
+    let tMove = t0;
+    if (kind === "dip" || kind === "flash") {
+      const dIn = kind === "dip" ? (opts.dipIn || 0.35) : 0;
+      const dOut = kind === "dip" ? Math.max(0.35, Math.min(0.7, s.pause_before || 0.45)) : 0.22;
+      const f = clip({ start: t0 - dIn, dur: dIn + dOut, track: 2,
+        style: Object.assign({ background: kind === "dip" ? "#000" : "#fff", zIndex: String(opts.z || 8) }, FULL) });
+      if (dIn) tl.fromTo(f, { opacity: 0 }, { opacity: 1, duration: dIn, ease: "power1.in" }, t0 - dIn);
+      tl.fromTo(f, { opacity: 1 }, { opacity: 0, duration: dOut, ease: "power1.out", immediateRender: !dIn }, t0);
+      tl.set(f, { opacity: 0 }, r3(t0 + dOut));
+    } else if (kind === "dissolve" && targets.length) {
+      tl.fromTo(targets, { opacity: 0 }, { opacity: 1, duration: opts.dissolve || 0.6, ease: "sine.inOut" }, t0);
+    } else if ((kind === "punch" || kind === "zoom") && targets.length) {
+      const d = kind === "punch" ? 0.28 : 0.55;
+      tl.fromTo(targets, { scale: kind === "punch" ? 1.24 : 1.6 }, { scale: drift[0], duration: d, ease: "expo.out" }, t0);
+      tMove = t0 + d;
+    } else if (kind === "push" && targets.length) {
+      tl.fromTo(targets, { x: 1080 }, { x: 0, duration: 0.45, ease: "expo.out" }, t0);
+    }
+    const rest = span - (tMove - t0);
+    if (targets.length && rest > 0.05 && drift[0] !== drift[1]) {
+      tl.fromTo(targets, { scale: drift[0] }, { scale: drift[1], duration: rest, ease: "sine.out",
+        immediateRender: tMove === t0 }, tMove);
+    }
+    return kind;
+  }
+
   const scenes = D.scenes;
   const last = scenes[scenes.length - 1];
   window.REEL = {
     D, stage, scenes, captions: D.captions, params: D.params || {},
     first: scenes[0], last, total: D.total, ctaStart: D.cta_start,
     clip, node, esc, maskWords, charSpans, trackOffsets, isEmphasis, rng, fadeOutAt, captionsFor, pad2, r3,
+    beat, insertsFor, mediaFor, screenMedia, mediaSpan, hasCut, beatTexts, insertCuts, cutIn, FULL,
     sceneEnd: (s) => r3(s.start + s.duration),
   };
 })();
