@@ -1,0 +1,28 @@
+# Mars Oasis, full cut (~77-85 s after the 1.1x pass). One voiced line per row;
+# the beat sheet in BRIEF.md maps each row to its visual, on-screen text and asset.
+#
+# 1) HOOK. Plant on frame zero, smash cut to a missile. On-screen: MISSILES… FOR GARDENING?
+Elon Musk went shopping for Russian missiles… because he wanted to grow some plants.
+The problem was the delivery address.
+# 3) 0.8 s of silence before this word, Mars revealed.
+Mars.
+He wanted to send a tiny greenhouse there. The project was called Mars Oasis.
+The idea was that a photograph of plants growing on another planet could get people excited about space again.
+# 6) On-screen: ABOUT $50 MILLION
+But the cheapest American launch option he found cost about fifty million dollars.
+That's a pretty expensive delivery charge for a gardening project.
+So he went to Russia to explore buying retired missiles.
+Without the warheads, obviously.
+That route didn't work out.
+# 11) Missile footage turns into rocket drawings.
+So he investigated whether a team could build cheaper rockets themselves.
+That question helped lead to SpaceX.
+And there's a useful question hiding inside this story.
+# 14) On-screen: BUY IT. BUILD IT. RETHINK IT.
+When something costs too much, how do you decide whether to buy it, build it yourself, or rethink the whole plan?
+That's a make-or-buy decision, something you explore in an MBA through operations management.
+You break down the costs. Compare the capabilities you have with the ones you'd need. Account for the time, investment and risk.
+Building it yourself might turn out to be a terrible idea. But now you have a way to evaluate it.
+# 18) Everyday business costs: software, packaging, delivery.
+Think about something your company pays for every month.
+Do you know what makes it cost that much?
