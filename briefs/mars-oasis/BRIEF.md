@@ -136,3 +136,19 @@ session (the assets are on your PC; the network policy blocks the Higgsfield
 CDN), so both cuts were verified with stand-ins: labelled colour clips named
 like the assets above, a stand-in cut-out and clipping, and noise-shaped voice
 files cut to each real take's length.
+
+| Check | Full cut (papercut) | Short cut (papercut) |
+|---|---|---|
+| `hyperframes lint` | 0 errors | 0 errors |
+| render | 95.1 s, 7 min 20 s | 42.0 s, 3 min 50 s |
+| loudness (volumedetect mean, window -17..-13 dB) | -15.0 dB | -15.6 dB |
+| frames read from the MP4 | every beat present: frame-zero hook, smash cut on "missiles" (2.20 → 2.33 s), dip and pause before "Mars.", clippings with highlighter, sticker, grey-out and stamp, rocket morph and lift-off on "SpaceX", cards, checklist, scale, CTA | same, plus the greenhouse insert on "tiny" |
+| decode (`decode/refs/mars-oasis-papercut/`, `…-short-papercut/`) | all footage cuts, dips, the smash cut and the morph named where planned; no cut where shots continue | same |
+
+The decoder does not register pushes between two drawn sheets (the caption
+band and header stay fixed, so the change sits under its soft-transition
+floor); frames from the render show them. With real footage and voice the
+durations change (the takes get their end silence trimmed), so re-run
+`make_reel.py --phase render` on the PC and decode that render. The
+blueprint style passed the same gates on the short cut
+(`decode/refs/mars-oasis-short-blueprint/`).

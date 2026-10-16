@@ -20,11 +20,11 @@ pointers, not verdicts — the sheets overrule them.
 | 1 | 2.27 | hard | 0.36 | `cuts/cut-01.jpg` |
 | 2 | 6.00 | whip / push / zoom / camera move | 0.00 | `cuts/cut-02.jpg` |
 | 3 | 8.30 | dip to black | 0.03 | `cuts/cut-03.jpg` |
-| 4 | 16.97 | whip / push / zoom / camera move | 0.01 | `cuts/cut-04.jpg` |
-| 5 | 23.60 | hard | 0.52 | `cuts/cut-05.jpg` |
+| 4 | 16.93 | whip / push / zoom / camera move | 0.07 | `cuts/cut-04.jpg` |
+| 5 | 23.60 | hard | 0.43 | `cuts/cut-05.jpg` |
 | 6 | 24.13 | whip / push / zoom / camera move | 0.00 | `cuts/cut-06.jpg` |
 | 7 | 28.50 | hard | 0.38 | `cuts/cut-07.jpg` |
-| 8 | 32.30 | hard | 0.71 | `cuts/cut-08.jpg` |
+| 8 | 32.30 | hard | 0.70 | `cuts/cut-08.jpg` |
 | 9 | 32.93 | hard | 0.21 | `cuts/cut-09.jpg` |
 | 10 | 34.73 | whip / push / zoom / camera move | 0.01 | `cuts/cut-10.jpg` |
 | 11 | 44.07 | dissolve | 0.00 | `cuts/cut-11.jpg` |
@@ -38,15 +38,15 @@ check `timeline-*.jpg` at these times):
 - none
 
 ### Motion
-- Mean visual-change energy **0.43** (0 frozen, >5 constant motion)
+- Mean visual-change energy **0.45** (0 frozen, >5 constant motion)
 - Longest static stretch **1.90 s** at 68.5 s
-- Energy per second: 1.28, 0.33, 2.21, 0.29, 0.3, 0.93, 0.83, 0.08, 1.84, 0.36, 0.39, 0.32, 0.06, 0.06, 0.01, 0.05, 3.05, 0.31, 0.01, 0.06, 0.06, 0.02, 0.05, 2.36, 2.15, 0.07, 0.08, 0.06, 1.55, 0.6, 0.01, 0.07, 5.15, 0.08, 0.37, 0.6, 0.11, 0.57, 0.24, 0.04, 0.5, 0.02, 0.06, 0.23, 0.14, 0.24, 0.0, 0.23, 0.33, 0.08, 0.01, 0.07, 0.28, 0.06, 0.04, 0.03, 0.36, 0.13, 0.31, 0.05, 0.73, 0.2, 0.06, 0.04, 0.18, 0.11, 0.13, 0.34, 0.1, 0.01, 0.06, 0.03, 0.04, 0.04, 0.0, 0.25, 0.07, 0.05, 0.17, 0.04, 0.03, 0.24, 0.16, 0.13, 0.48, 0.58, 0.31, 0.77, 2.81, 0.49, 0.22, 0.41, 0.37, 0.4, 0.39, 0.0
+- Energy per second: 1.28, 0.33, 2.21, 0.29, 0.3, 0.93, 0.83, 0.08, 1.84, 0.36, 0.39, 0.32, 0.06, 0.06, 0.01, 0.05, 2.8, 0.33, 0.01, 0.06, 0.06, 0.02, 0.06, 2.07, 2.15, 0.07, 0.08, 0.06, 1.55, 0.6, 0.01, 0.07, 5.13, 0.08, 0.37, 0.6, 0.11, 0.57, 0.24, 0.04, 0.5, 0.02, 0.06, 0.23, 0.14, 0.41, 0.0, 0.26, 0.75, 0.08, 0.01, 0.07, 0.63, 0.06, 0.04, 0.03, 0.44, 0.13, 0.34, 0.05, 0.88, 0.2, 0.06, 0.04, 0.18, 0.11, 0.25, 0.58, 0.09, 0.01, 0.06, 0.03, 0.04, 0.04, 0.0, 0.42, 0.15, 0.05, 0.17, 0.04, 0.03, 0.24, 0.46, 0.16, 0.51, 0.7, 0.41, 0.77, 3.13, 0.49, 0.22, 0.41, 0.37, 0.4, 0.39, 0.0
 
 ### Color
 - Brightness 0.72 · contrast 0.64 · saturation 0.22 · warmth +0.26
 - Black point 0.315 · white point 0.983
-- Shadow tint **orange** (0.402) · highlight tint **orange** (0.074)
-- Reel palette: `#ebe6da` 58% `#995f44` 10% `#a7ad8c` 8% `#696f66` 8% `#c36d3d` 8% `#74462f` 8%
+- Shadow tint **orange** (0.402) · highlight tint **orange** (0.082)
+- Reel palette: `#f2efe7` 35% `#e1d9c8` 16% `#b5673f` 14% `#7a4e39` 12% `#c7b9a2` 12% `#73826a` 11%
 
 Look hints:
 - matte / lifted blacks (film fade) — start from LUT look "film-fade" or {"preset":"vintage-wash"}
@@ -57,17 +57,17 @@ Look hints:
 |---|---|---|---|---|---|---|---|
 | 1 | 0.00 | 2.27 | 0.71 | 0.61 | 0.24 | matte / lifted blacks (film fade), high-key | `#f1efe6` 37% `#84b267` 32% `#709659` 13% |
 | 2 | 2.27 | 3.73 | 0.62 | 0.61 | 0.28 | matte / lifted blacks (film fade), warm cast | `#f2eee5` 38% `#b0593c` 22% `#885f50` 20% |
-| 3 | 6.00 | 2.30 | 0.86 | 0.24 | 0.10 | matte / lifted blacks (film fade), high-key, warm cast | `#e2dac8` 62% `#f1ede5` 29% `#bbb3a5` 7% |
-| 4 | 8.30 | 8.67 | 0.55 | 0.62 | 0.41 | matte / lifted blacks (film fade), warm cast | `#7f462e` 57% `#f2eee5` 33% `#d3c4af` 4% |
-| 5 | 16.97 | 6.63 | 0.81 | 0.61 | 0.16 | bleach bypass, matte / lifted blacks (film fade), high-key, warm cast | `#e1d9c7` 50% `#f2efe6` 33% `#844a30` 12% |
+| 3 | 6.00 | 2.30 | 0.86 | 0.25 | 0.10 | matte / lifted blacks (film fade), high-key, warm cast | `#e3dcca` 41% `#f1ede5` 29% `#ded6c3` 18% |
+| 4 | 8.30 | 8.63 | 0.55 | 0.62 | 0.41 | matte / lifted blacks (film fade), warm cast | `#7f462e` 57% `#f2eee5` 33% `#d3c4ae` 4% |
+| 5 | 16.93 | 6.67 | 0.76 | 0.61 | 0.21 | matte / lifted blacks (film fade), high-key, warm cast | `#f2eee5` 34% `#d4c5a8` 30% `#cebea0` 20% |
 | 6 | 23.60 | 0.53 | 0.67 | 0.58 | 0.38 | matte / lifted blacks (film fade), high-key, warm cast | `#f2eee6` 40% `#ab6f40` 28% `#d18041` 19% |
 | 7 | 24.13 | 4.37 | 0.73 | 0.56 | 0.27 | matte / lifted blacks (film fade), high-key, warm cast | `#f0ece4` 50% `#a96e40` 17% `#d48545` 14% |
-| 8 | 28.50 | 3.80 | 0.88 | 0.15 | 0.09 | matte / lifted blacks (film fade), high-key, warm cast | `#e1dac8` 57% `#f3f0e7` 39% `#c9bc96` 2% |
-| 9 | 32.30 | 0.63 | 0.59 | 0.61 | 0.35 | matte / lifted blacks (film fade), warm cast | `#f0ece4` 35% `#b0593c` 28% `#8d5d4e` 28% |
-| 10 | 32.93 | 1.80 | 0.67 | 0.65 | 0.32 | matte / lifted blacks (film fade), high-key, warm cast | `#eeeae2` 41% `#b75a39` 28% `#7d523f` 17% |
+| 8 | 28.50 | 3.80 | 0.88 | 0.23 | 0.09 | matte / lifted blacks (film fade), high-key, warm cast | `#e1dac8` 54% `#f3f0e7` 39% `#cbbfa3` 4% |
+| 9 | 32.30 | 0.63 | 0.59 | 0.61 | 0.35 | matte / lifted blacks (film fade), warm cast | `#ab593f` 36% `#f1ede5` 34% `#7e5548` 24% |
+| 10 | 32.93 | 1.80 | 0.67 | 0.65 | 0.32 | matte / lifted blacks (film fade), high-key, warm cast | `#efeae2` 42% `#b85a39` 27% `#7d5240` 17% |
 | 11 | 34.73 | 9.33 | 0.59 | 0.64 | 0.04 | monochrome, matte / lifted blacks (film fade) | `#6b6a68` 53% `#f0ece4` 30% `#bdbbb7` 9% |
-| 12 | 44.07 | 44.00 | 0.84 | 0.45 | 0.11 | matte / lifted blacks (film fade), high-key, warm cast | `#e2dac8` 62% `#f1ede5` 29% `#c7ab99` 3% |
-| 13 | 88.07 | 7.07 | 0.89 | 0.28 | 0.08 | matte / lifted blacks (film fade), high-key, warm cast | `#e0d8c7` 37% `#f0ede5` 32% `#fcfbf4` 23% |
+| 12 | 44.07 | 44.00 | 0.84 | 0.45 | 0.11 | matte / lifted blacks (film fade), high-key, warm cast | `#e2dac8` 59% `#f1ede5` 29% `#c6b3a1` 6% |
+| 13 | 88.07 | 7.07 | 0.85 | 0.32 | 0.11 | matte / lifted blacks (film fade), high-key, warm cast | `#cebea3` 40% `#efece3` 34% `#fcfbf4` 23% |
 
 ### Sound
 - Integrated loudness **-11.7 LUFS**, LRA 1.8 LU; volumedetect mean -15.0 dB (our gate: −17..−13)
@@ -85,15 +85,25 @@ Fill each with lexicon names, then the concrete numbers that rebuild it.
 <!-- what is on screen at 0.2 s; text promise; motion from frame zero; first cut timing -->
 
 ### Edit grammar (`cuts/`)
-Our own render (papercut style, full cut, stand-in footage and voice), checked
-against `briefs/mars-oasis/project.json`. Found: the smash cut on "missiles"
-(2.27), the sheet push into line 2 (6.00), the dip before "Mars." (8.30), hard
-cuts into the rocket and missile shots (23.60, 32.30), the morph dissolve
-(44.07), the dip into the CTA (88.07), and no cut where lines 9-10 continue the
-missile shot. Missed: every push between two drawn sheets (lines 13-19): paper
-sliding over the same paper had no visible edge. Fixed in the template (a
-shaded torn edge, alternating sheet tone); this report is regenerated from the
-re-render.
+Our own render (papercut, full cut, stand-in footage and voice), checked against
+`briefs/mars-oasis/project.json`:
+
+| at (s) | decoded | intended | verdict |
+|---|---|---|---|
+| 2.27 | hard | smash cut to the missile insert on "missiles" | as planned |
+| 6.00 | push | paper sheet pushes in (line 2) | as planned |
+| 8.30 | dip to black | dip + 0.8 s pause before "Mars." | as planned |
+| 10.73 | (none) | dissolve Mars → greenhouse | in frames 10.60 / 10.90 / 11.30; the two stand-ins share a palette |
+| 16.93 | push | sheet push (line 5) | as planned |
+| 23.60 | hard | cut to the rocket (line 6) | as planned |
+| 24.13 | push | the cost clipping slides in | prop motion |
+| 28.50 | hard | punch-in to the receipt sheet (line 7) | as planned (the punch starts at 1.24x) |
+| 32.30 | hard | cut to the missile (line 8) | as planned |
+| 32.93, 34.73 | hard, push | the Russia clipping slaps in, then leaves | prop motion |
+| 36.16-40.94 | (none) | lines 9-11 continue the missile shot | correct: no cut |
+| 44.07 | dissolve | the shot gives way to the drawn rocket | as planned |
+| 52.07, 60.02, 66.77, 75.68, 82.35, 85.74 | (none) | cream ↔ kraft sheet pushes | in frames (52.00 / 52.25 / 52.50, 60.00 / 60.22 / 60.45, 75.62 / 75.85 / 76.10); the fixed caption band, header tape and counter cover ~40% of the frame, so the signature change stays under the decoder's 0.10 soft-transition floor |
+| 88.07 | dip to black | dip into the CTA | as planned |
 
 ### Pacing
 <!-- ASL vs our default; where it speeds up or breathes; does it cut on the beat? -->

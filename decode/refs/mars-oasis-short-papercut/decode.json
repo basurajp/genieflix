@@ -1,0 +1,1190 @@
+{
+  "source": "mars-oasis-short-papercut.mp4",
+  "media": {
+    "width": 1080,
+    "height": 1920,
+    "aspect": "9:16",
+    "fps": 30.0,
+    "duration": 42.067,
+    "has_audio": true,
+    "video_codec": "h264"
+  },
+  "threshold": 0.2,
+  "edit": {
+    "shots": 11,
+    "boundaries": 10,
+    "by_kind": {
+      "hard": 4,
+      "whip / push / zoom / camera move": 3,
+      "dip to black": 2,
+      "dissolve": 1
+    },
+    "asl": 3.824,
+    "median_shot": 2.433,
+    "shortest_shot": 0.533,
+    "longest_shot": 10.033,
+    "cuts_per_10s": 2.377,
+    "cuts_in_first_3s": 1,
+    "first_cut_at": 2.267,
+    "cutting_rate_5s_windows": [
+      {
+        "from": 0.0,
+        "to": 5.0,
+        "cuts": 1
+      },
+      {
+        "from": 5.0,
+        "to": 10.0,
+        "cuts": 2
+      },
+      {
+        "from": 10.0,
+        "to": 15.0,
+        "cuts": 2
+      },
+      {
+        "from": 15.0,
+        "to": 20.0,
+        "cuts": 3
+      },
+      {
+        "from": 20.0,
+        "to": 25.0,
+        "cuts": 1
+      },
+      {
+        "from": 25.0,
+        "to": 30.0,
+        "cuts": 0
+      },
+      {
+        "from": 30.0,
+        "to": 35.0,
+        "cuts": 0
+      },
+      {
+        "from": 35.0,
+        "to": 40.0,
+        "cuts": 1
+      },
+      {
+        "from": 40.0,
+        "to": 42.067,
+        "cuts": 0
+      }
+    ]
+  },
+  "boundaries": [
+    {
+      "kind": "hard",
+      "t": 2.267,
+      "score": 0.364
+    },
+    {
+      "kind": "soft",
+      "soft_type": "whip / push / zoom / camera move",
+      "run": {
+        "start": 5.8,
+        "end": 6.2,
+        "type": "whip / push / zoom / camera move",
+        "change": 0.293,
+        "blend_residual": 0.47,
+        "color_shift": 57.0
+      },
+      "t": 6.0,
+      "score": 0.004
+    },
+    {
+      "kind": "soft",
+      "soft_type": "dip to black",
+      "run": {
+        "start": 8.267,
+        "end": 8.367,
+        "type": "dip to black",
+        "held_frames": 6
+      },
+      "t": 8.3,
+      "score": 0.029,
+      "dip": "black"
+    },
+    {
+      "kind": "hard",
+      "t": 10.733,
+      "score": 0.227
+    },
+    {
+      "kind": "hard",
+      "t": 14.367,
+      "score": 0.287
+    },
+    {
+      "kind": "soft",
+      "soft_type": "whip / push / zoom / camera move",
+      "run": {
+        "start": 15.6,
+        "end": 16.4,
+        "type": "whip / push / zoom / camera move",
+        "change": 0.168,
+        "blend_residual": 0.41,
+        "color_shift": 25.6
+      },
+      "t": 16.0,
+      "score": 0.0
+    },
+    {
+      "kind": "hard",
+      "t": 16.533,
+      "score": 0.207
+    },
+    {
+      "kind": "soft",
+      "soft_type": "whip / push / zoom / camera move",
+      "run": {
+        "start": 17.833,
+        "end": 18.633,
+        "type": "whip / push / zoom / camera move",
+        "change": 0.128,
+        "blend_residual": 0.49,
+        "color_shift": 22.4
+      },
+      "t": 18.233,
+      "score": 0.001
+    },
+    {
+      "kind": "soft",
+      "soft_type": "dissolve",
+      "run": {
+        "start": 24.567,
+        "end": 25.367,
+        "type": "dissolve",
+        "change": 0.231,
+        "blend_residual": 0.05,
+        "color_shift": 54.5
+      },
+      "t": 24.967,
+      "score": 0.0
+    },
+    {
+      "kind": "soft",
+      "soft_type": "dip to black",
+      "run": {
+        "start": 34.967,
+        "end": 35.033,
+        "type": "dip to black",
+        "held_frames": 2
+      },
+      "t": 35.0,
+      "score": 0.027
+    }
+  ],
+  "events": [
+    {
+      "frame": 12,
+      "t": 0.4,
+      "frames": 25,
+      "type": "opening move"
+    }
+  ],
+  "motion_bursts": [],
+  "motion": {
+    "energy_per_second": [
+      {
+        "second": 0,
+        "energy": 1.28
+      },
+      {
+        "second": 1,
+        "energy": 0.33
+      },
+      {
+        "second": 2,
+        "energy": 2.21
+      },
+      {
+        "second": 3,
+        "energy": 0.29
+      },
+      {
+        "second": 4,
+        "energy": 0.3
+      },
+      {
+        "second": 5,
+        "energy": 0.93
+      },
+      {
+        "second": 6,
+        "energy": 0.83
+      },
+      {
+        "second": 7,
+        "energy": 0.07
+      },
+      {
+        "second": 8,
+        "energy": 1.84
+      },
+      {
+        "second": 9,
+        "energy": 0.36
+      },
+      {
+        "second": 10,
+        "energy": 1.04
+      },
+      {
+        "second": 11,
+        "energy": 0.23
+      },
+      {
+        "second": 12,
+        "energy": 0.21
+      },
+      {
+        "second": 13,
+        "energy": 0.18
+      },
+      {
+        "second": 14,
+        "energy": 1.9
+      },
+      {
+        "second": 15,
+        "energy": 0.68
+      },
+      {
+        "second": 16,
+        "energy": 2.79
+      },
+      {
+        "second": 17,
+        "energy": 0.07
+      },
+      {
+        "second": 18,
+        "energy": 1.04
+      },
+      {
+        "second": 19,
+        "energy": 0.39
+      },
+      {
+        "second": 20,
+        "energy": 0.11
+      },
+      {
+        "second": 21,
+        "energy": 0.48
+      },
+      {
+        "second": 22,
+        "energy": 0.14
+      },
+      {
+        "second": 23,
+        "energy": 0.09
+      },
+      {
+        "second": 24,
+        "energy": 0.15
+      },
+      {
+        "second": 25,
+        "energy": 0.2
+      },
+      {
+        "second": 26,
+        "energy": 0.0
+      },
+      {
+        "second": 27,
+        "energy": 0.34
+      },
+      {
+        "second": 28,
+        "energy": 0.92
+      },
+      {
+        "second": 29,
+        "energy": 0.39
+      },
+      {
+        "second": 30,
+        "energy": 0.25
+      },
+      {
+        "second": 31,
+        "energy": 0.35
+      },
+      {
+        "second": 32,
+        "energy": 0.05
+      },
+      {
+        "second": 33,
+        "energy": 0.03
+      },
+      {
+        "second": 34,
+        "energy": 1.0
+      },
+      {
+        "second": 35,
+        "energy": 2.51
+      },
+      {
+        "second": 36,
+        "energy": 0.43
+      },
+      {
+        "second": 37,
+        "energy": 0.22
+      },
+      {
+        "second": 38,
+        "energy": 0.41
+      },
+      {
+        "second": 39,
+        "energy": 0.37
+      },
+      {
+        "second": 40,
+        "energy": 0.4
+      },
+      {
+        "second": 41,
+        "energy": 0.39
+      },
+      {
+        "second": 42,
+        "energy": 0.0
+      }
+    ],
+    "mean_energy": 0.62,
+    "longest_static_stretch": 1.433,
+    "longest_static_at": 25.7,
+    "note": "energy = mean ffmpeg scene score x100 (0 = frozen, >5 = constant motion); a static stretch over ~3 s is where the playbook says viewers scroll"
+  },
+  "shots": [
+    {
+      "index": 1,
+      "start": 0.0,
+      "end": 2.267,
+      "duration": 2.267,
+      "color": {
+        "brightness": 0.714,
+        "contrast": 0.615,
+        "black_point": 0.363,
+        "white_point": 0.983,
+        "saturation": 0.242,
+        "warmth": 0.075,
+        "shadow_tint": {
+          "hue": 30,
+          "name": "orange",
+          "strength": 0.076,
+          "rgb": "#4f4c49"
+        },
+        "highlight_tint": {
+          "hue": 51,
+          "name": "yellow",
+          "strength": 0.05,
+          "rgb": "#eceae0"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#f1eee6",
+          "share": 0.37
+        },
+        {
+          "hex": "#84b267",
+          "share": 0.314
+        },
+        {
+          "hex": "#709659",
+          "share": 0.132
+        },
+        {
+          "hex": "#536160",
+          "share": 0.104
+        },
+        {
+          "hex": "#b7bbac",
+          "share": 0.08
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "high-key"
+      ]
+    },
+    {
+      "index": 2,
+      "start": 2.267,
+      "end": 6.0,
+      "duration": 3.733,
+      "color": {
+        "brightness": 0.624,
+        "contrast": 0.615,
+        "black_point": 0.334,
+        "white_point": 0.983,
+        "saturation": 0.283,
+        "warmth": 0.249,
+        "shadow_tint": {
+          "hue": 16,
+          "name": "orange",
+          "strength": 0.35,
+          "rgb": "#503c34"
+        },
+        "highlight_tint": {
+          "hue": 37,
+          "name": "orange",
+          "strength": 0.058,
+          "rgb": "#efeae1"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#f2eee5",
+          "share": 0.383
+        },
+        {
+          "hex": "#b0593c",
+          "share": 0.222
+        },
+        {
+          "hex": "#885f51",
+          "share": 0.199
+        },
+        {
+          "hex": "#575b61",
+          "share": 0.116
+        },
+        {
+          "hex": "#baaca3",
+          "share": 0.079
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 3,
+      "start": 6.0,
+      "end": 8.3,
+      "duration": 2.3,
+      "color": {
+        "brightness": 0.856,
+        "contrast": 0.248,
+        "black_point": 0.619,
+        "white_point": 0.939,
+        "saturation": 0.099,
+        "warmth": 0.124,
+        "shadow_tint": null,
+        "highlight_tint": {
+          "hue": 41,
+          "name": "orange",
+          "strength": 0.093,
+          "rgb": "#e4decf"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#e2dac9",
+          "share": 0.584
+        },
+        {
+          "hex": "#f1ede5",
+          "share": 0.289
+        },
+        {
+          "hex": "#c8bfaf",
+          "share": 0.077
+        },
+        {
+          "hex": "#a59e91",
+          "share": 0.038
+        },
+        {
+          "hex": "#916a4a",
+          "share": 0.011
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "high-key",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 4,
+      "start": 8.3,
+      "end": 10.733,
+      "duration": 2.433,
+      "color": {
+        "brightness": 0.578,
+        "contrast": 0.624,
+        "black_point": 0.303,
+        "white_point": 0.943,
+        "saturation": 0.461,
+        "warmth": 0.433,
+        "shadow_tint": {
+          "hue": 18,
+          "name": "orange",
+          "strength": 0.681,
+          "rgb": "#7c4127"
+        },
+        "highlight_tint": {
+          "hue": 37,
+          "name": "orange",
+          "strength": 0.067,
+          "rgb": "#efe9df"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#f1ece3",
+          "share": 0.334
+        },
+        {
+          "hex": "#b55e38",
+          "share": 0.237
+        },
+        {
+          "hex": "#9f5231",
+          "share": 0.202
+        },
+        {
+          "hex": "#8a482a",
+          "share": 0.183
+        },
+        {
+          "hex": "#c8ac96",
+          "share": 0.044
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "bright pop / saturated creator look",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 5,
+      "start": 10.733,
+      "end": 14.367,
+      "duration": 3.634,
+      "color": {
+        "brightness": 0.641,
+        "contrast": 0.559,
+        "black_point": 0.329,
+        "white_point": 0.979,
+        "saturation": 0.415,
+        "warmth": 0.446,
+        "shadow_tint": {
+          "hue": 26,
+          "name": "orange",
+          "strength": 0.473,
+          "rgb": "#523c2b"
+        },
+        "highlight_tint": {
+          "hue": 41,
+          "name": "orange",
+          "strength": 0.062,
+          "rgb": "#eeeae0"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#eeeae1",
+          "share": 0.355
+        },
+        {
+          "hex": "#ac7142",
+          "share": 0.259
+        },
+        {
+          "hex": "#d08548",
+          "share": 0.242
+        },
+        {
+          "hex": "#7b593e",
+          "share": 0.116
+        },
+        {
+          "hex": "#dc442e",
+          "share": 0.029
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 6,
+      "start": 14.367,
+      "end": 16.0,
+      "duration": 1.633,
+      "color": {
+        "brightness": 0.547,
+        "contrast": 0.624,
+        "black_point": 0.315,
+        "white_point": 0.978,
+        "saturation": 0.412,
+        "warmth": 0.308,
+        "shadow_tint": {
+          "hue": 21,
+          "name": "orange",
+          "strength": 0.644,
+          "rgb": "#724229"
+        },
+        "highlight_tint": {
+          "hue": 41,
+          "name": "orange",
+          "strength": 0.064,
+          "rgb": "#eeeadf"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#7f462e",
+          "share": 0.571
+        },
+        {
+          "hex": "#f1ede4",
+          "share": 0.332
+        },
+        {
+          "hex": "#c6b6a1",
+          "share": 0.045
+        },
+        {
+          "hex": "#966646",
+          "share": 0.026
+        },
+        {
+          "hex": "#a28670",
+          "share": 0.025
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 7,
+      "start": 16.0,
+      "end": 16.533,
+      "duration": 0.533,
+      "color": {
+        "brightness": 0.607,
+        "contrast": 0.618,
+        "black_point": 0.235,
+        "white_point": 0.943,
+        "saturation": 0.274,
+        "warmth": 0.258,
+        "shadow_tint": {
+          "hue": 18,
+          "name": "orange",
+          "strength": 0.317,
+          "rgb": "#4b3b34"
+        },
+        "highlight_tint": {
+          "hue": 40,
+          "name": "orange",
+          "strength": 0.053,
+          "rgb": "#ede9e0"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#efece3",
+          "share": 0.376
+        },
+        {
+          "hex": "#a05a45",
+          "share": 0.299
+        },
+        {
+          "hex": "#7b5f55",
+          "share": 0.214
+        },
+        {
+          "hex": "#b6aea4",
+          "share": 0.06
+        },
+        {
+          "hex": "#4c3c35",
+          "share": 0.051
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 8,
+      "start": 16.533,
+      "end": 18.233,
+      "duration": 1.7,
+      "color": {
+        "brightness": 0.664,
+        "contrast": 0.651,
+        "black_point": 0.235,
+        "white_point": 0.966,
+        "saturation": 0.266,
+        "warmth": 0.312,
+        "shadow_tint": {
+          "hue": 15,
+          "name": "orange",
+          "strength": 0.466,
+          "rgb": "#56382e"
+        },
+        "highlight_tint": {
+          "hue": 39,
+          "name": "orange",
+          "strength": 0.052,
+          "rgb": "#ede8e0"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#f1ede6",
+          "share": 0.43
+        },
+        {
+          "hex": "#ae593e",
+          "share": 0.243
+        },
+        {
+          "hex": "#785447",
+          "share": 0.192
+        },
+        {
+          "hex": "#d0c8bf",
+          "share": 0.073
+        },
+        {
+          "hex": "#a39890",
+          "share": 0.062
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "high-key",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 9,
+      "start": 18.233,
+      "end": 24.967,
+      "duration": 6.734,
+      "color": {
+        "brightness": 0.59,
+        "contrast": 0.629,
+        "black_point": 0.235,
+        "white_point": 0.939,
+        "saturation": 0.383,
+        "warmth": 0.339,
+        "shadow_tint": {
+          "hue": 16,
+          "name": "orange",
+          "strength": 0.418,
+          "rgb": "#553b32"
+        },
+        "highlight_tint": {
+          "hue": 42,
+          "name": "orange",
+          "strength": 0.164,
+          "rgb": "#ede2c6"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#efebe3",
+          "share": 0.314
+        },
+        {
+          "hex": "#ae593d",
+          "share": 0.3
+        },
+        {
+          "hex": "#895f51",
+          "share": 0.241
+        },
+        {
+          "hex": "#ddb454",
+          "share": 0.091
+        },
+        {
+          "hex": "#573e34",
+          "share": 0.054
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 10,
+      "start": 24.967,
+      "end": 35.0,
+      "duration": 10.033,
+      "color": {
+        "brightness": 0.836,
+        "contrast": 0.323,
+        "black_point": 0.441,
+        "white_point": 0.983,
+        "saturation": 0.119,
+        "warmth": 0.114,
+        "shadow_tint": {
+          "hue": 34,
+          "name": "orange",
+          "strength": 0.085,
+          "rgb": "#3f3c39"
+        },
+        "highlight_tint": {
+          "hue": 41,
+          "name": "orange",
+          "strength": 0.108,
+          "rgb": "#e4dccb"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#d0c2a6",
+          "share": 0.404
+        },
+        {
+          "hex": "#f0ede5",
+          "share": 0.311
+        },
+        {
+          "hex": "#fcfbf4",
+          "share": 0.184
+        },
+        {
+          "hex": "#b1a696",
+          "share": 0.073
+        },
+        {
+          "hex": "#6a5c50",
+          "share": 0.029
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "high-key",
+        "warm cast"
+      ]
+    },
+    {
+      "index": 11,
+      "start": 35.0,
+      "end": 42.067,
+      "duration": 7.067,
+      "color": {
+        "brightness": 0.883,
+        "contrast": 0.29,
+        "black_point": 0.496,
+        "white_point": 0.983,
+        "saturation": 0.079,
+        "warmth": 0.128,
+        "shadow_tint": {
+          "hue": 36,
+          "name": "orange",
+          "strength": 0.084,
+          "rgb": "#464440"
+        },
+        "highlight_tint": {
+          "hue": 42,
+          "name": "orange",
+          "strength": 0.07,
+          "rgb": "#ebe6da"
+        }
+      },
+      "palette": [
+        {
+          "hex": "#dcd2c1",
+          "share": 0.396
+        },
+        {
+          "hex": "#f1ede5",
+          "share": 0.316
+        },
+        {
+          "hex": "#fcfbf4",
+          "share": 0.23
+        },
+        {
+          "hex": "#84746a",
+          "share": 0.035
+        },
+        {
+          "hex": "#d9dbd9",
+          "share": 0.024
+        }
+      ],
+      "look_hints": [
+        "matte / lifted blacks (film fade)",
+        "high-key",
+        "warm cast"
+      ]
+    }
+  ],
+  "color": {
+    "overall": {
+      "brightness": 0.686,
+      "contrast": 0.666,
+      "black_point": 0.306,
+      "white_point": 0.983,
+      "saturation": 0.276,
+      "warmth": 0.298,
+      "shadow_tint": {
+        "hue": 18,
+        "name": "orange",
+        "strength": 0.42,
+        "rgb": "#543b31"
+      },
+      "highlight_tint": {
+        "hue": 41,
+        "name": "orange",
+        "strength": 0.079,
+        "rgb": "#eae4d8"
+      }
+    },
+    "palette": [
+      {
+        "hex": "#efebe1",
+        "share": 0.459
+      },
+      {
+        "hex": "#a85a3d",
+        "share": 0.186
+      },
+      {
+        "hex": "#755040",
+        "share": 0.161
+      },
+      {
+        "hex": "#c8bca9",
+        "share": 0.097
+      },
+      {
+        "hex": "#84a06c",
+        "share": 0.061
+      },
+      {
+        "hex": "#d18744",
+        "share": 0.036
+      }
+    ],
+    "look_hints": [
+      {
+        "look": "matte / lifted blacks (film fade)",
+        "rebuild_with": "LUT look \"film-fade\" or {\"preset\":\"vintage-wash\"}"
+      },
+      {
+        "look": "high-key",
+        "rebuild_with": "{\"preset\":\"clean-studio\"}"
+      },
+      {
+        "look": "warm cast",
+        "rebuild_with": "{\"preset\":\"warm-daylight\"}"
+      }
+    ]
+  },
+  "audio": {
+    "integrated_lufs": -12.2,
+    "loudness_range_lu": 1.5,
+    "volumedetect_mean_db": -15.6,
+    "volumedetect_peak_db": -1.5,
+    "pipeline_gate": "-17..-13 dB mean (volumedetect)",
+    "onsets": [
+      0.163,
+      0.418,
+      0.65,
+      0.882,
+      1.115,
+      1.37,
+      1.602,
+      1.834,
+      2.067,
+      2.322,
+      2.554,
+      2.786,
+      3.042,
+      3.274,
+      3.506,
+      3.738,
+      3.994,
+      4.226,
+      4.458,
+      4.714,
+      4.946,
+      5.155,
+      5.41,
+      5.805,
+      5.968,
+      6.223,
+      6.432,
+      6.687,
+      6.92,
+      7.152,
+      7.384,
+      7.639,
+      7.872,
+      9.102,
+      9.288,
+      9.52,
+      9.752,
+      9.985,
+      10.217,
+      10.751,
+      10.89,
+      11.146,
+      11.378,
+      11.61,
+      11.865,
+      12.098,
+      12.353,
+      12.585,
+      12.817,
+      13.05,
+      13.282,
+      13.537,
+      13.746,
+      14.002,
+      14.234,
+      14.489,
+      14.698,
+      14.954,
+      15.186,
+      15.418,
+      15.882,
+      16.045,
+      16.3,
+      16.533,
+      16.765,
+      17.02,
+      17.252,
+      17.485,
+      17.717,
+      17.972,
+      18.181,
+      18.437,
+      18.669,
+      18.924,
+      19.133,
+      19.389,
+      19.621,
+      19.853,
+      20.085,
+      20.341,
+      20.596,
+      21.037,
+      21.432,
+      21.687,
+      21.92,
+      22.152,
+      22.384,
+      22.616,
+      22.872,
+      23.104,
+      23.336,
+      23.591,
+      23.824,
+      24.056,
+      24.288,
+      24.543,
+      24.776,
+      25.008,
+      25.263,
+      25.496,
+      25.728,
+      25.983,
+      26.215,
+      26.424,
+      26.68,
+      26.912,
+      27.167,
+      27.4,
+      27.632,
+      28.026,
+      28.189,
+      28.444,
+      28.653,
+      28.909,
+      29.164,
+      29.373,
+      29.605,
+      29.861,
+      30.093,
+      30.325,
+      30.557,
+      30.836,
+      31.045,
+      31.277,
+      31.533,
+      31.765,
+      31.997,
+      32.229,
+      32.508,
+      32.717,
+      32.949,
+      33.181,
+      33.437,
+      33.669,
+      33.901,
+      34.133,
+      34.389,
+      34.621,
+      35.016,
+      35.178,
+      35.434,
+      35.666,
+      35.898,
+      36.13,
+      36.362,
+      36.618,
+      36.85,
+      37.105,
+      37.338,
+      37.57,
+      37.802,
+      38.034,
+      38.29,
+      38.522,
+      38.754,
+      39.01,
+      39.242,
+      39.474,
+      39.706,
+      39.962,
+      40.171,
+      40.426,
+      40.658,
+      40.89
+    ],
+    "onsets_per_second": 3.9,
+    "tempo_bpm": 129.2,
+    "tempo_confidence": 0.272,
+    "cuts_on_onset": 6,
+    "cuts_total": 10,
+    "cuts_on_onset_ratio": 0.6,
+    "chance_ratio": 0.39,
+    "note": "onsets include speech syllables as well as music hits; cutting is beat-driven only when cuts_on_onset_ratio clearly beats chance_ratio"
+  },
+  "sheets": {
+    "labels": true,
+    "timeline_sheets": 7
+  }
+}

@@ -142,9 +142,9 @@
         "start": 5.8,
         "end": 6.2,
         "type": "whip / push / zoom / camera move",
-        "change": 0.295,
+        "change": 0.293,
         "blend_residual": 0.47,
-        "color_shift": 57.6
+        "color_shift": 57.0
       },
       "t": 6.0,
       "score": 0.004
@@ -159,27 +159,27 @@
         "held_frames": 6
       },
       "t": 8.3,
-      "score": 0.028,
+      "score": 0.029,
       "dip": "black"
     },
     {
       "kind": "soft",
       "soft_type": "whip / push / zoom / camera move",
       "run": {
-        "start": 16.567,
-        "end": 17.367,
+        "start": 16.533,
+        "end": 17.333,
         "type": "whip / push / zoom / camera move",
-        "change": 0.304,
-        "blend_residual": 0.52,
-        "color_shift": 61.4
+        "change": 0.26,
+        "blend_residual": 0.5,
+        "color_shift": 49.9
       },
-      "t": 16.967,
-      "score": 0.015
+      "t": 16.933,
+      "score": 0.066
     },
     {
       "kind": "hard",
       "t": 23.6,
-      "score": 0.519
+      "score": 0.431
     },
     {
       "kind": "soft",
@@ -190,7 +190,7 @@
         "type": "whip / push / zoom / camera move",
         "change": 0.117,
         "blend_residual": 0.72,
-        "color_shift": 14.3
+        "color_shift": 16.3
       },
       "t": 24.133,
       "score": 0.004
@@ -203,7 +203,7 @@
     {
       "kind": "hard",
       "t": 32.3,
-      "score": 0.706
+      "score": 0.7
     },
     {
       "kind": "hard",
@@ -328,11 +328,11 @@
       },
       {
         "second": 16,
-        "energy": 3.05
+        "energy": 2.8
       },
       {
         "second": 17,
-        "energy": 0.31
+        "energy": 0.33
       },
       {
         "second": 18,
@@ -352,11 +352,11 @@
       },
       {
         "second": 22,
-        "energy": 0.05
+        "energy": 0.06
       },
       {
         "second": 23,
-        "energy": 2.36
+        "energy": 2.07
       },
       {
         "second": 24,
@@ -392,7 +392,7 @@
       },
       {
         "second": 32,
-        "energy": 5.15
+        "energy": 5.13
       },
       {
         "second": 33,
@@ -444,7 +444,7 @@
       },
       {
         "second": 45,
-        "energy": 0.24
+        "energy": 0.41
       },
       {
         "second": 46,
@@ -452,11 +452,11 @@
       },
       {
         "second": 47,
-        "energy": 0.23
+        "energy": 0.26
       },
       {
         "second": 48,
-        "energy": 0.33
+        "energy": 0.75
       },
       {
         "second": 49,
@@ -472,7 +472,7 @@
       },
       {
         "second": 52,
-        "energy": 0.28
+        "energy": 0.63
       },
       {
         "second": 53,
@@ -488,7 +488,7 @@
       },
       {
         "second": 56,
-        "energy": 0.36
+        "energy": 0.44
       },
       {
         "second": 57,
@@ -496,7 +496,7 @@
       },
       {
         "second": 58,
-        "energy": 0.31
+        "energy": 0.34
       },
       {
         "second": 59,
@@ -504,7 +504,7 @@
       },
       {
         "second": 60,
-        "energy": 0.73
+        "energy": 0.88
       },
       {
         "second": 61,
@@ -528,15 +528,15 @@
       },
       {
         "second": 66,
-        "energy": 0.13
+        "energy": 0.25
       },
       {
         "second": 67,
-        "energy": 0.34
+        "energy": 0.58
       },
       {
         "second": 68,
-        "energy": 0.1
+        "energy": 0.09
       },
       {
         "second": 69,
@@ -564,11 +564,11 @@
       },
       {
         "second": 75,
-        "energy": 0.25
+        "energy": 0.42
       },
       {
         "second": 76,
-        "energy": 0.07
+        "energy": 0.15
       },
       {
         "second": 77,
@@ -592,23 +592,23 @@
       },
       {
         "second": 82,
-        "energy": 0.16
+        "energy": 0.46
       },
       {
         "second": 83,
-        "energy": 0.13
+        "energy": 0.16
       },
       {
         "second": 84,
-        "energy": 0.48
+        "energy": 0.51
       },
       {
         "second": 85,
-        "energy": 0.58
+        "energy": 0.7
       },
       {
         "second": 86,
-        "energy": 0.31
+        "energy": 0.41
       },
       {
         "second": 87,
@@ -616,7 +616,7 @@
       },
       {
         "second": 88,
-        "energy": 2.81
+        "energy": 3.13
       },
       {
         "second": 89,
@@ -647,7 +647,7 @@
         "energy": 0.0
       }
     ],
-    "mean_energy": 0.43,
+    "mean_energy": 0.45,
     "longest_static_stretch": 1.9,
     "longest_static_at": 68.5,
     "note": "energy = mean ffmpeg scene score x100 (0 = frozen, >5 = constant motion); a static stretch over ~3 s is where the playbook says viewers scroll"
@@ -758,40 +758,40 @@
       "end": 8.3,
       "duration": 2.3,
       "color": {
-        "brightness": 0.859,
-        "contrast": 0.241,
+        "brightness": 0.856,
+        "contrast": 0.249,
         "black_point": 0.619,
         "white_point": 0.939,
-        "saturation": 0.098,
+        "saturation": 0.099,
         "warmth": 0.124,
         "shadow_tint": null,
         "highlight_tint": {
           "hue": 41,
           "name": "orange",
-          "strength": 0.092,
-          "rgb": "#e5ded0"
+          "strength": 0.093,
+          "rgb": "#e4decf"
         }
       },
       "palette": [
         {
-          "hex": "#e2dac8",
-          "share": 0.618
+          "hex": "#e3dcca",
+          "share": 0.413
         },
         {
           "hex": "#f1ede5",
           "share": 0.289
         },
         {
-          "hex": "#bbb3a5",
-          "share": 0.073
+          "hex": "#ded6c3",
+          "share": 0.185
         },
         {
-          "hex": "#9d806f",
-          "share": 0.013
+          "hex": "#bdb5a5",
+          "share": 0.095
         },
         {
-          "hex": "#7a6941",
-          "share": 0.006
+          "hex": "#90765e",
+          "share": 0.019
         }
       ],
       "look_hints": [
@@ -803,8 +803,8 @@
     {
       "index": 4,
       "start": 8.3,
-      "end": 16.967,
-      "duration": 8.667,
+      "end": 16.933,
+      "duration": 8.633,
       "color": {
         "brightness": 0.549,
         "contrast": 0.624,
@@ -821,7 +821,7 @@
         "highlight_tint": {
           "hue": 41,
           "name": "orange",
-          "strength": 0.063,
+          "strength": 0.062,
           "rgb": "#efeae0"
         }
       },
@@ -835,7 +835,7 @@
           "share": 0.329
         },
         {
-          "hex": "#d3c4af",
+          "hex": "#d3c4ae",
           "share": 0.036
         },
         {
@@ -843,7 +843,7 @@
           "share": 0.034
         },
         {
-          "hex": "#af9983",
+          "hex": "#af9982",
           "share": 0.03
         }
       ],
@@ -854,16 +854,16 @@
     },
     {
       "index": 5,
-      "start": 16.967,
+      "start": 16.933,
       "end": 23.6,
-      "duration": 6.633,
+      "duration": 6.667,
       "color": {
-        "brightness": 0.805,
+        "brightness": 0.76,
         "contrast": 0.615,
         "black_point": 0.327,
         "white_point": 0.983,
-        "saturation": 0.16,
-        "warmth": 0.293,
+        "saturation": 0.21,
+        "warmth": 0.28,
         "shadow_tint": {
           "hue": 30,
           "name": "orange",
@@ -871,36 +871,35 @@
           "rgb": "#4f4c49"
         },
         "highlight_tint": {
-          "hue": 41,
+          "hue": 40,
           "name": "orange",
-          "strength": 0.088,
-          "rgb": "#e7e1d3"
+          "strength": 0.14,
+          "rgb": "#dfd4bf"
         }
       },
       "palette": [
         {
-          "hex": "#e1d9c7",
-          "share": 0.503
+          "hex": "#f2eee5",
+          "share": 0.335
         },
         {
-          "hex": "#f2efe6",
-          "share": 0.332
+          "hex": "#d4c5a8",
+          "share": 0.298
         },
         {
-          "hex": "#844a30",
-          "share": 0.122
+          "hex": "#cebea0",
+          "share": 0.198
         },
         {
-          "hex": "#c3ae9c",
-          "share": 0.022
+          "hex": "#844c32",
+          "share": 0.129
         },
         {
-          "hex": "#947a6b",
-          "share": 0.022
+          "hex": "#ac9782",
+          "share": 0.04
         }
       ],
       "look_hints": [
-        "bleach bypass",
         "matte / lifted blacks (film fade)",
         "high-key",
         "warm cast"
@@ -1018,40 +1017,40 @@
       "end": 32.3,
       "duration": 3.8,
       "color": {
-        "brightness": 0.879,
-        "contrast": 0.154,
+        "brightness": 0.877,
+        "contrast": 0.229,
         "black_point": 0.644,
         "white_point": 0.983,
-        "saturation": 0.092,
-        "warmth": 0.158,
+        "saturation": 0.093,
+        "warmth": 0.154,
         "shadow_tint": null,
         "highlight_tint": {
-          "hue": 43,
+          "hue": 42,
           "name": "orange",
           "strength": 0.088,
-          "rgb": "#e8e2d4"
+          "rgb": "#e8e2d3"
         }
       },
       "palette": [
         {
           "hex": "#e1dac8",
-          "share": 0.568
+          "share": 0.541
         },
         {
           "hex": "#f3f0e7",
           "share": 0.394
         },
         {
-          "hex": "#c9bc96",
-          "share": 0.02
+          "hex": "#cbbfa3",
+          "share": 0.041
         },
         {
-          "hex": "#7c7870",
-          "share": 0.013
+          "hex": "#896d58",
+          "share": 0.016
         },
         {
-          "hex": "#ab6436",
-          "share": 0.006
+          "hex": "#a69f8f",
+          "share": 0.008
         }
       ],
       "look_hints": [
@@ -1068,14 +1067,14 @@
       "color": {
         "brightness": 0.593,
         "contrast": 0.606,
-        "black_point": 0.234,
+        "black_point": 0.235,
         "white_point": 0.943,
         "saturation": 0.353,
         "warmth": 0.344,
         "shadow_tint": {
           "hue": 15,
           "name": "red",
-          "strength": 0.445,
+          "strength": 0.446,
           "rgb": "#563930"
         },
         "highlight_tint": {
@@ -1087,24 +1086,24 @@
       },
       "palette": [
         {
-          "hex": "#f0ece4",
-          "share": 0.353
+          "hex": "#ab593f",
+          "share": 0.361
         },
         {
-          "hex": "#b0593c",
-          "share": 0.284
+          "hex": "#f1ede5",
+          "share": 0.345
         },
         {
-          "hex": "#8d5d4e",
-          "share": 0.276
+          "hex": "#7e5548",
+          "share": 0.242
         },
         {
-          "hex": "#573b31",
-          "share": 0.051
+          "hex": "#cfc3b2",
+          "share": 0.029
         },
         {
-          "hex": "#bbad9f",
-          "share": 0.036
+          "hex": "#9d8e82",
+          "share": 0.024
         }
       ],
       "look_hints": [
@@ -1120,7 +1119,7 @@
       "color": {
         "brightness": 0.665,
         "contrast": 0.653,
-        "black_point": 0.241,
+        "black_point": 0.242,
         "white_point": 0.966,
         "saturation": 0.319,
         "warmth": 0.383,
@@ -1139,24 +1138,24 @@
       },
       "palette": [
         {
-          "hex": "#eeeae2",
-          "share": 0.411
+          "hex": "#efeae2",
+          "share": 0.424
         },
         {
-          "hex": "#b75a39",
-          "share": 0.275
+          "hex": "#b85a39",
+          "share": 0.273
         },
         {
-          "hex": "#7d523f",
-          "share": 0.169
+          "hex": "#7d5240",
+          "share": 0.171
         },
         {
-          "hex": "#baa88b",
-          "share": 0.095
+          "hex": "#baa98c",
+          "share": 0.097
         },
         {
-          "hex": "#f8f5ee",
-          "share": 0.05
+          "hex": "#f9f7f1",
+          "share": 0.035
         }
       ],
       "look_hints": [
@@ -1223,20 +1222,20 @@
       "end": 88.067,
       "duration": 44.0,
       "color": {
-        "brightness": 0.844,
-        "contrast": 0.451,
+        "brightness": 0.841,
+        "contrast": 0.45,
         "black_point": 0.369,
         "white_point": 0.939,
-        "saturation": 0.113,
-        "warmth": 0.239,
+        "saturation": 0.114,
+        "warmth": 0.236,
         "shadow_tint": {
-          "hue": 37,
+          "hue": 38,
           "name": "orange",
-          "strength": 0.181,
+          "strength": 0.18,
           "rgb": "#38342e"
         },
         "highlight_tint": {
-          "hue": 40,
+          "hue": 41,
           "name": "orange",
           "strength": 0.096,
           "rgb": "#e6dfd0"
@@ -1245,23 +1244,23 @@
       "palette": [
         {
           "hex": "#e2dac8",
-          "share": 0.616
+          "share": 0.593
         },
         {
           "hex": "#f1ede5",
           "share": 0.289
         },
         {
-          "hex": "#c7ab99",
-          "share": 0.033
+          "hex": "#c6b3a1",
+          "share": 0.057
         },
         {
-          "hex": "#555145",
-          "share": 0.033
+          "hex": "#625c4c",
+          "share": 0.044
         },
         {
-          "hex": "#b3694f",
-          "share": 0.028
+          "hex": "#d55d46",
+          "share": 0.018
         }
       ],
       "look_hints": [
@@ -1276,12 +1275,12 @@
       "end": 95.133,
       "duration": 7.066,
       "color": {
-        "brightness": 0.887,
-        "contrast": 0.285,
-        "black_point": 0.522,
+        "brightness": 0.854,
+        "contrast": 0.32,
+        "black_point": 0.517,
         "white_point": 0.983,
-        "saturation": 0.078,
-        "warmth": 0.126,
+        "saturation": 0.114,
+        "warmth": 0.148,
         "shadow_tint": {
           "hue": 33,
           "name": "orange",
@@ -1289,32 +1288,32 @@
           "rgb": "#4a4845"
         },
         "highlight_tint": {
-          "hue": 42,
+          "hue": 41,
           "name": "orange",
-          "strength": 0.069,
-          "rgb": "#ebe7db"
+          "strength": 0.099,
+          "rgb": "#e6dfd0"
         }
       },
       "palette": [
         {
-          "hex": "#e0d8c7",
-          "share": 0.372
+          "hex": "#cebea3",
+          "share": 0.405
         },
         {
-          "hex": "#f0ede5",
-          "share": 0.317
+          "hex": "#efece3",
+          "share": 0.336
         },
         {
           "hex": "#fcfbf4",
-          "share": 0.231
+          "share": 0.23
         },
         {
-          "hex": "#bfafa4",
-          "share": 0.056
+          "hex": "#7a766c",
+          "share": 0.025
         },
         {
-          "hex": "#816d61",
-          "share": 0.024
+          "hex": "#d36349",
+          "share": 0.004
         }
       ],
       "look_hints": [
@@ -1326,12 +1325,12 @@
   ],
   "color": {
     "overall": {
-      "brightness": 0.724,
+      "brightness": 0.717,
       "contrast": 0.638,
       "black_point": 0.315,
       "white_point": 0.983,
-      "saturation": 0.217,
-      "warmth": 0.264,
+      "saturation": 0.224,
+      "warmth": 0.263,
       "shadow_tint": {
         "hue": 18,
         "name": "orange",
@@ -1341,34 +1340,34 @@
       "highlight_tint": {
         "hue": 41,
         "name": "orange",
-        "strength": 0.074,
-        "rgb": "#eae5d9"
+        "strength": 0.082,
+        "rgb": "#e8e2d5"
       }
     },
     "palette": [
       {
-        "hex": "#ebe6da",
-        "share": 0.584
+        "hex": "#f2efe7",
+        "share": 0.351
       },
       {
-        "hex": "#995f44",
-        "share": 0.099
+        "hex": "#e1d9c8",
+        "share": 0.162
       },
       {
-        "hex": "#a7ad8c",
-        "share": 0.08
+        "hex": "#b5673f",
+        "share": 0.141
       },
       {
-        "hex": "#696f66",
-        "share": 0.08
+        "hex": "#7a4e39",
+        "share": 0.12
       },
       {
-        "hex": "#c36d3d",
-        "share": 0.08
+        "hex": "#c7b9a2",
+        "share": 0.119
       },
       {
-        "hex": "#74462f",
-        "share": 0.077
+        "hex": "#73826a",
+        "share": 0.108
       }
     ],
     "look_hints": [
