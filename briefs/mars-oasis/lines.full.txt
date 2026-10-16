@@ -1,4 +1,4 @@
-# Mars Oasis, full cut (~77-85 s after the 1.1x pass). One voiced line per row;
+# Mars Oasis, full cut (~80-88 s after the 1.1x pass). One voiced line per row;
 # the beat sheet in BRIEF.md maps each row to its visual, on-screen text and asset.
 #
 # 1) HOOK. Plant on frame zero, smash cut to a missile. On-screen: MISSILES… FOR GARDENING?
@@ -26,3 +26,5 @@ Building it yourself might turn out to be a terrible idea. But now you have a wa
 # 18) Everyday business costs: software, packaging, delivery.
 Think about something your company pays for every month.
 Do you know what makes it cost that much?
+# 20) CTA: follow card.
+We share stories that inspire. For your weekly dose of quirky stories, follow now!

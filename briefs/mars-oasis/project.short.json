@@ -1,0 +1,152 @@
+{
+  "slug": "mars-oasis-short",
+  "title": "Missiles… for gardening?",
+  "topic": "mars oasis",
+  "audience": "working professionals who like stories about how big things got built",
+  "lang": "en",
+  "music": "",
+  "sfx": [],
+  "cta_keyword": "FOLLOW NOW",
+  "style": "papercut",
+  "style_params": {
+    "file_label": "CASE FILE · MARS OASIS",
+    "cta_label": "For your weekly dose of quirky stories",
+    "cta_note": "We share stories that inspire"
+  },
+  "beats": {
+    "1": {
+      "text": "MISSILES… FOR GARDENING?",
+      "inserts": [
+        {
+          "asset": "assets/footage/line01-missile.mp4",
+          "at": "missiles"
+        }
+      ],
+      "draw": [
+        {
+          "prop": "cutout",
+          "image": "assets/cutouts/musk.png",
+          "side": "right",
+          "h": 760,
+          "at": "Elon"
+        }
+      ]
+    },
+    "2": {
+      "draw": {
+        "prop": "label",
+        "text": "DELIVER TO:"
+      }
+    },
+    "3": {
+      "pause_before": 0.8,
+      "transition": "dip",
+      "text": "MARS"
+    },
+    "4": {
+      "text": "ABOUT $50 MILLION",
+      "draw": {
+        "prop": "pricetag",
+        "text": "$50M",
+        "at": "fifty",
+        "until": "For"
+      },
+      "inserts": [
+        {
+          "asset": "assets/footage/line04-greenhouse.jpg",
+          "at": "tiny"
+        }
+      ]
+    },
+    "5": {
+      "draw": [
+        {
+          "prop": "clipping",
+          "image": "assets/clippings/russia.png",
+          "y": 560,
+          "lines": [
+            "2001-02: trips to Russia",
+            "to buy refurbished ICBMs"
+          ],
+          "highlight": 1,
+          "highlights": [
+            [
+              4,
+              40,
+              92,
+              18
+            ]
+          ],
+          "source": "Source: History of SpaceX, Wikipedia",
+          "cues": [
+            "Russian"
+          ],
+          "until": "Without"
+        },
+        {
+          "prop": "sticker",
+          "text": "(NO WARHEADS)",
+          "at": "warheads"
+        }
+      ]
+    },
+    "6": {
+      "continue": true,
+      "transition": "none",
+      "text": "SPACEX · 2002",
+      "text_at": "SpaceX",
+      "draw": [
+        {
+          "prop": "desaturate",
+          "at": "failed"
+        },
+        {
+          "prop": "stamp",
+          "at": "failed",
+          "until": "build"
+        },
+        {
+          "prop": "rocket",
+          "morph": true,
+          "at": "build",
+          "lift_at": "SpaceX"
+        }
+      ]
+    },
+    "7": {
+      "media": "none",
+      "draw": [
+        {
+          "prop": "cards",
+          "items": [
+            "BUY IT.",
+            "BUILD IT.",
+            "RETHINK IT."
+          ],
+          "cues": [
+            "Buy",
+            "build",
+            "rethink"
+          ],
+          "until": "That's"
+        },
+        {
+          "prop": "lockup",
+          "items": [
+            "MAKE-OR-BUY",
+            "MBA"
+          ],
+          "cues": [
+            "make-or-buy",
+            "MBA"
+          ],
+          "at": "That's"
+        }
+      ]
+    },
+    "8": {
+      "media": "none",
+      "transition": "dip"
+    }
+  }
+}

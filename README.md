@@ -110,9 +110,12 @@ survive, put it in the plan (the template), never in the output.
 
 ## Styles, footage and decoding references
 
-Four complete art directions ship beside the classic look — `swiss-editorial`,
-`kinetic-punch`, `cine-doc`, `neo-brutal` — each with its own type system,
-motion grammar, transitions, captions and grade. Pick one with
+Six complete art directions ship beside the classic look — `swiss-editorial`,
+`kinetic-punch`, `cine-doc`, `neo-brutal`, `papercut` (Vox-style collage: photo
+cut-outs, clipping highlights) and `blueprint` (engineering drawing) — each with
+its own type system, motion grammar, transitions, captions and grade. Per-line
+direction (on-screen text, a cut on a spoken word, a pause before a line, drawn
+props) lives in `project.json` `"beats"`. Pick one with
 `node factory/new.mjs <slug> "Title" --style cine-doc`. Raw or generated clips
 are staged with `pipeline/footage.py` (9:16 reframe, trim to the line, a named
 grade from `styles/grades.json` or your own `.cube` LUT), and
@@ -130,7 +133,8 @@ setup/                        one-shot setup scripts per OS
 voice-samples/                your voice reference lives here (gitignored)
 pipeline/                     the step scripts above + common.py, config, corrections.json
 styles/                       style templates (swiss-editorial, kinetic-punch, cine-doc,
-                              neo-brutal), the grade library and LEXICON.md
+                              neo-brutal, papercut, blueprint), the shared runtime and
+                              prop library (_lib/), the grade library and LEXICON.md
 decode/                       reference-reel decoder: measurements + contact sheets
 template/                     the reference project every new video is copied from
   lines.txt, project.json     the plan: five lines + metadata

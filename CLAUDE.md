@@ -19,7 +19,7 @@ bash setup/setup-mac.sh            # or setup-linux.sh / setup-windows.ps1 (inst
 npx hyperframes doctor             # verify the toolchain
 
 # Factory (the normal path)
-node factory/new.mjs <slug> "Title" [--style swiss-editorial|kinetic-punch|cine-doc|neo-brutal]
+node factory/new.mjs <slug> "Title" [--style swiss-editorial|kinetic-punch|cine-doc|neo-brutal|papercut|blueprint]
 node factory/enqueue.mjs <slug>         # building → queue
 node factory/runner.mjs                 # runs the queue; dashboard at http://localhost:4300/dashboard.html
 
@@ -37,6 +37,11 @@ python3 -m py_compile pipeline/*.py scheduler/*.py   # plus node --check factory
 # Footage lane: reframe 9:16, trim to the line, bake a named grade (styles/grades.json)
 python3 pipeline/footage.py --project <dir> --src-dir <clips> [--fit blur] [--grade teal-orange] [--lut x.cube]
 python3 pipeline/footage.py --project <dir> --grade-sheet <clip>    # every grade on one frame
+python3 pipeline/footage.py --project <dir> --line 1 --src clip.mp4 --as line01-missile   # a beat insert
+# then rebuild: build_timeline.py (decides media + continued spans) and build_index.py
+
+# Narration made elsewhere (hosted TTS, recorded VO): <dir>/vo/lineNN.mp3|wav -> voice backend "files"
+python3 pipeline/fetch_vo.py --project <dir> --manifest briefs/<slug>/vo.json   # fills vo/ from URLs
 
 # Decode a reference reel (cuts, transitions, pacing, colour, sound + contact sheets)
 python3 decode/decode_reel.py decode/inbox/<reel>.mp4               # → decode/refs/<name>/REPORT.md
@@ -104,6 +109,24 @@ Track map: 0 background, 1 slides/scene, 2 overlays/title, 3 captions, 4 voice, 
 `pipeline/footage.py` or the LTX-2 lane (`integrations/ltx2/stage_footage.py`), both of
 which re-encode with dense keyframes and strip audio.
 
+**Beats** (`project.json` `"beats"`, keyed by line number; full table in `styles/README.md`):
+`text`/`text_at` (on-screen text), `inserts` (cut to a clip/still on a spoken word),
+`pause_before` (silence before a line: the scene starts with it, voice and captions
+after — `build_timeline.py`), `media` (`"none"` or a path), `continue` (the previous
+shot rolls on; the owner's `media_duration` covers it and `footage.py` trims to it),
+`transition`, `draw` (props). `build_index.py` resolves word anchors against
+`captions.json` words into absolute times and ships them in the DATA blob
+(`scene.beat`); inserts become media clips placed right after their scene so the next
+scene still covers them. Templates move `R.mediaFor(s)` (clip + inserts), never
+`#scene-N` directly. Drawing styles (`blueprint`, `papercut`) share the prop library
+`styles/_lib/props.js`; a style repaints it with colour roles `--bg --ink --acc --hot
+--leaf`. A prop `image` not staged yet is dropped with a warning, so plans build early.
+
+**Voice backend `files`**: `voice.py` converts `<project>/vo/lineNN.*` (auto-detected,
+or `"voice_backend": "files"` in project.json), trimming end silence
+(`vo_trim_silence`). `fetch_vo.py` fills `vo/` from a `{"lines": {"1": url}}` manifest
+— the lane for hosted TTS such as ElevenLabs via Higgsfield.
+
 **Style templates** (`styles/<name>/`, chosen by `project.json` `"style"`; see
 `styles/README.md`): `build_index.py` fills only DURATION / SLIDES / AUDIO / DATA (a JSON
 blob of scenes, caption groups with per-word timings, title, CTA, merged `style_params`);
@@ -142,6 +165,11 @@ is the shared vocabulary for briefs and decode reports.
 - HyperFrames' live grading (`data-color-grading`) needs a GPU: on software WebGL it ran at
   ~18 s/frame. Grades are therefore baked by `pipeline/footage.py` (ffmpeg); `blend` filters
   in a grade chain need `format=gbrp` first or they blend YUV planes (magenta casts).
+- `mix-blend-mode: saturation` on a grey div above a `<video>` desaturates the footage in
+  renders (verified) — the `desaturate` prop; a CSS `filter` on the video itself is not used.
+- A killed ffmpeg leaves an MP4 with no moov atom that still has the right name; `footage.py`
+  writes `*.part.mp4` and renames. `hyperframes snapshot` can also skip a video frame
+  ("could not be extracted") — trust frames from the render, not the snapshot.
 - The preview lies. Verify by extracting frames **from the rendered MP4** (qa.py does this) —
   that is how every composition bug in this repo's history was actually caught.
 - Numbers that are contractual: caption band top 1380px (never lower — Instagram UI covers it),

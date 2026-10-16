@@ -1,11 +1,267 @@
 {
   "slug": "mars-oasis",
   "title": "Missiles… for gardening?",
-  "topic": "make or buy",
-  "audience": "working professionals considering an MBA",
+  "topic": "mars oasis",
+  "audience": "working professionals who like stories about how big things got built",
   "lang": "en",
   "music": "",
   "sfx": [],
-  "cta_keyword": "MBA",
-  "style": "swiss-editorial"
+  "cta_keyword": "FOLLOW NOW",
+  "style": "papercut",
+  "style_params": {
+    "file_label": "CASE FILE · MARS OASIS",
+    "cta_label": "For your weekly dose of quirky stories",
+    "cta_note": "We share stories that inspire"
+  },
+  "beats": {
+    "1": {
+      "text": "MISSILES… FOR GARDENING?",
+      "inserts": [
+        {
+          "asset": "assets/footage/line01-missile.mp4",
+          "at": "missiles"
+        }
+      ],
+      "draw": [
+        {
+          "prop": "cutout",
+          "image": "assets/cutouts/musk.png",
+          "side": "right",
+          "h": 760,
+          "at": "Elon"
+        }
+      ]
+    },
+    "2": {
+      "draw": {
+        "prop": "label",
+        "text": "DELIVER TO:"
+      }
+    },
+    "3": {
+      "pause_before": 0.8,
+      "transition": "dip",
+      "text": "MARS"
+    },
+    "4": {
+      "transition": "dissolve",
+      "text": "MARS OASIS · 2001"
+    },
+    "5": {
+      "media": "none",
+      "draw": {
+        "prop": "polaroid",
+        "image": "assets/footage/line04.jpg"
+      }
+    },
+    "6": {
+      "text": "ABOUT $50 MILLION",
+      "draw": [
+        {
+          "prop": "clipping",
+          "image": "assets/clippings/cost.png",
+          "y": 560,
+          "lines": [
+            "Cheapest US launch he found:",
+            "about $50 million"
+          ],
+          "highlight": 1,
+          "highlights": [
+            [
+              4,
+              40,
+              92,
+              18
+            ]
+          ],
+          "source": "Source: Musk, Stanford talk, 2003",
+          "cues": [
+            "fifty"
+          ]
+        }
+      ]
+    },
+    "7": {
+      "transition": "punch",
+      "draw": {
+        "prop": "receipt",
+        "items": [
+          [
+            "1 SMALL GREENHOUSE",
+            "QTY 1"
+          ],
+          [
+            "DELIVERY: MARS",
+            "$50,000,000"
+          ]
+        ],
+        "cues": [
+          "delivery",
+          "charge"
+        ]
+      }
+    },
+    "8": {
+      "draw": [
+        {
+          "prop": "clipping",
+          "image": "assets/clippings/russia.png",
+          "y": 560,
+          "lines": [
+            "2001-02: trips to Russia",
+            "to buy refurbished ICBMs"
+          ],
+          "highlight": 1,
+          "highlights": [
+            [
+              4,
+              40,
+              92,
+              18
+            ]
+          ],
+          "source": "Source: History of SpaceX, Wikipedia",
+          "cues": [
+            "Russia"
+          ],
+          "until": "missiles"
+        }
+      ]
+    },
+    "9": {
+      "continue": true,
+      "transition": "none",
+      "draw": {
+        "prop": "sticker",
+        "text": "(NO WARHEADS)",
+        "at": "warheads"
+      }
+    },
+    "10": {
+      "continue": true,
+      "transition": "none",
+      "draw": [
+        {
+          "prop": "desaturate"
+        },
+        {
+          "prop": "stamp",
+          "at": "work"
+        }
+      ]
+    },
+    "11": {
+      "continue": true,
+      "transition": "none",
+      "draw": {
+        "prop": "rocket",
+        "morph": true,
+        "at": "build"
+      }
+    },
+    "12": {
+      "media": "none",
+      "transition": "none",
+      "text": "SPACEX · 2002",
+      "text_at": "SpaceX",
+      "draw": {
+        "prop": "rocket",
+        "lift": true,
+        "at": "SpaceX"
+      }
+    },
+    "13": {
+      "media": "none",
+      "transition": "zoom",
+      "draw": {
+        "prop": "question"
+      }
+    },
+    "14": {
+      "media": "none",
+      "draw": {
+        "prop": "cards",
+        "items": [
+          "BUY IT.",
+          "BUILD IT.",
+          "RETHINK IT."
+        ],
+        "cues": [
+          "buy",
+          "build",
+          "rethink"
+        ]
+      }
+    },
+    "15": {
+      "media": "none",
+      "draw": {
+        "prop": "lockup",
+        "items": [
+          "MAKE-OR-BUY",
+          "MBA",
+          "OPERATIONS MANAGEMENT"
+        ],
+        "cues": [
+          "make-or-buy",
+          "MBA",
+          "operations"
+        ]
+      }
+    },
+    "16": {
+      "media": "none",
+      "draw": {
+        "prop": "checklist",
+        "items": [
+          "COSTS",
+          "CAPABILITIES",
+          "TIME, INVESTMENT, RISK"
+        ],
+        "cues": [
+          "costs",
+          "capabilities",
+          "time"
+        ]
+      }
+    },
+    "17": {
+      "media": "none",
+      "draw": {
+        "prop": "scale",
+        "cues": [
+          "terrible",
+          "evaluate"
+        ]
+      }
+    },
+    "18": {
+      "media": "none",
+      "transition": "push",
+      "draw": {
+        "prop": "icons",
+        "items": [
+          "SOFTWARE",
+          "PACKAGING",
+          "DELIVERY"
+        ],
+        "cues": [
+          "company",
+          "pays",
+          "month"
+        ]
+      }
+    },
+    "19": {
+      "media": "none",
+      "text": "WHAT MAKES IT COST THAT MUCH?",
+      "draw": {
+        "prop": "question"
+      }
+    },
+    "20": {
+      "media": "none",
+      "transition": "dip"
+    }
+  }
 }

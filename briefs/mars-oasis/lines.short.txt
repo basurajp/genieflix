@@ -1,13 +1,16 @@
-# Mars Oasis, short cut (~30 s). DRAFT for approval: the story compressed to
-# hook, problem, price, missiles, SpaceX, then one line of make-or-buy.
+# Mars Oasis, short cut (~33 s after the 1.1x pass): hook, problem, price,
+# missiles, SpaceX, one line of make-or-buy, follow CTA. Beats in project.short.json.
 #
-# 1) HOOK. Plant on frame zero, smash cut to a missile. On-screen: MISSILES… FOR GARDENING?
+# 1) HOOK. Plant on frame zero, smash cut to a missile on "missiles". On-screen: MISSILES… FOR GARDENING?
 Elon Musk went shopping for Russian missiles… because he wanted to grow some plants.
-# 2) Beat of silence, then Mars.
-The problem was the delivery address. Mars.
-# 3) On-screen: ABOUT $50 MILLION
+The problem was the delivery address.
+# 3) 0.8 s of silence before this word, Mars revealed.
+Mars.
+# 4) On-screen: ABOUT $50 MILLION; the greenhouse cuts in on "tiny".
 An American rocket cost about fifty million dollars. For a tiny greenhouse.
 So he tried buying retired Russian missiles. Without the warheads, obviously.
 When that failed, he asked if a team could build cheaper rockets. That question led to SpaceX.
-# 6) On-screen: BUY IT. BUILD IT. RETHINK IT.
+# 7) On-screen: BUY IT. BUILD IT. RETHINK IT.
 Buy it, build it, or rethink it? That's a make-or-buy decision, and you learn it in an MBA.
+# 8) CTA: follow card.
+We share stories that inspire. For your weekly dose of quirky stories, follow now!

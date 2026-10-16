@@ -1,29 +1,26 @@
 # Mars Oasis: "Missiles… for gardening?"
 
-Make-or-buy explainer reel for an MBA (operations management). Hook: Elon
-Musk tried to buy Russian missiles to launch a greenhouse to Mars; that
-question led to SpaceX. This folder is the plan; the project itself is built
-in `factory/building/mars-oasis/` (gitignored) once assets are in.
+Make-or-buy story reel for a story page: interesting stories that make people
+think "I could do that with an MBA". Hook: Elon Musk tried to buy Russian
+missiles to launch a greenhouse to Mars; that question helped lead to SpaceX.
+This folder is the plan; each cut is built in `factory/building/<slug>/`
+(gitignored) on the machine that has the assets and the voice takes.
 
-## Start
+| File | What |
+|---|---|
+| `lines.full.txt`, `project.json` | full cut, 20 lines (~80-86 s after the 1.1x pass) |
+| `lines.short.txt`, `project.short.json` | short cut, 8 lines (~36-38 s) |
+| `vo.full.json`, `vo.short.json` | the voice takes, one URL per line, for `pipeline/fetch_vo.py` |
 
-```bash
-git fetch origin claude/vibrant-brown-223314 && git checkout claude/vibrant-brown-223314
-node factory/new.mjs mars-oasis "Missiles… for gardening?"
-cp briefs/mars-oasis/lines.full.txt factory/building/mars-oasis/lines.txt      # or lines.short.txt
-cp briefs/mars-oasis/project.json  factory/building/mars-oasis/project.json
-mkdir -p factory/building/mars-oasis/assets/raw    # drop the assets below in here
-```
+## Decisions (settled 2026-10-16)
 
-## Open decisions
-
-| # | Decision | Options | Recommendation |
-|---|---|---|---|
-| 1 | Visual route | A: drawn motion graphics (new `blueprint` style, no footage) · B: generated footage (Higgsfield, paid credits) · C: your footage/stock · or a mix | Mix: real or generated footage for the hook (plant, missile, Mars), blueprint graphics for the business half |
-| 2 | Length | full (~77-85 s) · short (~30 s) · both | Both; the short cut is the one to test against skip rate |
-| 3 | Ending | the question as a closing card · a comment keyword (e.g. "Comment MBA") | Keyword: every template's last beat is built for one, and it gives a measurable response |
-| 4 | Brand | whose MBA, logo, colours, fonts, programme name | JAIN Online and EdNxt design-system skills are available if it is either |
-| 5 | Voice | your cloned voice (run the voice phase locally) · a recorded VO file per line | Cloned voice through the factory |
+| # | Decision | Chosen |
+|---|---|---|
+| 1 | Visual route | Mix, in the **`papercut`** style (Vox-style collage): footage for the story beats from your asset pool, photo cut-outs and news/research clippings with highlighter animations, drawn paper props for the business half. `blueprint` (engineering drawing) is built too: set `"style": "blueprint"` to switch. |
+| 2 | Length | Both cuts. |
+| 3 | Ending | A follow CTA, voiced: "We share stories that inspire. For your weekly dose of quirky stories, follow now!" End card: FOLLOW NOW. |
+| 4 | Brand | None. A story page; no institution, logo or handle on screen. |
+| 5 | Voice | Higgsfield preset voice **Cillian**, ElevenLabs engine (picked from four auditions; the "Jagdish" voice element was not used). Every line is generated: `vo.*.json`. |
 
 ## Fact notes (checked)
 
@@ -35,62 +32,107 @@ mkdir -p factory/building/mars-oasis/assets/raw    # drop the assets below in he
   ([IEEE Spectrum](https://spectrum.ieee.org/amp/elon-musk-spacex-2650251626));
   Wikipedia cites $8 million per missile quoted by Kosmotras
   ([History of SpaceX](https://en.wikipedia.org/wiki/History_of_SpaceX)). Keep "about".
-- Optional stronger money beat: "$50 million for an American rocket, roughly
-  $10 million for a Russian missile." Two numbers side by side stop thumbs.
-- The Russian trips failed, Mars Oasis was dropped, and a feasibility study of
-  cheaper US launches followed; SpaceX was founded in 2002.
+- Mars Oasis was the 2001 plan; the Russia trips were October 2001 and February
+  2002 per Wikipedia ([History of SpaceX](https://en.wikipedia.org/wiki/History_of_SpaceX)),
+  while Musk has said he went three times
+  ([Fast Company](https://www.fastcompany.com/3006829/spacex-founder-elon-musk-considered)).
+  The reel never states a trip count. SpaceX was founded in 2002.
+- The note cards that stand in for missing clippings use the reel's own words
+  with a source line ("Source: Musk, Stanford talk, 2003"; "Source: History of
+  SpaceX, Wikipedia"). Only put a quote on screen from a screenshot of the
+  real document.
 
-Rights: naming Musk in the story is commentary. Do not use his photos,
-footage or likeness in this ad (it implies endorsement of an MBA programme),
-and do not show the SpaceX logo; set "SpaceX" in the reel's own type.
+Rights, said once: this page funnels to MBA/MCA programmes, so it is
+commercial. A recognisable photo of Musk carries right-of-publicity and
+implied-endorsement risk, and press photos and article screenshots are usually
+copyrighted. Use images you have a licence for (or CC-BY with credit), keep
+clippings to short excerpts used as commentary, and never imply he endorses
+anything. No SpaceX logo; "SpaceX" is set in the reel's own type.
 
-## Beat sheet (full cut, matches lines.full.txt)
+## Beats (full cut; `project.json` holds the exact spec)
 
-| Line | VO | Visual | On-screen text | Transition in | Asset file(s) |
-|---|---|---|---|---|---|
-| 1 | Elon Musk went shopping for Russian missiles… because he wanted to grow some plants. | Plant macro on frame 0, smash cut to missile on "missiles" | MISSILES… FOR GARDENING? | (opens) | `plant.mp4`, `missile.mp4` |
-| 2 | The problem was the delivery address. | Shipping label being filled in | DELIVER TO: ______ | hard cut | drawn |
-| 3 | Mars. | Mars reveal, slow push-in; 0.8 s silence before the word | MARS | dip to black | `mars.mp4` or `.jpg` |
-| 4 | He wanted to send a tiny greenhouse there. The project was called Mars Oasis. | Tiny greenhouse on red soil | MARS OASIS · 2001 | dissolve | `greenhouse.jpg` |
-| 5 | The idea was that a photograph of plants growing on another planet could get people excited about space again. | A polaroid of green on red, dropping into frame | | hard cut | drawn (uses `greenhouse.jpg`) |
-| 6 | But the cheapest American launch option he found cost about fifty million dollars. | Rocket with a swinging price tag | ABOUT $50 MILLION | hard cut | `rocket.mp4` |
-| 7 | That's a pretty expensive delivery charge for a gardening project. | Receipt: item "1 small greenhouse", delivery "$50,000,000" | | punch-in | drawn |
-| 8 | So he went to Russia to explore buying retired missiles. | Missile footage | | hard cut | `missile.mp4` (second section) |
-| 9 | Without the warheads, obviously. | Same shot, sticker slaps on | (NO WARHEADS) | none (sticker) | |
-| 10 | That route didn't work out. | Missile shot desaturates, stamp | ✕ | | |
-| 11 | So he investigated whether a team could build cheaper rockets themselves. | Missile footage turns into blueprint line drawings | | match cut / line-draw morph | drawn |
-| 12 | That question helped lead to SpaceX. | Blueprint rocket completes and lifts | SPACEX · 2002 | | drawn |
-| 13 | And there's a useful question hiding inside this story. | Blueprint zooms out to a question mark | | zoom transition | drawn |
-| 14 | When something costs too much, how do you decide whether to buy it, build it yourself, or rethink the whole plan? | Three cards on "buy", "build", "rethink" | BUY IT. BUILD IT. RETHINK IT. | | drawn |
-| 15 | That's a make-or-buy decision, something you explore in an MBA through operations management. | Label locks in | MAKE-OR-BUY · MBA · OPERATIONS MANAGEMENT | | brand logo |
-| 16 | You break down the costs. Compare the capabilities you have with the ones you'd need. Account for the time, investment and risk. | Checklist ticking on each phrase | COSTS · CAPABILITIES · TIME, INVESTMENT, RISK | | drawn |
-| 17 | Building it yourself might turn out to be a terrible idea. But now you have a way to evaluate it. | A balance scale tipping, then settling | | | drawn |
-| 18 | Think about something your company pays for every month. | Software, packaging, delivery: three quick cards | | push | `software.jpg`, `packaging.jpg`, `delivery.jpg` |
-| 19 | Do you know what makes it cost that much? | End card: the question, brand, CTA | (question or keyword) | dip to black | brand logo |
+| Line | VO (short) | Visual | On-screen | In |
+|---|---|---|---|---|
+| 1 | …shopping for Russian missiles… | plant on frame 0; cut-out of Musk slides in on "Elon"; smash cut to the missile on "missiles" | MISSILES… FOR GARDENING? (first word turns red on the cut) | opens |
+| 2 | delivery address | drawn shipping label, address field blinking empty | (label: DELIVER TO:) | paper sheet push |
+| 3 | Mars. | Mars still; 0.8 s of silence first, dip to black | MARS | dip |
+| 4 | tiny greenhouse… Mars Oasis | greenhouse still | MARS OASIS · 2001 | dissolve |
+| 5 | a photograph of plants… | polaroid of the greenhouse photo dropping in | | sheet push |
+| 6 | about fifty million dollars | rocket footage + cost clipping, highlighter on "fifty" | ABOUT $50 MILLION | cut |
+| 7 | expensive delivery charge | receipt prints; delivery row lights up, total circled | | punch-in |
+| 8 | went to Russia… | missile footage + Russia clipping, highlighter on "Russia" | | cut |
+| 9 | Without the warheads | same shot rolling, sticker slaps on | (NO WARHEADS) | none |
+| 10 | didn't work out | same shot drains to grey, stamp | NO DEAL | none |
+| 11 | build cheaper rockets | the shot gives way to a line-drawn rocket | | none (morph) |
+| 12 | helped lead to SpaceX | rocket lifts off on "SpaceX" | SPACEX · 2002 | none |
+| 13 | a useful question | construction circles, a drawn question mark | | zoom |
+| 14 | buy it, build it, or rethink | three cards, each on its word | BUY IT. BUILD IT. RETHINK IT. | sheet push |
+| 15 | make-or-buy… MBA… operations | three labels lock in on their words | MAKE-OR-BUY · MBA · OPERATIONS MANAGEMENT | sheet push |
+| 16 | costs, capabilities, time | checklist ticks on each phrase | | sheet push |
+| 17 | terrible idea… evaluate it | balance scale tips on "terrible", settles on "evaluate" | | sheet push |
+| 18 | your company pays for every month | software, packaging, delivery tiles on the words | | push |
+| 19 | what makes it cost that much? | the question again | WHAT MAKES IT COST THAT MUCH? | sheet push |
+| 20 | follow now! | taped CTA card, marker underline and arrow | FOLLOW NOW | dip |
 
-Two features the beat sheet needs that the pipeline lacks today (to build in
-the next session): per-line on-screen text and word-anchored inserts (cut to a
-second asset at a given word, line 1), and a per-line pause before the line
-(line 3).
+Short cut: lines 1-3 as above; 4 rocket + price tag, greenhouse insert on
+"tiny"; 5 missile + Russia clipping, sticker on "warheads"; 6 same shot greys
+out, stamp on "failed", rocket drawn over it on "build" and launched on
+"SpaceX"; 7 buy/build/rethink cards then MAKE-OR-BUY · MBA labels; 8 CTA.
 
-## Assets to upload
+## Assets to stage from your pool
 
-Put them in `factory/building/mars-oasis/assets/raw/` with these names. Clips
-3-8 s, vertical if you have it (landscape is fine, it gets blur-padded or
-cropped), no burned-in text or watermarks, rights cleared.
-
-| File | What | Needed for |
+| File (rename to this) | Goes to | Used on |
 |---|---|---|
-| `plant.mp4` | Seedling or small plant, macro close-up, shallow focus | line 1 (frame zero) |
-| `missile.mp4` | Missile on a launcher or in a silo; Soviet/Russian-looking if possible | lines 1, 8-10 |
-| `mars.mp4` or `mars.jpg` | Mars from space, or the surface | line 3 |
-| `greenhouse.jpg` | Small greenhouse or terrarium (on red soil is a bonus) | lines 4-5 |
-| `rocket.mp4` | Any rocket on the pad or launching (not SpaceX-branded) | line 6 |
-| `software.jpg`, `packaging.jpg`, `delivery.jpg` | Everyday business costs | line 18 |
-| `logo.svg` or `logo.png` | Programme / institution logo, transparent | lines 15, 19 |
-| `brand.txt` | Colours (hex), fonts, programme name, CTA wording | everything |
-| `music.mp3` | A track you have the rights to (optional) | bed |
-| `voice-sample.wav` | 1-2 min of clean speech for the clone (or recorded VO per line) | voice |
+| `plant.mp4` | `footage.py --line 1` | 1 (frame zero) |
+| `missile.mp4` | `footage.py --line 1 --as line01-missile`, and `--line 8 --start <s>` (full) / `--line 5` (short) | 1, 8-11 / 5-6 |
+| `mars.mp4` or `mars.jpg` | `footage.py --line 3` | 3 |
+| `greenhouse.jpg` | `footage.py --line 4` (full), `--line 4 --as line04-greenhouse` (short) | 4-5 / 4 |
+| `rocket.mp4` | `footage.py --line 6` (full), `--line 4` (short) | 6 / 4 |
+| `musk.png` (transparent cut-out) | copy to `assets/cutouts/musk.png` | 1 |
+| `cost.png` (screenshot: the $50M line) | copy to `assets/clippings/cost.png` | 6 |
+| `russia.png` (screenshot: a story on the Russia trips) | copy to `assets/clippings/russia.png` | 8 / 5 |
 
-Route A needs only the logo, brand.txt and the voice; everything marked
-"drawn" is built in code.
+The missile shot in the full cut rolls under lines 8-11 (about 14 s); a
+shorter clip holds its last frame, so use the longest take you have. Clippings
+default to one highlighter box at `[4, 40, 92, 18]` (x, y, w, h in percent of
+the image): edit `highlights` (and add a `circle`) in the beat to sit on the
+real line. Anything not staged is skipped or replaced by a drawn or typed
+version, so the reel builds either way.
+
+## Run it on your PC (Windows PowerShell; `python` = Python 3)
+
+```powershell
+git fetch origin claude/vibrant-brown-223314; git checkout claude/vibrant-brown-223314; git pull
+
+# full cut (repeat with mars-oasis-short, lines.short.txt, project.short.json, vo.short.json)
+node factory/new.mjs mars-oasis "Missiles… for gardening?" --style papercut
+copy briefs\mars-oasis\lines.full.txt factory\building\mars-oasis\lines.txt
+copy briefs\mars-oasis\project.json   factory\building\mars-oasis\project.json
+python pipeline\fetch_vo.py   --project factory\building\mars-oasis --manifest briefs\mars-oasis\vo.full.json
+python pipeline\make_reel.py  --project factory\building\mars-oasis --phase voice
+
+$P = "factory\building\mars-oasis"; $S = "C:\path\to\your\pool"
+python pipeline\footage.py --project $P --line 1 --src $S\plant.mp4
+python pipeline\footage.py --project $P --line 1 --src $S\missile.mp4 --as line01-missile
+python pipeline\footage.py --project $P --line 3 --src $S\mars.jpg
+python pipeline\footage.py --project $P --line 4 --src $S\greenhouse.jpg
+python pipeline\footage.py --project $P --line 6 --src $S\rocket.mp4
+python pipeline\footage.py --project $P --line 8 --src $S\missile.mp4 --start 2
+mkdir $P\assets\cutouts, $P\assets\clippings
+copy $S\musk.png $P\assets\cutouts\;  copy $S\cost.png $P\assets\clippings\;  copy $S\russia.png $P\assets\clippings\
+python pipeline\build_timeline.py --project $P
+python pipeline\build_index.py    --project $P
+python pipeline\make_reel.py      --project $P --phase render     # QA gates, 1.1x, -> factory\ready-to-post\
+python decode\decode_reel.py factory\ready-to-post\mars-oasis.mp4  # check the cuts land where the table says
+```
+
+If a voice URL stops working, download that take from the Higgsfield gallery
+and save it as `vo\lineNN.mp3`; `voice.py` picks it up the same way.
+
+## QA in the cloud session (stand-ins)
+
+The real footage, cut-outs, clippings and voice takes could not reach the cloud
+session (the assets are on your PC; the network policy blocks the Higgsfield
+CDN), so both cuts were verified with stand-ins: labelled colour clips named
+like the assets above, a stand-in cut-out and clipping, and noise-shaped voice
+files cut to each real take's length.
