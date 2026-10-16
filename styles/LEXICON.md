@@ -42,6 +42,14 @@ wrong format (PLAYBOOK §2: you grade formats, not videos).
 *Spot it:* `hard` boundaries in `REPORT.md`; `cuts/cut-NN.jpg` changes in one frame.
 *Build it:* the default between scenes in every template.
 
+**Smash cut** — An abrupt cut, no fade, between two shots that contrast hard in
+mood or content, often landing mid-sentence for a jolt or a laugh ("missiles…"
+→ plant). *Spot it:* a `hard` boundary with a high score where the colour and
+subject flip; the cut lands on a spoken word. *Build it:* a word-anchored insert
+in `project.json` beats — `"inserts": [{"asset": "assets/footage/line01-missile.mp4",
+"at": "missiles"}]` — cuts a frame before the word; styles may add a flash over it
+(`R.insertCuts`).
+
 **Jump cut** — The same shot with time removed, so the subject "jumps". The
 creator staple for removing pauses and filler. *Spot it:* `jump cut (same set-up)`
 boundaries in `REPORT.md`; near-identical neighbours on the contact sheet. *Build it:* cut the voice lines
@@ -353,7 +361,21 @@ dot, timecode or date stamp. → grade `camcorder`; HyperFrames' `Creator
 Camcorder` / `VHS Playback` treatments on GPU machines.
 
 **Collage / zine / cut-out** — Photos as cut-outs on paper, tape, stickers,
-mixed type, often B&W photos on colour fields. → `neo-brutal` + `mono-classic`.
+mixed type, often B&W photos on colour fields. → **`papercut`** (or `neo-brutal`
++ `mono-classic` for the louder sticker version).
+
+**Vox-style papercut explainer** — The editorial collage format: grained or
+kraft paper, torn construction-paper shapes, people as cut-out photos with a
+paper outline, news and research clippings with a highlighter sweep and a
+marker circle, hand-drawn arrows, motion that steps like stop-motion. Only
+secondary sources describe it (no first-party Vox write-up found). →
+**`papercut`**: props `cutout`, `clipping`, plus the drawn library; entrances
+use `steps(7)`.
+
+**Blueprint / technical drawing** — Cyanotype navy, white line art, dimension
+lines and callouts, a title block; things are drawn on stroke by stroke
+(draw-on / write-on). → **`blueprint`**; the props draw with an SVG
+`stroke-dashoffset` reveal on `pathLength="1"`.
 
 **Minimalism** — Few elements, one typeface, lots of space, slow motion.
 
@@ -467,6 +489,13 @@ fit its grammar.
 | "Hormozi captions", "creator edit", "punch-ins" | `"style": "kinetic-punch"`, `punch_scale` |
 | "cinematic", "doc", "film look" | `"style": "cine-doc"`, grade `teal-orange` / `warm-film` |
 | "neubrutalism", "collage", "stickers" | `"style": "neo-brutal"` |
+| "Vox-style", "papercut", "paper collage" | `"style": "papercut"` |
+| "news clipping with a highlight", "research paper cutout" | papercut prop `clipping` (your screenshot + `highlights` boxes, timed with `cues`) |
+| "cut-out photo of the person" | prop `cutout` (transparent PNG in `assets/cutouts/`) |
+| "blueprint", "engineering drawing", "drawn on" | `"style": "blueprint"`, beats `draw` props |
+| "smash cut on the word X" | beats `inserts` with `"at": "X"` |
+| "a beat of silence before X" | beats `pause_before` on X's line |
+| "same shot keeps rolling" | beats `"continue": true` on the next line |
 | "B&W with one colour" | grade `mono-classic` + any accent param |
 | "matte film", "faded" | grade `film-fade` |
 | "silver, gritty" | grade `bleach-bypass` |
@@ -518,3 +547,8 @@ Colour: [Wikipedia — Bleach bypass](https://en.wikipedia.org/wiki/Bleach_bypas
 Sound: [IRPR — riser](https://sounddesign.irpr.agency/glossary/riser/) ·
 [IRPR — whoosh](https://sounddesign.irpr.agency/glossary/whoosh/) ·
 [IRPR — impact](https://sounddesign.irpr.agency/glossary/impact/)
+
+Smash cut: [No Film School — smash cut](https://nofilmschool.com/what-is-smash-cut-in-movies) ·
+[MasterClass — smash cut](https://www.masterclass.com/articles/how-to-use-a-smash-cut-transition-when-editing-a-film)
+
+Vox-style collage (secondary only): [videoai.me — Vox-style video](https://videoai.me/blog/what-is-vox-style-video-explained-2026)

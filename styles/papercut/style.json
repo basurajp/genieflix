@@ -1,0 +1,37 @@
+{
+  "name": "Papercut",
+  "summary": "Vox-style collage explainer: warm grained paper, photos as paper cut-outs, news and research clippings with a highlighter sweep and a marker circle, torn-paper scraps for the headline and beat text, masking-tape labels, drawn scenes sliding in as paper sheets in stop-motion steps.",
+  "lexicon": [
+    "papercut / collage motion design (Vox-style explainer)",
+    "cut-out photo with paper outline",
+    "clipping highlight (highlighter sweep, marker circle)",
+    "torn-paper edge, paper push transition",
+    "stop-motion stepping (on twos)",
+    "masking-tape label",
+    "smash cut (word-anchored insert)",
+    "dip to black, punch-in, push, zoom transition (per beat)"
+  ],
+  "best_for": "stories about real people and events, history, business case studies: anything with names, dates, documents and quotes",
+  "footage": "full-bleed, any; photos of people as transparent PNG cut-outs; screenshots of articles or papers as clippings (assets/cutouts/, assets/clippings/)",
+  "grade": "warm-film",
+  "grade_variants": ["film-fade", "neutral", "mono-classic", "muted-editorial"],
+  "music": "plucky or light percussive bed, 95-120 BPM; paper rustles and a stamp thud as sfx",
+  "sfx": "paper slide on each sheet push, marker squeak on a circle, one stamp thud",
+  "scene_overlap": 0.5,
+  "draws": true,
+  "props": ["cutout", "clipping", "label", "polaroid", "pricetag", "receipt", "sticker", "desaturate", "stamp",
+            "rocket", "question", "cards", "lockup", "checklist", "scale", "icons"],
+  "params": {
+    "bg": "#ece2cf",
+    "ink": "#1c1b19",
+    "acc": "#2a5db0",
+    "hot": "#e2412c",
+    "leaf": "#3f9b4f",
+    "hl": "#ffe14d",
+    "file_label": "",
+    "sheet_label": "",
+    "cta_label": "Follow for more",
+    "cta_note": "",
+    "step": "steps(7)"
+  }
+}

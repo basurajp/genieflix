@@ -1,0 +1,53 @@
+{
+  "name": "Blueprint",
+  "summary": "Engineering drawing on navy: a gridded drafting sheet, white line art drawn on stroke by stroke, cyan dimension lines, mono labels in a title block. Footage plays full-bleed for the story beats; drawn props (label, price tag, receipt, rocket, cards, checklist, scale) carry the explainer beats.",
+  "lexicon": [
+    "blueprint / technical drawing look (cyanotype navy, white line art)",
+    "draw-on (stroke reveal / write-on line animation)",
+    "dimension lines and callouts",
+    "title block end card",
+    "smash cut (word-anchored insert)",
+    "dip to black, punch-in, push, zoom transition (per beat)",
+    "mask reveal type, karaoke captions"
+  ],
+  "best_for": "explainers that move from a story to a framework: how things are built, costs, decisions, processes",
+  "footage": "full-bleed, any; drawn scenes need none (project.json beats \"draw\")",
+  "grade": "film-fade",
+  "grade_variants": [
+    "neutral",
+    "muted-editorial",
+    "mono-classic",
+    "teal-orange"
+  ],
+  "music": "light pulse or ticking electronic, 95-115 BPM; drops out for the CTA",
+  "sfx": "pen scratch on draw-ons, a stamp thud, one whoosh on the rocket lift",
+  "scene_overlap": 0.5,
+  "draws": true,
+  "props": [
+    "label",
+    "polaroid",
+    "pricetag",
+    "receipt",
+    "sticker",
+    "desaturate",
+    "stamp",
+    "rocket",
+    "question",
+    "cards",
+    "lockup",
+    "checklist",
+    "scale",
+    "icons"
+  ],
+  "params": {
+    "bg": "#0d2a4a",
+    "ink": "#eaf2ff",
+    "acc": "#6fd3ff",
+    "hot": "#ff7a3d",
+    "leaf": "#7fe08f",
+    "file_label": "",
+    "sheet_label": "SHEET",
+    "cta_label": "Follow for more",
+    "cta_note": ""
+  }
+}

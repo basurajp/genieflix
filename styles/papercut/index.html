@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>reel — papercut</title>
+<style>
+  /* PAPERCUT — a Vox-style collage explainer for a 9:16 reel. Warm grained
+     paper; photos as paper cut-outs; news and research clippings with a
+     highlighter sweep and a marker circle; torn-paper scraps carry the
+     headline and each beat's text; drawn scenes slide in as sheets of paper
+     in stop-motion steps. Props come from project.json beats ("draw"), timed
+     to spoken words by build_index.py; the prop library is styles/_lib/props.js.
+     Layers (CSS z-index decides paint order, not the track index):
+       0 paper · 1 footage · 2 desaturate blend · 3 grain over footage
+       4 scene layer (paper sheet + props) · 5 caption band · 6 tape labels,
+       scraps · 7 captions · 8 dips / flashes / paper wipes · 9 CTA
+     Generated per project by pipeline/build_index.py (style "papercut"). */
+  @font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400;
+    src: url("assets/style/fonts/instrument-serif-latin-400-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400;
+    src: url("assets/style/fonts/instrument-serif-latin-ext-400-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  @font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400;
+    src: url("assets/style/fonts/instrument-serif-latin-400-italic.woff2") format("woff2"); }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 600;
+    src: url("assets/style/fonts/inter-tight-latin-600-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Inter Tight"; font-style: normal; font-weight: 800;
+    src: url("assets/style/fonts/inter-tight-latin-800-normal.woff2") format("woff2"); }
+  @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500;
+    src: url("assets/style/fonts/ibm-plex-mono-latin-500-normal.woff2") format("woff2");
+    unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD; }
+  @font-face { font-family: "IBM Plex Mono"; font-style: normal; font-weight: 500;
+    src: url("assets/style/fonts/ibm-plex-mono-latin-ext-500-normal.woff2") format("woff2");
+    unicode-range: U+0100-02BA,U+02BD-02C5,U+02C7-02CC,U+02CE-02D7,U+02DD-02FF,U+0304,U+0308,U+0329,U+1D00-1DBF,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF; }
+  <!--HF:FONT_FACES-->
+
+  :root {
+    --bg: #ece2cf;       /* paper */
+    --ink: #1c1b19;
+    --acc: #2a5db0;      /* blue pen */
+    --hot: #e2412c;      /* red marker */
+    --leaf: #3f9b4f;
+    --hl: #ffe14d;       /* highlighter */
+    --white: #fffdf6;    /* fresh paper for scraps and cards */
+    --m: 72px;
+    --w: 864px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { background: var(--bg); }
+  #stage {
+    position: relative; width: 1080px; height: 1920px; overflow: hidden;
+    background: var(--bg); color: var(--ink);
+    font-family: "Inter Tight", "Noto Sans Devanagari", "Helvetica Neue", Arial, sans-serif;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; letter-spacing: .05em; }
+  .serif { font-family: "Instrument Serif", "Noto Sans Devanagari", Georgia, serif; font-weight: 400; }
+
+  /* paper with grain (static, procedural — nothing to vendor) */
+  .paper {
+    background-color: var(--bg);
+    background-image:
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='320' height='320'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .27 0 0 0 0 .16 0 0 0 .20 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"),
+      radial-gradient(1200px 1600px at 50% 40%, rgba(255, 255, 255, .35), rgba(0, 0, 0, .06) 100%);
+  }
+  #bg { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 0; }
+
+  .scene { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; object-fit: cover; z-index: 1; transform-origin: 50% 45%; }
+  .desat { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 2; background: #808080; mix-blend-mode: saturation; }
+  #grain { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 3; mix-blend-mode: multiply; opacity: .55;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .38 0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); }
+
+  .layer { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 4; transform-origin: 50% 42%; }
+  .layer.sheet { box-shadow: -14px 0 0 rgba(0, 0, 0, .14); }
+  .art { position: absolute; left: 0; top: 0; overflow: visible; }
+  .ln { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+  .thin { stroke-width: 3; }
+  .acc { stroke: var(--acc); }
+  .wrn { stroke: var(--hot); }
+  .grn { stroke: var(--leaf); }
+  .cl { stroke: var(--acc); stroke-width: 2.5; stroke-dasharray: 22 10 4 10; opacity: .7; fill: none; }
+  .tx { fill: var(--ink); font-family: "IBM Plex Mono", ui-monospace, monospace; font-weight: 500; letter-spacing: .05em; }
+  .tx.c { fill: var(--acc); }
+  .tx.big { font-family: "Inter Tight", "Helvetica Neue", Arial, sans-serif; font-weight: 800; letter-spacing: -.01em; }
+
+  /* the torn paper band the captions sit on */
+  #band { position: absolute; left: -20px; top: 1336px; width: 1120px; height: 600px; z-index: 5; background-color: var(--white);
+    filter: drop-shadow(0 -6px 0 rgba(0, 0, 0, .12)); }
+  #band .bp { position: absolute; inset: 0; }
+
+  /* masking tape labels */
+  .tape { position: absolute; z-index: 6; padding: 12px 26px 10px; background: rgba(233, 220, 185, .93); color: var(--ink);
+    font-size: 24px; text-transform: uppercase; box-shadow: 0 2px 0 rgba(0, 0, 0, .08); }
+  #filetape { left: 54px; top: 232px; transform: rotate(-2deg); transform-origin: 0 50%; }
+  .counter { position: absolute; z-index: 6; left: 856px; top: 236px; width: 150px; height: 46px; padding-top: 10px;
+    text-align: center; font-size: 24px; color: var(--white); background: var(--hot); transform: rotate(3deg); }
+
+  /* mask reveal + highlighter words */
+  .m { display: inline-block; overflow: hidden; vertical-align: top; padding: 0 .04em .12em; margin-bottom: -.12em; }
+  .mi { display: inline-block; position: relative; }
+  .mi.em { isolation: isolate; }
+  .mi.em::before { content: ""; position: absolute; left: -.06em; right: -.06em; top: .28em; bottom: .02em; background: var(--hl); z-index: -1; }
+
+  /* torn paper scraps: the hook headline and each beat's text */
+  .scrap { position: absolute; left: 60px; top: 300px; width: 900px; z-index: 6; filter: drop-shadow(8px 10px 0 rgba(0, 0, 0, .22)); }
+  .scrap .bit { display: inline-block; background: var(--white); padding: 26px 40px 34px 38px; max-width: 900px; }
+  .scrap .t { line-height: .92; letter-spacing: -.012em; isolation: isolate; }
+
+  /* captions on the band: ink, the live word under a highlighter */
+  .cap { position: absolute; left: var(--m); top: 1384px; width: var(--w); z-index: 7;
+    font-weight: 800; font-size: 60px; line-height: 1.1; letter-spacing: -.015em; color: var(--ink); }
+  .cap .w { position: relative; display: inline-block; isolation: isolate; }
+  .cap .w .hl { position: absolute; left: -6px; right: -6px; top: 14px; bottom: 2px; background: var(--hl); z-index: -1; transform-origin: 0 50%; }
+  .cap .w.em { color: var(--hot); }
+
+  /* props (shared library), repainted as paper */
+  .pw { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  .polaroid { position: absolute; left: 250px; top: 470px; width: 580px; height: 700px; background: var(--white);
+    padding: 28px 28px 0; box-shadow: 10px 14px 0 rgba(0, 0, 0, .2); transform-origin: 50% 0%; }
+  .polaroid .ph { width: 524px; height: 540px; overflow: hidden; background: #2b3a4f; position: relative; }
+  .polaroid .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .polaroid .ph svg { position: absolute; left: 0; top: 0; }
+  .polaroid .pc { color: var(--ink); font-size: 34px; text-align: center; margin-top: 30px; }
+  .tag { position: absolute; left: 640px; top: 520px; width: 360px; height: 560px; transform-origin: 180px 0px; }
+  .receipt-slot { position: absolute; left: 230px; top: 440px; width: 620px; height: 900px; overflow: hidden; }
+  .receipt-slot .slot { position: absolute; left: 0; top: 0; width: 620px; height: 12px; background: var(--ink); }
+  .receipt { position: absolute; left: 30px; top: 12px; width: 560px; background: var(--white); color: var(--ink);
+    padding: 40px 38px 80px; clip-path: polygon(0 0, 100% 0, 100% 100%, 95% 97%, 90% 100%, 85% 97%, 80% 100%, 75% 97%, 70% 100%, 65% 97%, 60% 100%, 55% 97%, 50% 100%, 45% 97%, 40% 100%, 35% 97%, 30% 100%, 25% 97%, 20% 100%, 15% 97%, 10% 100%, 5% 97%, 0 100%); }
+  .receipt .rh { font-size: 34px; text-align: center; }
+  .receipt .rs { font-size: 22px; text-align: center; opacity: .7; margin-top: 8px; }
+  .receipt .rr { border-top: 3px dashed var(--ink); margin: 26px 0; opacity: .6; }
+  .receipt .row { position: relative; display: flex; justify-content: space-between; font-size: 26px; padding: 14px 0; }
+  .receipt .row span { position: relative; z-index: 1; }
+  .receipt .row .hl { position: absolute; left: -12px; right: -12px; top: 4px; bottom: 4px; background: var(--hl); opacity: 0; z-index: 0; }
+  .receipt .total { font-size: 34px; }
+  .receipt .total .circ { position: absolute; left: -12px; top: -24px; overflow: visible; }
+  .sticker { position: absolute; left: 150px; top: 820px; padding: 22px 38px 28px; background: var(--hl); color: var(--ink);
+    font-weight: 800; font-size: 92px; line-height: 1; letter-spacing: -.02em; border: 7px solid var(--ink); border-radius: 22px;
+    box-shadow: 12px 12px 0 rgba(0, 0, 0, .4); transform-origin: 50% 50%; white-space: nowrap; }
+  .stamp { position: absolute; left: 280px; top: 560px; width: 520px; height: 520px; transform-origin: 50% 50%; mix-blend-mode: multiply; }
+  .stamp .band { position: absolute; left: -10px; top: 214px; width: 540px; height: 92px; background: var(--white);
+    border: 6px solid var(--hot); color: var(--hot); font-size: 54px; text-align: center; line-height: 80px; }
+  .rk { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; }
+  .scan { position: absolute; left: 0; top: 0; width: 1080px; height: 8px; background: var(--hl); z-index: 4; }
+  .card, .tile { background: var(--white); box-shadow: 8px 10px 0 rgba(0, 0, 0, .18); border-radius: 20px; }
+  .card { position: absolute; left: 130px; width: 820px; height: 240px; }
+  .card .lab { position: absolute; left: 270px; top: 56px; font-weight: 800; font-size: 100px; line-height: 1; letter-spacing: -.03em; }
+  .plate { position: absolute; left: var(--m); width: var(--w); font-weight: 800; letter-spacing: -.03em; line-height: 1; }
+  .plate .br { position: absolute; top: -18px; bottom: -18px; width: 34px; border: 6px solid var(--hot); }
+  .plate .br.l { left: -22px; border-right: 0; }
+  .plate .mi.em { color: var(--hot); }
+  .plate .mi.em::before { display: none; }
+  .row-chk { position: absolute; left: 300px; width: 640px; font-weight: 800; letter-spacing: -.02em; line-height: 1.02; opacity: .3; }
+  .tile { position: absolute; left: 130px; width: 820px; height: 230px; }
+  .tile .lab { position: absolute; left: 290px; top: 52px; font-weight: 800; font-size: 82px; letter-spacing: -.03em; line-height: 1; }
+  .tile .per { position: absolute; left: 294px; top: 150px; font-size: 26px; color: var(--acc); }
+
+  /* collage props: cut-outs and clippings */
+  .cutout { position: absolute; z-index: 1; transform-origin: 50% 100%; }
+  .cutout.left { left: 30px; } .cutout.right { right: 30px; } .cutout.center { left: 50%; margin-left: -330px; width: 660px; text-align: center; }
+  .cutout img { display: block; width: auto; }
+  .cutout.png img { filter: drop-shadow(7px 0 0 #fff) drop-shadow(-7px 0 0 #fff) drop-shadow(0 7px 0 #fff) drop-shadow(0 -7px 0 #fff) drop-shadow(12px 16px 0 rgba(0, 0, 0, .25)); }
+  .cutout.photo { background: var(--white); padding: 16px 16px 16px; box-shadow: 12px 16px 0 rgba(0, 0, 0, .22); }
+  .cutout.photo img { max-width: 720px; object-fit: cover; }
+  .cutout .tagline { position: absolute; left: 24px; bottom: 26px; padding: 10px 22px 8px; background: var(--ink); color: var(--white); font-size: 28px; text-transform: uppercase; }
+  .clip-card { position: absolute; left: 110px; top: 470px; width: 860px; background: var(--white); padding: 22px 22px 18px;
+    box-shadow: 12px 16px 0 rgba(0, 0, 0, .22); transform-origin: 50% 50%; }
+  .clip-card .clipimg { position: relative; width: 816px; }
+  .clip-card .clipimg img { display: block; width: 816px; height: auto; filter: grayscale(.35) contrast(1.05); }
+  .clip-card .hlbox { position: absolute; background: var(--hl); mix-blend-mode: multiply; transform-origin: 0 50%; }
+  .clip-card .mark { position: absolute; overflow: visible; }
+  .clip-card .note { padding: 18px 20px 6px; font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 34px; line-height: 1.5; }
+  .clip-card .nl { position: relative; isolation: isolate; }
+  .clip-card .nl .hlbox { left: -8px; right: -8px; top: 8px; bottom: 4px; z-index: -1; transform: scaleX(0); }
+  .clip-card .src { margin-top: 14px; font-size: 22px; text-transform: uppercase; color: var(--acc); }
+
+  /* CTA: a paper card taped to the sheet */
+  #cta { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 9; }
+  #cta .card2 { position: absolute; left: 90px; top: 430px; width: 900px; height: 760px; background: var(--white);
+    box-shadow: 14px 18px 0 rgba(0, 0, 0, .22); transform: rotate(-1.5deg); transform-origin: 50% 50%; }
+  #cta .tp { position: absolute; width: 190px; height: 56px; background: rgba(233, 220, 185, .93); }
+  #cta .lab { position: absolute; left: 70px; top: 80px; width: 760px; font-size: 32px; text-transform: uppercase; color: var(--acc); line-height: 1.3; }
+  #cta .kw { position: absolute; left: 62px; top: 200px; width: 800px; font-size: 200px; line-height: .86; letter-spacing: -.02em; transform-origin: 0% 50%; }
+  #cta .note { position: absolute; left: 70px; top: 600px; width: 760px; font-size: 30px; text-transform: uppercase; line-height: 1.3; }
+</style>
+</head>
+<body>
+<div id="stage" data-composition-id="reel" data-start="0" data-width="1080" data-height="1920" data-fps="30" data-duration="<!--HF:DURATION-->">
+
+  <!-- track 1: scene media and word-anchored inserts (generated) -->
+  <!--HF:SLIDES-->
+
+  <!-- tracks 4-6: voice / music / sfx (generated) -->
+  <!--HF:AUDIO-->
+
+  <script type="application/json" id="hf-data"><!--HF:DATA--></script>
+  <script src="assets/gsap.min.js"></script>
+  <script src="assets/style/reel.js"></script>
+  <script src="assets/style/props.js"></script>
+  <script>
+  (function () {
+    const R = window.REEL, D = R.D, P = R.params, esc = R.esc;
+    const stage = R.stage;
+    for (const k of ["bg", "ink", "acc", "hot", "leaf", "hl"]) if (P[k]) stage.style.setProperty("--" + k, P[k]);
+    const tl = gsap.timeline({ paused: true });
+    const STEP = P.step || "steps(7)";          // stop-motion: every entrance moves in hard steps
+    const { PROPS, H } = REEL_PROPS(tl, { ease: STEP });
+    const { svg, DR, drawOn, fadeIn, maskIn, words, stacked, sizeFor, reps } = H;
+    const n = R.scenes.length;
+    const rnd = R.rng(23);
+
+    /* torn edge as a clip-path polygon: jagged along the named sides, seeded */
+    function torn(sides, seed, depth) {
+      const r = R.rng(seed), d = depth || 1.6, pts = [];
+      const j = () => (r() * d).toFixed(2);
+      const steps = 22;
+      for (let k = 0; k <= steps; k++) pts.push(`${(100 * k / steps).toFixed(2)}% ${sides.includes("t") ? j() : 0}%`);
+      for (let k = 1; k <= steps; k++) pts.push(`${sides.includes("r") ? (100 - j()) : 100}% ${(100 * k / steps).toFixed(2)}%`);
+      for (let k = steps - 1; k >= 0; k--) pts.push(`${(100 * k / steps).toFixed(2)}% ${sides.includes("b") ? (100 - j()) : 100}%`);
+      for (let k = steps - 1; k > 0; k--) pts.push(`${sides.includes("l") ? j() : 0}% ${(100 * k / steps).toFixed(2)}%`);
+      return `polygon(${pts.join(",")})`;
+    }
+
+    /* a sheet of kraft paper wiping across a cut (the "tear" transition on footage) */
+    function paperWipe(t) {
+      const w = R.clip({ cls: "paper", start: t - 0.3, dur: 0.66, track: 2,
+        style: Object.assign({ zIndex: "8", background: "#cdb48a", clipPath: torn("lr", 7 + Math.round(t * 10), 2.4) }, R.FULL) });
+      tl.fromTo(w, { x: 1150 }, { x: 0, duration: 0.3, ease: STEP }, t - 0.3);
+      tl.to(w, { x: -1150, duration: 0.32, ease: STEP }, t + 0.03);
+    }
+
+    /* ---------- furniture ---------- */
+    R.clip({ id: "bg", cls: "paper", start: 0, dur: R.total, track: 0 });
+    R.clip({ id: "grain", start: 0, dur: R.total, track: 2 });
+    const band = R.clip({ id: "band", start: 0, dur: R.total, track: 2, html: `<div class="bp paper"></div>` });
+    band.style.clipPath = torn("t", 5, 1.4);
+    band.querySelector(".bp").style.backgroundColor = "var(--white)";
+    tl.fromTo(band, { y: 600 }, { y: 0, duration: 0.45, ease: STEP }, 0);
+    const ft = R.clip({ id: "filetape", cls: "tape mono", start: 0, dur: R.total, track: 2, text: P.file_label || D.kicker });
+    ft.style.clipPath = torn("lr", 3, 3);
+    tl.fromTo(ft, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: STEP }, 0.05);
+
+    /* ---------- scenes ---------- */
+    R.scenes.forEach((s, i) => {
+      const end = R.sceneEnd(s);
+      const b = R.beat(s);
+      const media = R.mediaFor(s);
+      const drawn = !s.media_id;
+      const next = R.scenes[i + 1];
+      const overlap = next && !next.media_id ? 0.5 : 0;
+      const props = b.draw || [];
+      let layer = null;
+      if (drawn || props.length || s === R.last) {
+        layer = R.clip({ cls: "layer" + (drawn ? " paper sheet" : ""), start: s.start, dur: s.duration + overlap, track: 2 });
+        if (drawn) layer.style.clipPath = torn("l", 40 + i, 1.8);
+      }
+
+      // the cut into the scene: drawn sheets push in from the right in steps
+      // (Vox paper push) unless the beat names a transition; "tear" on footage
+      // wipes a kraft sheet across the cut
+      const kind = b.transition || (drawn && i > 0 ? "sheet" : "cut");
+      if (kind === "sheet" && layer) {
+        tl.fromTo(layer, { x: 1100, rotation: 1.5 }, { x: 0, rotation: 0, duration: 0.42, ease: STEP }, s.start);
+      } else if (kind === "tear") {
+        paperWipe(s.start);
+        R.cutIn(tl, s, { kind: "cut", targets: media, drift: [1.06, 1.0] });
+      } else {
+        R.cutIn(tl, s, {
+          targets: media.length ? media : (drawn && layer ? [layer] : []),
+          drift: media.length ? [1.06, 1.0] : [1, 1],
+        });
+      }
+
+      // counter on a red tag
+      const c = R.clip({ cls: "counter mono", start: s.start, dur: s.duration, track: 2, text: `${R.pad2(i + 1)} / ${R.pad2(n)}` });
+      if (R.hasCut(s)) tl.fromTo(c, { scale: 0, rotation: -20 }, { scale: 1, rotation: 3, duration: 0.25, ease: STEP }, s.start + 0.05);
+
+      props.forEach((sp) => {
+        const fn = PROPS[sp.prop];
+        if (!fn) { console.warn("papercut: unknown prop", sp.prop); return; }
+        fn(sp, s, layer);
+      });
+
+      // captions: ink on the band, the live word under a highlighter
+      R.captionsFor(s).forEach((cap) => {
+        const html = cap.words.map((w) => `<span class="w${R.isEmphasis(w.text) ? " em" : ""}"><i class="hl"></i>${esc(w.text)}</span>`).join(" ");
+        const el = R.clip({ cls: "cap", start: cap.start, dur: cap.end - cap.start, track: 3, html });
+        el.querySelectorAll(".hl").forEach((hl, j) => {
+          const w = cap.words[j];
+          const nxt = j + 1 < cap.words.length ? cap.words[j + 1].start : cap.end;
+          tl.fromTo(hl, { scaleX: 0 }, { scaleX: 1, duration: 0.12, ease: "power2.out" }, Math.max(cap.start, w.start - 0.03));
+          tl.to(hl, { scaleX: 0, transformOrigin: "100% 50%", duration: 0.08, ease: "none" }, Math.max(w.start + 0.12, nxt - 0.03));
+        });
+      });
+
+      if (i === 0) {
+        // hook: a torn scrap, on screen by 0.2 s
+        const size = sizeFor(D.title, true) * 1.05;
+        const h = R.clip({ id: "headline", cls: "scrap", start: 0, dur: end, track: 2, html:
+          `<div class="bit"><div class="t serif" style="font-size:${size}px">${stacked(D.title, size)}</div></div>` });
+        h.querySelector(".bit").style.clipPath = torn("tblr", 2, 1.2);
+        tl.fromTo(h, { scale: 1.3, rotation: -9, opacity: 0 }, { scale: 1, rotation: -2, opacity: 1, duration: 0.18, ease: "steps(3)" }, 0.0);
+        tl.to(h, { rotation: -1.2, duration: 0.5, ease: "steps(2)", yoyo: true, repeat: reps(end - 0.8, 0.5) }, 0.5);
+        const ins = (b.inserts || [])[0];
+        const first = h.querySelector(".mi");
+        if (ins && first) tl.set(first, { color: P.hot || "#e2412c" }, ins.start);
+        R.fadeOutAt(tl, h, end, 0.2);
+      }
+
+      if (s === R.last && layer) {
+        const t0 = s.start + (s.pause_before || 0) + 0.15;
+        const cta = R.clip({ id: "cta", start: s.start, dur: end - s.start, track: 2, html:
+          `<div class="card2">
+             <i class="tp" style="left:-40px;top:-22px;transform:rotate(-24deg)"></i>
+             <i class="tp" style="right:-40px;top:-22px;transform:rotate(22deg)"></i>
+             <div class="lab mono">${esc(P.cta_label || "Follow for more")}</div>
+             <div class="kw serif">${words(D.cta_keyword)}</div>
+             <div class="note mono">${esc(P.cta_note || "")}</div>
+           </div>` + svg(`<path class="ln wrn d" ${DR} style="stroke-width:9" d="M190 1150 C 170 1230, 160 1290, 118 1340"/>
+             <path class="ln wrn d" ${DR} style="stroke-width:9" d="M100 1282 L 112 1344 L 172 1326"/>
+             <path class="ln wrn d" ${DR} style="stroke-width:10" d="M160 1010 C 380 1030, 640 1000, 900 1018"/>`) });
+        const card = cta.querySelector(".card2");
+        tl.fromTo(card, { y: 1200, rotation: -9 }, { y: 0, rotation: -1.5, duration: 0.5, ease: STEP }, t0);
+        fadeIn(cta.querySelectorAll(".lab"), t0 + 0.4, 0.2);
+        maskIn(cta.querySelector(".kw"), t0 + 0.5, 0.08);
+        fadeIn(cta.querySelectorAll(".note"), t0 + 0.9, 0.2);
+        drawOn(cta.querySelectorAll(".d"), t0 + 1.1, 0.45, 0.3, "power2.out");
+        tl.to(cta.querySelector(".kw"), { scale: 1.04, duration: 0.5, ease: "steps(2)", yoyo: true, repeat: reps(end - t0 - 2.2, 0.5) }, t0 + 2.2);
+      }
+    });
+
+    // a line's on-screen text (project.json beats): a torn scrap slapped on
+    let k = 0;
+    R.beatTexts(tl, { cls: "scrap", mode: "mask", delay: 0.12, wrap: (h, s) => {
+      const size = sizeFor(s.beat.text) * 1.05;
+      return `<div class="bit" style="clip-path:${torn("tblr", 60 + s.index, 1.3)}"><div class="t serif" style="font-size:${size}px">${stacked(s.beat.text, size)}</div></div>`;
+    }, enter: (tl, el, t) => {
+      const tilt = (k++ % 2 ? 1.5 : -2);
+      tl.fromTo(el, { scale: 1.3, rotation: tilt * 4, opacity: 0 }, { scale: 1, rotation: tilt, opacity: 1, duration: 0.18, ease: "steps(3)" }, t);
+      maskIn(el, t + 0.05, 0.04);
+    } });
+    R.insertCuts(tl, { flash: 0.08 });
+
+    window.__timelines = window.__timelines || {};
+    window.__timelines.reel = tl;
+  })();
+  </script>
+</div>
+</body>
+</html>
