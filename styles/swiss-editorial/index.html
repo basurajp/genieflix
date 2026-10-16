@@ -116,6 +116,8 @@
   #cta .kw { font-weight: 900; font-size: 190px; line-height: .86; letter-spacing: -.05em; margin-top: 26px; word-break: break-word; }
   #cta .row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: 34px; font-size: 24px; letter-spacing: .08em; text-transform: uppercase; }
   #cta .arrow { font-family: "Inter Tight", sans-serif; font-weight: 900; font-size: 84px; line-height: .8; color: var(--accent); }
+  /* ↘ is in no vendored Inter Tight subset (it would paint in a system font); ↓ is, so turn it */
+  #cta .arrow i { display: inline-block; font-style: normal; transform: rotate(-45deg); }
 </style>
 </head>
 <body>
@@ -209,7 +211,7 @@
         const cta = R.clip({ id: "cta", start: s.start, dur: end - s.start, track: 2, html:
           `<div class="lab mono">${R.esc(P.cta_label || "Comment the word")}</div>
            <div class="kw">${R.maskWords(D.cta_keyword)}</div>
-           <div class="row mono"><span>${R.esc(P.cta_note || "")}</span><span class="arrow">↘</span></div>` });
+           <div class="row mono"><span>${R.esc(P.cta_note || "")}</span><span class="arrow"><i>↓</i></span></div>` });
         tl.fromTo(cta, { clipPath: "inset(0 0 100% 0)" }, { clipPath: "inset(0 0 0% 0)", duration: 0.6, ease: "expo.inOut" }, s.start);
         tl.fromTo("#cta .mi", { yPercent: 105 }, { yPercent: 0, duration: 0.6, ease: IN, stagger: 0.05 }, s.start + 0.35);
         tl.fromTo("#cta .arrow", { x: -18, y: -18 }, { x: 0, y: 0, duration: 0.5, ease: "power2.inOut", repeat: Math.max(1, Math.floor((end - s.start - 1) / 0.5)), yoyo: true }, s.start + 0.8);
