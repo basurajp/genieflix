@@ -71,7 +71,11 @@
     background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='1.1' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .5 0 0 0 0 .45 0 0 0 0 .38 0 0 0 .35 0'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"); }
 
   .layer { position: absolute; left: 0; top: 0; width: 1080px; height: 1920px; z-index: 4; transform-origin: 50% 42%; }
-  .layer.sheet { box-shadow: -14px 0 0 rgba(0, 0, 0, .14); }
+  /* a sheet reads as a new piece of paper when it pushes over the last one:
+     a shaded torn edge, and consecutive sheets alternate tone */
+  .layer.sheet::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 54px;
+    background: linear-gradient(90deg, rgba(70, 48, 22, .34), rgba(70, 48, 22, 0)); }
+  .layer.sheet.alt { background-color: #e2d4ba; }
   .art { position: absolute; left: 0; top: 0; overflow: visible; }
   .ln { fill: none; stroke: var(--ink); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
   .thin { stroke-width: 3; }
@@ -241,6 +245,7 @@
     tl.fromTo(ft, { scaleX: 0 }, { scaleX: 1, duration: 0.4, ease: STEP }, 0.05);
 
     /* ---------- scenes ---------- */
+    let sheets = 0;
     R.scenes.forEach((s, i) => {
       const end = R.sceneEnd(s);
       const b = R.beat(s);
@@ -251,7 +256,8 @@
       const props = b.draw || [];
       let layer = null;
       if (drawn || props.length || s === R.last) {
-        layer = R.clip({ cls: "layer" + (drawn ? " paper sheet" : ""), start: s.start, dur: s.duration + overlap, track: 2 });
+        layer = R.clip({ cls: "layer" + (drawn ? " paper sheet" + (sheets++ % 2 ? " alt" : "") : ""),
+          start: s.start, dur: s.duration + overlap, track: 2 });
         if (drawn) layer.style.clipPath = torn("l", 40 + i, 1.8);
       }
 
